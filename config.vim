@@ -8,12 +8,6 @@ AirlineTheme fairyfloss
 let g:airline_theme = 'fairyfloss'
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_statusline_ontop = 1
-" reply.vim [REPL]
-let g:reply_repls = {
-            \'ruby'   : ['irb'],
-            \'python' : ['python3'],
-            \'lua'    : ['lua'],
-            \}
 
 " vim-which-key
 nnoremap <silent> <leader>      :<c-u>WhichKey '<Space>'<CR>
