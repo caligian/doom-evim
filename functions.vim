@@ -1,17 +1,6 @@
 " You have to restart vim after editing this file :(. Be careful
 "
 "
-function! RunBuffer1()
-    let l:assoc = {'py': 'python3', 'js': 'js', 'sh': 'bash', 'zsh': 'zsh', 'lua': 'lua', 'rb': 'ruby'}
-    let l:ext = expand("%:e") 
-    if has_key(l:assoc, l:ext) 
-        let l:prog = get(l:assoc, l:ext)
-        execute '! ' l:prog ' ' expand("%")
-    else
-        echom "No binary set for this filetype"
-    endif
-endfunction
-noremap <A-r> :call RunBuffer1()<CR>
 
 "" Grep convenience funcs
 " Fdfind
@@ -34,3 +23,12 @@ function! SearchFileInThisDir(file)
     exec 'Fdfind ' . a:file . ' . ""'
 endfunction
 command! -nargs=+ FdfindHere call SearchFileInThisDir(<f-args>)
+
+function! LoadBuffer()
+    if (expand("%:e") == "vim")
+        exec "source " . expand("%:p")
+    else
+        echom 'This is not a vimscript buffer'
+    endif
+endfunction
+command! -nargs=0 LoadBuffer call LoadBuffer()

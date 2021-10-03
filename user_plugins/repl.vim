@@ -115,22 +115,22 @@ function! ReplSendString()
 endfunction
 
 function! ReplSendRegion()
-    normal! ma`<v`>y'a
+    normal! mZ`<v`>y'Z
     call ReplSendString()
 endfunction
 
 function! ReplSendTillPoint()
-    normal! maggv'a$y'a
+    normal! mZggv'a$y'Z
     call ReplSendString()
 endfunction
 
 function! ReplSendLine()
-    normal! ma^v$y'a
+    normal! mZ^v$y'Z
     call ReplSendString()
 endfunction
 
 function! ReplSendBuffer()
-    normal! maggvGy'a
+    normal! mZggvG$y'Z
     call ReplSendString()
 endfunction
 

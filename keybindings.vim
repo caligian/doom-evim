@@ -31,7 +31,7 @@ noremap <leader>fs :w<CR>
 noremap <leader>fd :e! DIR
 noremap <leader>fD :CtrlP DIR
 noremap <leader>fp :e! ~/.config/nvim/
-noremap <leader>fv :w <bar> source %<CR>
+noremap <leader>fv :LoadBuffer<CR>
 noremap <leader>fr :CtrlPMRUFiles<CR>
 
 "" Search strings

@@ -1,7 +1,7 @@
 " This file shall contain all the package-related configs
 "
 " Themes
-colorscheme pastel
+colorscheme solarized8_dark_flat
 
 " Airline
 AirlineTheme fairyfloss
