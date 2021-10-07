@@ -30,6 +30,7 @@ let g:repl_assoc = {
             \'mjs'  : 'node',
             \'js'   : 'node',
             \'rb'   : 'pry',
+            \'lua'  : 'lua',
             \'zsh'  : 'zsh',
             \'bash' : 'bash',
             \'sh'   : 'bash'

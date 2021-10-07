@@ -10,10 +10,8 @@ ruby << EOF
 fregex, dglob, regex = VIM::evaluate('a:fregex'), VIM::evaluate('a:dglob'), VIM::evaluate('a:regex')
 
 # Modify the exclude strings as required. 
-out = %x(fdfind "#{fregex}" "#{dglob}" --exclude '\.git' --exclude '\.*' -X egrep -n "#{regex}" {}).split("\n")
-
-out = out.map { |s| s.split(/:/, 3) }
-out.map { |s| fn, line = s[0..1]; printf("%-15s @ %-4s| %s \n", fn, line, s[2..].join(""))}
+out = %x(fdfind "#{fregex}" "#{dglob}" --exclude '\.git' --exclude '\.*' -X egrep -n "#{regex}" {})
+puts out
 EOF
 endfunction
 command! -nargs=+ Grep call SearchStringInDir(<f-args>)
