@@ -61,7 +61,7 @@
 ; vim-palette: Colorscheme provider
 (utils.after! :vim-palette
         (fn []
-          (vim.cmd "color Base2Tone-Forest-dark")))
+          (vim.cmd "color Base2Tone-Morning-dark")))
 
 ; galaxyline
 (utils.after! :galaxyline.nvim

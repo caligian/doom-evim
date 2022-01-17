@@ -17,101 +17,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Make the required global tables for doom
-(tset _G :doom {})
-(tset _G.doom :lsp {})
-(tset _G.doom :utils utils)
-
-; These are the default packages. If user comments any in user-packages, THEY WILL BE IGNORED. 
-; This is just here as a reference
-; The user will modify the a similar table in ~/.vdoom.d/user-packages.lua
-(tset _G.doom :default_packages {"wbthomason/packer.nvim" true
-
-                                 ; Vim session management
-                                 "xolox/vim-session" true
-                                 "xolox/vim-misc" true
-
-                                 ; Ruby stuff
-                                 "tpope/vim-rails" true
-                                 "tpope/vim-rake" true
-                                 "tpope/vim-projectionist" true
-                                 "vim-ruby/vim-ruby" true
-                                 "skalnik/vim-vroom" true
-
-                                 ; Better commenting
-                                 "preservim/nerdcommenter" true
-
-                                 ; Markdown mode
-                                 "plasticboy/vim-markdown" true
-
-                                 ; Async
-                                 "tpope/vim-dispatch" true
-
-                                 ; Python stuff
-                                 "alfredodeza/pytest.vim" true
-
-                                 ; zk 
-                                 "dagle/zk.nvim" true
-
-                                 "svermeulen/vimpeccable" true
-
-                                 "nvim-lua/plenary.nvim" true
-
-                                 "nvim-telescope/telescope-project.nvim" true
-                                 "nvim-telescope/telescope.nvim" true
-                                 "nvim-telescope/telescope-file-browser.nvim" true
-
-                                 "moll/vim-bbye" true
-
-                                 "folke/zen-mode.nvim" true
-
-                                 "folke/which-key.nvim" true
-
-                                 "Vimjas/vim-python-pep8-indent" true
-                                 "lukas-reineke/indent-blankline.nvim" true
-
-                                 "tpope/vim-fugitive" true
-                                 "tpope/vim-rhubarb" true
-                                 "lewis6991/gitsigns.nvim" true
-
-                                 "kreskij/Repeatable.vim" true
-
-                                 "tpope/vim-surround" true
-                                 "Raimondi/delimitMate" true
-
-                                 "rafcamlet/nvim-luapad" true
-
-                                 ; Tags in a side-window
-                                 "preservim/tagbar" true
-
-                                 ; Better undo
-                                 "mbbill/undotree" true
-
-                                 ; Themes
-                                 "glepnir/galaxyline.nvim" true
-                                 "bling/vim-bufferline" true
-                                 "gmist/vim-palette" true
-                                 "ryanoasis/vim-devicons" true
-                                 "kyazdani42/nvim-web-devicons" true
-
-                                 ; lsp-stuff
-                                 "neovim/nvim-lspconfig" true
-                                 "nvim-treesitter/nvim-treesitter" true
-                                 "williamboman/nvim-lsp-installer" true
-                                 "hrsh7th/nvim-cmp" true
-                                 "hrsh7th/cmp-nvim-lsp" true
-                                 "saadparwaiz1/cmp_luasnip" true
-                                 "L3MON4D3/LuaSnip" true
-                                 "SirVer/ultisnips" true
-
-                                 ; Fennel support
-                                 "Olical/aniseed" true
-                                 "Olical/conjure" true
-                                 "bakpakin/fennel.vim" true})
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ~/.vdoom.d/user-packages.lua contains the actual list
-(utils.try-require-else :user-packages "DOOM")
-(tset _G.doom :packages (require :user-packages))
+(set _G.doom {})
+(set _G.doom.lsp {})
+(set _G.doom.utils utils)
 
 ; This will proceed to startup of packer with the plugins provided
 (require :packages)
@@ -122,10 +30,6 @@
 (tset _G.doom :fnl_config true)
 
 ; LSP settings
-(tset _G.doom.lsp :servers {:solargraph {} :pyright {}})
-(tset _G.doom.lsp :install_sumneko_lua true)
-(tset _G.doom.lsp :load_default true)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Require user-overrides
 ; Try requiring user init config
@@ -134,6 +38,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Setup LSP
 (utils.try-require-else :lsp-configs "DOOM")
+(require :lsp-configs)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Setup required autocmds
