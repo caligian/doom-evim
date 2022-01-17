@@ -16,6 +16,7 @@
         new-pkgs     (utils.set-items (current-pkgs.difference default-pkgs))
         missing-pkgs (utils.set-items (default-pkgs.difference current-pkgs))
         remaining-pkgs (utils.set-items (current-pkgs.difference (Set new-pkgs)))
+        doom-packages {}
         master-t []]
 
     ; Disable missing packages
@@ -25,12 +26,15 @@
 
     (when (> (length new-pkgs) 0)
       (each [_ k (ipairs new-pkgs)]
+        (tset doom-packages k (. current-packages k))
         (table.insert master-t (. current-packages k))))
 
     (when (> (length remaining-pkgs) 0)
       (each [_ k (ipairs remaining-pkgs)]
+        (tset doom-packages k (. current-packages k))
         (table.insert master-t (. current-packages k))))
-    (tset doom :packages master-t)
+
+    (tset doom :packages doom-packages)
     master-t))
 
 (packer.startup (fn [use]

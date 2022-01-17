@@ -11,19 +11,27 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; General functions
+;; globals
 (if (not _G.map-help-groups)
   (global map-help-groups {:leader {:t "Tab operations"
                                     :b "Buffer operations"
                                     :q "Buffer operations"
+                                    :l "LSP operations"
                                     :w "Window operations"
+                                    :d "Debugger operations"
+                                    :h "Help operations"
+                                    :c "Comment operations"
                                     :m "Major mode operations"
                                     :x "Misc operations"}
-                           :localleader {}}))
+                           :localleader {:t "Terminal operations"
+                                         :e "REPL operations"
+                                         :l "[fennel] Conjure log"
+                                         :r "[fennel] Conjure REPL"}}))
 
 (if (not _G.lambdas)
   (global lambdas {}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn fmt [...] 
   (string.format ...))
 
@@ -44,7 +52,7 @@
 
 (defn register [f]
   (table.insert lambdas f)
-  (fmt "lua f = lambdas[%d]; f()" (length lambdas)))
+  (fmt ":lua f = lambdas[%d]; f()<CR>" (length lambdas)))
 
 (defn set-items [s]
   (icollect [k _ (pairs s.items)] k))
@@ -178,7 +186,7 @@
 
 (defn after! [pkg config-f]
   (let [packages (listify pkg)
-        loaded   (vec (fun.filter #(. packer_plugins $1) packages))
+        loaded   (vec (fun.filter #(. doom.packages $1) packages))
         equals   (= (length packages) (length loaded))]
     (if equals 
       (do (config-f) true)
@@ -450,13 +458,9 @@
         modes (or (listify opts.modes) ["n"])
         events (or (listify opts.events) false)
         patterns (or (listify opts.patterns) false)
-        exec (do 
-               (if 
-                 (= (type opts.exec) "string")
-                 opts.exec
-
-                 (= (type opts.exec) "function")
-                 (register opts.exec)))
+        exec (if (= (type opts.exec) "function")
+               (register opts.exec)
+               opts.exec)
         help (or opts.help opts.exec)
         help-group (or opts.help-group 
                        (rx.gsub opts.keys "<(?:local)?leader>(.)[^$]+" "%1"))
@@ -568,3 +572,10 @@
         (tset bind-t :lock true)
         (tset t (. basename i) bind-t)))
     t))
+
+; Register all help-groups in <leader>
+(each [k group-name (pairs map-help-groups.leader)]
+  (wk.register {k {:name group-name}} {:prefix "<leader>"}))
+ 
+(each [k group-name (pairs map-help-groups.localleader)]
+  (wk.register {k {:name group-name}} {:prefix "<localleader>"}))

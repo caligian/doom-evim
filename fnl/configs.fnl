@@ -58,9 +58,15 @@
                       (telescope.load_extension "project") 
                       (vim.cmd "noremap <C-p> :lua require('telescope').extensions.project.project({})<CR>"))))))
 
-(utils.after! :awesome-vim-colorschemes
+; vim-palette: Colorscheme provider
+(utils.after! :vim-palette
         (fn []
-          (vim.cmd "color 256_noir")))
+          (vim.cmd "color Base2Tone-Forest-dark")))
+
+; galaxyline
+(utils.after! :galaxyline.nvim
+              (fn []
+                (require :modeline)))
 
 ; Tagbar
 (utils.after! :tagbar
@@ -107,7 +113,9 @@
 (utils.after! :which-key.nvim
         (fn []
           (let [wk (require :which-key)]
-            (wk.setup))))
+            (wk.setup {:key_labels {"<space>" "SPC"
+                                    "<cr>" "RET"
+                                    "<tab>" "TAB"}}))))
 
 ; pytest
 (utils.after! :pytest.vim
@@ -116,6 +124,7 @@
 
           (utils.define-keys [{:noremap true
                                :keys "<leader>mtf"
+                               :key-attribs ["buffer"]
                                :modes ["n"]
                                :events ["BufEnter"]
                                :patterns ["*py"]
@@ -125,6 +134,7 @@
 
                               {:noremap true
                                :keys "<leader>mtc"
+                               :key-attribs ["buffer"]
                                :events ["BufEnter"]
                                :modes ["n"]
                                :patterns ["*py"]
@@ -134,6 +144,7 @@
 
                               {:noremap true
                                :keys "<leader>mtm"
+                               :key-attribs ["buffer"]
                                :events ["BufEnter"]
                                :modes ["n"]
                                :patterns ["*py"]
@@ -143,6 +154,7 @@
 
                               {:noremap true
                                :keys "<leader>mtp"
+                               :key-attribs ["buffer"]
                                :events ["BufEnter"]
                                :modes ["n"]
                                :patterns ["*py"]
@@ -157,7 +169,8 @@
                                :patterns ["*py"]
                                :exec ":Pytest clear<CR>"
                                :help "Run pytest on current file"
-                               :help-group "m"}])))
+                               :help-group "m"}])
+          (set vim.g.pytest_executable "pytest")))
 
 ; Ruby stuff
 ; vroom
@@ -219,9 +232,16 @@
                                :noremap true
                                :exec ":execute(\":FocusDispatch\" . input(\"Focus Dispatch % \"))<CR>"}])))
 
+; ultisnips
 (utils.after! [:ultisnips
                :vim-snippets]
               (vim.cmd "let g:UltiSnipsExpandTrigger='<tab>'")
               (vim.cmd "let g:UltiSnipsJumpForwardTrigger='<C-j>'")
               (vim.cmd "let g:UltiSnipsJumpBackwardTrigger='<C-k>'")
               (vim.cmd "let g:UltiSnipsEditSplit='vertical'"))
+
+; vim-session
+(after! :vim-session
+        (fn []
+          (set vim.g.session_directory "~/.config/nvim/sessions")))
+

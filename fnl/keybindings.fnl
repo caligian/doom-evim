@@ -34,6 +34,7 @@
                      :patterns "*rb"
                      :exec (utils.split-termdebug-buffer "ruby" "-r debug" "vsp" true true)}])
 
+
 ; In order to use lua debugger, use this command 
 ; sudo cp ~/.config/nvim/lua/debugger.lua /usr/local/share/lua/5.1/
 ; Then `require "debugger"` in your script
@@ -103,3 +104,13 @@
 ; Clipboard stuff
 (vim.cmd "noremap <leader>xp :normal! \"+p<CR>") 
 (vim.cmd "vnoremap <leader>xy :'<'>normal! \"+y<CR>")
+
+; Reload entire config
+(utils.define-keys [{:keys "<leader>hrr"
+                     :exec (fn [] 
+                             (vim.cmd "tabnew") 
+                             (vim.cmd "edit ~/.config/nvim/fnl/init.fnl")
+                             (vim.cmd "ConjureEvalBuf")
+                             (vim.cmd "tabprevious")
+                             (vim.cmd "echom \"Successfully reloaded Doom!\""))}])
+

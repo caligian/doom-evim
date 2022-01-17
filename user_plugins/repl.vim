@@ -19,7 +19,7 @@ function! ReplRun()
     if type(l:repl) == v:t_number
         return 0
     endif
-    
+
     let l:cmd = 'tabnew | term ' . l:repl
     let l:repl_buffer = ""
 
@@ -117,21 +117,25 @@ endfunction
 function! ReplSendRegion()
     normal! mZ`<v`>y'Z
     call ReplSendString()
+    normal! d'Z
 endfunction
 
 function! ReplSendTillPoint()
     normal! mZggv'a$y'Z
     call ReplSendString()
+    normal! d'Z
 endfunction
 
 function! ReplSendLine()
     normal! mZ^v$y'Z
     call ReplSendString()
+    normal! d'Z
 endfunction
 
 function! ReplSendBuffer()
     normal! mZggvG$y'Z
     call ReplSendString()
+    normal! d'Z
 endfunction
 
 " Defining commands

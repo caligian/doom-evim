@@ -3,7 +3,7 @@
 (local file-logger (require :logging.file))
 (local path (require :path))
 ;
-(global log-path (path (vim.fn.stdpath "data") "doom-neovim.log"))
+(global log-path (path (vim.fn.stdpath "data") "doom-evim.log"))
 
 (defn log [level message]
   (let [logger (file-logger log-path "%d-%m-%Y-%H-%M-%S" "[%date] [%level] %message\n")]
