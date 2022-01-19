@@ -3,7 +3,7 @@
              core aniseed.core}})
 
 (when (not _G.doom.lsp)
-  (set _G.doom.lsp {:install_sumneko_lua false
+  (set _G.doom.lsp {:install_sumneko_lua true
                     :load_default true
                     :servers {:solargraph {} :pyright {}}}))
 
@@ -33,7 +33,7 @@
 ; Runner will be SPC m r
 ; Testing will be SPC m e
 ; Compiling will be SPC m c
-; Debug will be SPC m d
+; Debug will be SPC m d [vs]
 (defn make-builder-kbd [lang]
   (let [keys "<leader>mb"
         t (. doom.langs lang)
@@ -200,12 +200,12 @@
         confs (core.map #(. doom.lsp.servers $1) langs)
         is-manual (core.map #(let [t (. doom.langs $1)] (or (. t :manual) false)) langs)
         capabilities (cmp-nvim-lsp.update_capabilities (vim.lsp.protocol.make_client_capabilities))]
-
     (for [i 1 (length langs)]
       (when (and (not (. is-manual i)) 
                  (. servers i))
         (let [server (. servers i)
               config (or (. confs i) {})]
+
           (when (not (. config :on_attach))
             (tset config :on_attach on-attach-f))
           (when (not (. config :capabilities))
@@ -236,5 +236,4 @@
                  :cmp-nvim-lsp
                  :cmp_luasnip
                  :LuaSnip]
-                (setup)))
-
+                #(setup)))

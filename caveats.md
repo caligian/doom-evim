@@ -4,7 +4,7 @@ This section contains some of the gotchas that may get you. It is important you 
 
 - *How to know if something's gone wrong?* 
     `~/.local/share/nvim/doom-evim.log` contains the startup log.
-- How do I update doom? 
+- *How do I update doom?* 
     `git pull` should do it. That being said, your local configs will be overwritten. So stash it if you want to preserve yours.
 - *Why fennel integration?*
     In my experience, lisp is a really nice form to use and much clearer than other languages. Since fennel is a lisp parser than being a separate language, lua support is DIRECT.
@@ -17,7 +17,7 @@ This section contains some of the gotchas that may get you. It is important you 
 - *Why does not telescope work?*
     Neovim 0.5 and above is required.
 - *Can I not use the default configuration?* 
-    Yes. You can disable packages by commenting packages in ~/.vdoom.d/user-packages.lua. New packages will be added automatically. All the packer-forms will be accessible in doom.packages.
+    Yes. You can disable packages by commenting packages in ~/.vdoom.d/user-packages.lua. New packages will be added automatically. All the packer-forms will be accessible after executing `require('package_utils').get_master_list()`
 - *Can I disable default LSP configuration?*
     Yes you can set `doom.lsp.load_default = false`. You have to set LSP configuration all by your own now :(
 - *Why cannot I see my help-group in which-key?* 

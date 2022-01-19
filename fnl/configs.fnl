@@ -48,6 +48,10 @@
             (vim.cmd "noremap  <leader>hj :lua require('telescope.builtin').jumplist()<CR>")
             (vim.cmd "noremap  <leader>h  :lua require('telescope.builtin').registers()<CR>")
             (vim.cmd "noremap  <M-y>      :lua require('telescope.builtin').registers()<CR>")
+            (vim.cmd "noremap <leader><leader>s :lua require('telescope.builtin.resume()')<CR>")
+
+            ; LSP 
+            (vim.cmd "noremap <leader>hq :lua require('telescope.builtin').quickfix()<CR>")
 
             ; Load file browser
             (telescope.load_extension "file_browser")

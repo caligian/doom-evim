@@ -5,6 +5,8 @@ This file is the heart and soul of doom. It contains all the required functions 
 
 Although the documentation of the file is incomplete, you can still go through the code at your leisure in order to get a comprehensive understanding of this module. However, I will only mention the ones the user can use.
 
+Do note that these functions **have a domain-specific usage**. Do not use them for normal configuring that can be carried out by other libraries such as `fun` and `path`.
+
 ## Globals defined
 - `map-help-groups` Form: {:prefix {:key "Group description"}}. This is a table that is used for which-key to obtain description for prefixes. You can always append to this dictionary as and when you want. `Prefix` is either `leader` or `localleader`.
 - `lambdas` Form: `[f, g, h, i, ...]`. Contains functions indexed at n+1. This is used by `register` to get command strings.
@@ -48,6 +50,7 @@ Please `(require "path")` instead. These are half-baked functions at best.
 
 ### Editing
 - `promote-indent` and `demote-indent` Accept an optional param as line number to indent. If no param is provided, current line will be indented or deindented. `vim.bo.shiftwidth` is used to determine the value of spaces inserted. Returns: `nil`
+- `visual-indent` and `visual-deindent` (Missing)
 
 
 

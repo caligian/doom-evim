@@ -50,9 +50,11 @@
           path-arr))
       false)))
 
-(defn register [f]
+(defn register [f ?keybinding]
   (table.insert lambdas f)
-  (fmt ":lua f = lambdas[%d]; f()<CR>" (length lambdas)))
+  (if (not ?keybinding)
+    (fmt "lua f = lambdas[%d]; f()" (length lambdas))
+    (fmt ":lua f = lambdas[%d]; f()<CR>" (length lambdas))))
 
 (defn set-items [s]
   (icollect [k _ (pairs s.items)] k))
@@ -306,27 +308,72 @@
 ; Work on a range of lines. However, ignore the text that lies within that range
 (defn line-range-exec [cmd]
   (let [[start end] (vpos)
+       exec-each-line (fn [cmd start end] 
+                        )
         cmd (if 
               (= "string" (type cmd))
               cmd
               
               (= "function" (type cmd))
               (register cmd))]
-    (for [i start end 1]
-      (set-pos 0 [i 0])
-      (vim.cmd cmd))))
+
+    (when (and (> start 0)
+               (> end 0))
+      (for [i start end] 
+        (exec "normal! %dG" i)
+        (vim.cmd cmd))))) 
 
 ; if newline is true then count will be assumed to be on each new line
-(defn respect-count [cmd ?newline]
+(defn respect-count [cmd ?newline ?keybinding]
   (defn -respect-count [] 
-    (let [current-line (linenum)
+    (let [count (if (= (or vim.v.count 0) 0)
+                  1
+                  vim.v.count)
+          current-line (linenum)
+          cmd (if 
+                (= (type cmd) "string")
+                cmd 
+
+                (= (type cmd) "function")
+                (register cmd))
           last-line (+ current-line vim.v.count)
           newline (or ?newline false)]
       (for [i current-line last-line 1]
         (if newline 
-          (do (set-pos 0 [i 0]) (vim.cmd cmd))
+          (do 
+            (exec "normal! %dG" i) 
+            (vim.cmd cmd))
           (vim.cmd cmd)))))
-  (register -respect-count))
+  (register -respect-count (or ?keybinding false)))
+
+(defn -respect-count [cmd ?newline ?keybinding] 
+    (let [count (if (= (or vim.v.count 0) 0)
+                  1
+                  vim.v.count)
+          current-line (linenum)
+          cmd (if 
+                (= (type cmd) "string")
+                cmd 
+
+                (= (type cmd) "function")
+                (register cmd))
+          last-line (+ current-line vim.v.count)
+          newline (or ?newline false)]
+      (for [i current-line last-line 1]
+        (if newline 
+          (do 
+            (print "line-num %d" i)
+            (exec "normal! %dG" i) 
+            (vim.cmd cmd))
+          (vim.cmd cmd)))))
+
+(defn get-line [?bufnr ?lineno]
+  (let [bufnr (or ?bufnr 0)
+        lineno (or ?lineno (linenum))
+        s (buffer-string bufnr [lineno (+ 1 lineno)] true)]
+    (if (= (length s) 0)
+      false
+      s)))
 
 (defn to-temp-buffer [s ?direction]
   (let [direction (or ?direction "sp")
@@ -348,31 +395,34 @@
 
 (defn adjust-indent [?towards ?lineno]
   (defn -indent [towards lineno]
-    (let [line (buffer-string 0 [lineno (+ 1 lineno)])
-          current-line-num (linenum)
-          current-line-s (current-line)
-          last-line (+ 1 current-line-num)
-          (first-whitespace _) (string.find current-line-s "[^ \t]")
-          num-whitespace (if 
-                           (> first-whitespace vim.bo.shiftwidth)
-                           vim.bo.shiftwidth
+    (let [lineno (- lineno 1)
+          line (get-line 0 lineno)]
+      (when line 
+        (let [current-line-num lineno
+              current-line-s line
+              last-line (+ 1 current-line-num)
+              (first-whitespace _) (string.find current-line-s "[^ \t]")
+              first-whitespace (or first-whitespace 0)
+              num-whitespace (if 
+                               (> first-whitespace vim.bo.shiftwidth)
+                               vim.bo.shiftwidth
 
-                           (< first-whitespace vim.bo.shiftwidth)
-                           (- first-whitespace 1)
+                               (< first-whitespace vim.bo.shiftwidth)
+                               (- first-whitespace 1)
 
-                           vim.bo.shiftwidth)
-          modified-line (when first-whitespace
-                          (if (= towards 1)
-                            (string.gsub current-line-s "^" (string.rep " " vim.bo.shiftwidth))
-                            (string.gsub current-line-s (.. "^" (string.rep " " num-whitespace)) "")))]
-      (set-lines 0 [(- current-line-num 1) current-line-num] modified-line)))
-  (-indent (or ?towards 1) (or ?lineno (linenum))))
+                               vim.bo.shiftwidth)
+              modified-line (when first-whitespace
+                              (if (= towards 1)
+                                (string.gsub current-line-s "^" (string.rep " " vim.bo.shiftwidth))
+                                (string.gsub current-line-s (.. "^" (string.rep " " num-whitespace)) "")))]
+          (set-lines 0 [current-line-num (+ current-line-num 1)] modified-line)))))
+    (-indent (or ?towards 1) (or ?lineno (linenum))))
 
-(defn promote-indent [?lineno]
-  (adjust-indent -1 ?lineno))
-
-(defn demote-indent [?lineno]
+(defn increase-indent [?lineno]
   (adjust-indent 1 ?lineno))
+
+(defn decrease-indent [?lineno]
+  (adjust-indent -1 ?lineno))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; autocmd and augroup functions
@@ -461,7 +511,6 @@
        (wk.register original-t {:prefix "<leader>"}))
      
      original-t)))
-
 (defn define-key [opts]
   (let [noremap (or opts.noremap true)
         key-attribs (or (listify opts.key-attribs) ["silent"])
@@ -470,13 +519,11 @@
         events (or (listify opts.events) false)
         patterns (or (listify opts.patterns) false)
         exec (if (= (type opts.exec) "function")
-               (register opts.exec)
+               (register opts.exec true)
                opts.exec)
         help (or opts.help opts.exec)
         help-group (or opts.help-group 
                        (rx.gsub opts.keys "<(?:local)?leader>(.)[^$]+" "%1"))
-        respect-count-newlines (or opts.respect-count-newlines false)
-        respect-count (or opts.respect-count false)
         repeatable (or opts.repeatable false)
         groups (or (listify opts.groups) false)
         
@@ -493,7 +540,6 @@
         (fn [e] (add-hook groups events patterns e))
         key-command-strings)
       (fun.each vim.cmd key-command-strings))
-
     (register-to-wk keys help help-group)))
 
 (defn define-keys [opts-a]
