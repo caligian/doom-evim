@@ -61,7 +61,7 @@
 ; vim-palette: Colorscheme provider
 (utils.after! :vim-palette
         (fn []
-          (vim.cmd "color Base2Tone-Morning-dark")))
+          (vim.cmd "color base16-solarflare")))
 
 ; galaxyline
 (utils.after! :galaxyline.nvim
@@ -244,4 +244,3 @@
 (after! :vim-session
         (fn []
           (set vim.g.session_directory "~/.config/nvim/sessions")))
-

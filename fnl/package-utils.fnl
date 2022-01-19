@@ -91,7 +91,7 @@
                                         $1) 
                                      (utils.keys pkgs-t))
                       lock-status (if (. pkgs-t :lock)
-                                    (utils.vec (fun.take (fun.cycle [(. pkgs-t) :lock])))
+                                    (utils.vec (fun.take (length pkgs) (fun.cycle [(. pkgs-t) :lock])))
                                     (core.map #(let [_pkg-t (. pkgs-t $1)
                                                      _lock  (or (. _pkg-t :lock) true)]
                                                  _lock)

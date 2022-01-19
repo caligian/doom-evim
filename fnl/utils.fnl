@@ -69,6 +69,12 @@
 (defn exec [cmd ...]
   (vim.cmd (fmt cmd ...)))
 
+; Form: {:os func ...} 
+; First matching os will eval the function
+(defn consider-os [os-funcs]
+  (let [current-os (vec (fun.take 1 (fun.filter #(~= 0 (vim.fn.has $1)) (keys os-funcs))))]
+    (. os-funcs (. current-os 1))))
+
 (defn split-and [cmd direction string-only]
   (let [cmd (fmt ":%s | :%s" (or direction "sp") cmd)]
     (if string-only 
@@ -157,8 +163,7 @@
   (if 
     (= (vim.fn.has "win32") 1)
     (table.concat [...] "\\")
-  
-    (= (vim.fn.has "unix") 1)
+    
     (table.concat [...] "/")))
 
 (defn datap [...]
@@ -300,7 +305,13 @@
 
 ; Work on a range of lines. However, ignore the text that lies within that range
 (defn line-range-exec [cmd]
-  (let [[start end] (vpos)]
+  (let [[start end] (vpos)
+        cmd (if 
+              (= "string" (type cmd))
+              cmd
+              
+              (= "function" (type cmd))
+              (register cmd))]
     (for [i start end 1]
       (set-pos 0 [i 0])
       (vim.cmd cmd))))
@@ -532,46 +543,6 @@
     #(require module-name)
     #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name)) 
     #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1))))
-
-; More functions :(
-; Install new packages and disabled user-disabled packages
-
-; Form: ["pkg-name"] = packer-form
-(defn get-default-pkgs []
-  (let [k (keys doom.default_packages)
-        v (vals doom.default_packages)
-        v (core.map #(if (= (type $1) "table")
-                       (do 
-                         (tset $1 :lock true)
-                         $1)
-                       {:lock true}) v)
-        basename (core.map #(string.match $1 "[^/]*/([^/]+)") k)
-        t {}]
-    (for [i 1 (length k)]
-      (let [bind-t (. v i)
-            _key (. k i)]
-        (table.insert bind-t _key)
-        (tset bind-t :lock true)
-        (tset t (. basename i) bind-t)))
-    t))
-
-(defn get-current-pkgs []
-  (let [k (keys doom.packages)
-        v (vals doom.packages)
-        v (core.map #(if (= (type $1) "table")
-                       (do 
-                         (tset $1 :lock true)
-                         $1)
-                       {:lock true}) v)
-        basename (core.map #(string.match $1 "[^/]*/([^/]+)") k)
-        t {}]
-    (for [i 1 (length k)]
-      (let [bind-t (. v i)
-            _key (. k i)]
-        (table.insert bind-t _key)
-        (tset bind-t :lock true)
-        (tset t (. basename i) bind-t)))
-    t))
 
 ; Register all help-groups in <leader>
 (each [k group-name (pairs map-help-groups.leader)]

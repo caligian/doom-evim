@@ -92,6 +92,9 @@
   (utils.try-require-else :user-fnl-configs "USER")
   (utils.try-require-else :user-fnl-keybindings "USER"))
 
+; Load doom's basic repl
+(require :repl)
+
 ; Doom has started. 
 (logger.ilog "DOOM LOG ENDS----------------------------------")
 (logger.ilog "=================================================")

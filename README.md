@@ -1,6 +1,6 @@
 
 # Welcome to doom-evim
-This project has been inspired by doom-emacs and doom-nvim. However, I named it doom because it is batteries-included like doom-nvim and doom-emacs.
+This project has been inspired by doom-emacs and doom-nvim. However, I named it doom because it is batteries-included like doom-nvim and doom-emacs.Why the 'e'? To pay a homage to emacs' revered emacs-lisp.
 
 ## Introduction
 doom-evim does not have all the configurations that will cater all the users of this repo but it will provide the default configurations necessary to quickly bolt-on to this distribution's features. For example, in order to add a server to nvim-lsp using the default configuration at nvim-lspconfig's repo, you can simply append to doom.lsp.servers with your required configuration or a blank table. 
@@ -43,8 +43,8 @@ This distribution is **EXTREMELY OPINIONATED**. I use lua, ruby and python and h
 - [Neovide](https://github.com/neovide/neovide)
 
 ### How to install the requirements?
-- First run clone_required.sh which will install everything mentioned in 'Other Requirements' section to stdpath('data')/site/pack/start/. This will ensure that fennel support is there. `fennel.lua` is already provided with the repo. This script will also copy the sample `.vdoom.d` to $HOME.
-- `install_fonts.sh` will copy Ubuntu Mono to ~/.local/share/fonts and run `fc-cache -r`
+- First run clone_required.sh which will install everything mentioned in 'Other Requirements' section to `stdpath('data')/site/pack/start/`. This will ensure that fennel support is there. `fennel.lua` is already provided with the repo. This script will also copy the sample `.vdoom.d` to $HOME.
+- `install_fonts.sh` will copy Ubuntu Mono to `~/.local/share/fonts` and run `fc-cache -r`
 - Install the required luarocks. 
 - Install `fdfind` and `rg` with your distro's package manager. 
 - Now start doom and run `:PackerSync`

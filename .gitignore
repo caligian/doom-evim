@@ -1,0 +1,15 @@
+tmp/*
+backup/*
+undo/*
+user_plugins/*
+lua/logger.lua
+lua/init.lua
+lua/package-utils.lua
+lua/keybindings.lua
+lua/packages.lua
+lua/utils.lua
+.vdoom.d/compiled/*
+*tmp
+*swp
+*~
+
