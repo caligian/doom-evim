@@ -66,9 +66,6 @@
                                {:desc "Langauge-specific modules for doom"
                                 :lock false
 
-                                ; Python
-                                :pytest.vim {:repo "Vimjass/vim-python-pep8-indent" :desc "Better python indentation"}
-
                                 ; Ruby
                                 :vim-rspec {:repo "thoughtbot/vim-rspec" :desc "Rspec plugin for doom"}
                                 :vim-rake {:repo "tpope/vim-rake" :desc "Ruby builder for doom"}

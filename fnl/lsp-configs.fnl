@@ -1,112 +1,7 @@
 (module lsp-configs
   {autoload {utils utils
-             core aniseed.core}})
-
-(when (not _G.doom.lsp)
-  (set _G.doom.lsp {:install_sumneko_lua true
-                    :load_default true
-                    :servers {:solargraph {} :pyright {}}}))
-
-(when (not _G.doom.langs)
-  (set _G.doom.langs {:python {:server "pyright" 
-                               :compile "python3"
-                               :pattern "*py"
-                               :debug "python3 -m pdb"
-                               :testing "pytest"
-                               :builder false}
-
-                      :ruby {:server "solargraph"
-                             :compile "ruby"
-                             :pattern "*rb"
-                             :debug "ruby -r debug"
-                             :testing "rspec"
-                             :builder "rake"}
-
-                      :lua {:server "sumneko_lua"
-                            :compile "lua"
-                            :pattern "*lua"
-                            :manual true
-                            :debug "lua"
-                            :testing "lua"
-                            :builder false}}))
-
-; Runner will be SPC m r
-; Testing will be SPC m e
-; Compiling will be SPC m c
-; Debug will be SPC m d [vs]
-(defn make-builder-kbd [lang]
-  (let [keys "<leader>mb"
-        t (. doom.langs lang)
-        builder (. t :builder)
-        exec (utils.fmt ":Dispatch %s<CR>" builder)]
-    (when builder 
-      (utils.define-key {:keys keys
-                         :noremap true
-                         :key-attribs ["buffer"]
-                         :exec exec
-                         :patterns (. t :pattern)
-                         :events "WinEnter"
-                         :help-group "m"
-                         :help (utils.fmt "Dispatch job: %s" builder)}))))
-
-(defn make-testing-kbd [lang]
-  (let [keys "<leader>me"
-        t (. doom.langs lang)
-        testing (. t :testing)
-        exec (utils.fmt ":!%s %%<CR>" testing)]
-    (when testing 
-      (utils.define-key {:keys keys
-                         :noremap true
-                         :key-attribs ["buffer"]
-                         :exec exec
-                         :patterns (. t :pattern)
-                         :events "WinEnter"
-                         :help-group "m"
-                         :help (utils.fmt "Run test suite" testing)}))))
-
-(defn make-compile-kbd [lang]
-  (let [keys "<leader>mc"
-        t (. doom.langs lang)
-        compile (. t :compile)
-        exec (utils.fmt ":!%s %%<CR>" compile)]
-    (when compile 
-      (utils.define-key {:keys keys
-                         :noremap true
-                         :key-attribs ["buffer"]
-                         :exec exec
-                         :patterns (. t :pattern)
-                         :events "WinEnter"
-                         :help-group "m"
-                         :help (utils.fmt "Compile current buffer" compile)}))))
-
-(defn make-debug-kbd [lang]
-  (let [keys "<leader>mdv"
-        t (. doom.langs lang)
-        debugger (. t :debug)
-        exec (utils.split-termdebug-buffer debugger false "vsp" true true)]
-    (when debug 
-      (utils.define-key {:keys keys
-                         :noremap true
-                         :key-attribs ["buffer"]
-                         :exec exec
-                         :patterns (. t :pattern)
-                         :events "WinEnter"
-                         :help-group "m"
-                         :help (utils.fmt "Vsplit and debug current buffer" debug)})))
-
-  (let [keys "<leader>mds"
-        t (. doom.langs lang)
-        debugger (. t :debug)
-        exec (utils.split-termdebug-buffer debugger false "sp" true true)]
-    (when debug 
-      (utils.define-key {:keys keys
-                         :noremap true
-                         :key-attribs ["buffer"]
-                         :exec exec
-                         :patterns (. t :pattern)
-                         :events "WinEnter"
-                         :help-group "m"
-                         :help (utils.fmt "Split and debug current buffer" debug)}))))
+             core aniseed.core
+             str aniseed.string}})
 
 (defn setup-keybindings []
   (vim.cmd "noremap <leader>lD  :lua vim.lsp.buf.declaration()<CR>")
@@ -214,12 +109,6 @@
             (current-server.setup config)))))))
 
 (defn setup [] 
-  (each [lang _ (pairs doom.langs)]
-    (make-compile-kbd lang)
-    (make-debug-kbd lang)
-    (make-testing-kbd lang)
-    (make-builder-kbd lang)) 
-
   (setup-keybindings)
   (setup-nvim-cmp)
   (setup-servers)
@@ -227,13 +116,3 @@
   (when doom.lsp.install_sumneko_lua
     (setup-sumneko-lua))
   true)
-
-(when doom.lsp.load_default
-  (utils.after! [:nvim-lspconfig 
-                 :nvim-treesitter
-                 :nvim-lsp-installer
-                 :nvim-cmp
-                 :cmp-nvim-lsp
-                 :cmp_luasnip
-                 :LuaSnip]
-                #(setup)))

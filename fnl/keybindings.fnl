@@ -57,10 +57,11 @@
 
                     {:keys "<A-h>"
                      :modes ["v"]
-                     :exec (utils.register #(utils.line-range-exec utils.decrease-indent) true)
+                     :exec (utils.respect-count #(utils.line-range-exec utils.decrease-indent) true)
                      :help "Decrease indent in range"}
 
                     {:keys "<A-l>"
                      :modes ["v"]
-                     :exec (utils.register #(utils.line-range-exec utils.increase-indent) true)
-                     :help "Increase indent in range"}])
+                     :exec (utils.respect-count #(utils.line-range-exec utils.increase-indent) true)
+                     :help "Increase indent in range"}
+                    ])

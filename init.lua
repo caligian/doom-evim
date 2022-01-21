@@ -1,3 +1,8 @@
+local function add_user_package_path(dirname)
+    package.path = string.format('%s/%s/?.lua', vim.fn.stdpath("config"), dirname) 
+    package.path = string.format('%s/%s/lua/?.lua', vim.fn.stdpath("config"), dirname) 
+end
+
 local function init(vim)
     vim.o.completeopt = "menu,menuone,noselect"
     vim.o.mouse="a"
@@ -13,11 +18,12 @@ local function init(vim)
     vim.o.backspace="indent,eol,start"
     vim.o.number = true
     vim.o.numberwidth = 4
+    vim.o.cursorline = true
     vim.o.tabstop = 4
     vim.o.shiftwidth = 4
     vim.o.expandtab = true
     vim.o.foldmethod = "syntax"
-    vim.o.guifont="FiraCode NF:h12"
+    vim.o.guifont="FuraCode NF:h12"
     vim.o.backupdir = string.format("%s/%s", vim.fn.stdpath("config"), "backup")
     vim.o.directory = string.format("%s/%s", vim.fn.stdpath("config"), "tmp")
     vim.o.undodir = string.format("%s/%s", vim.fn.stdpath("config"), "undo")
@@ -32,22 +38,16 @@ local function init(vim)
     vim.cmd [[ tnoremap <Esc> <C-\><C-n> ]]
 
     -- Adding fennel searchers
-    -- This will load init.fnl
-    vim.cmd [[ let g:aniseed#env = v:true ]]
-
     -- Add all user configurations to package path
     debug.traceback = require("fennel").traceback
 
-    -- Load user lua files
-    package.path = package.path .. ";" .. string.format("%s/.vdoom.d/?.lua", os.getenv("HOME"))
+    -- Change fennel-compiled results directory
+    vim.cmd [[ let g:aniseed#env = v:true ]]
 
-    package.path = package.path .. ";" .. string.format("%s/.vdoom.d/lua/?.lua", os.getenv("HOME"))
-
-    -- Load user compiled fennel-to-lua files
-    package.path = package.path .. ";" .. string.format("%s/.vdoom.d/compiled/?.lua", os.getenv("HOME"))
-
-    -- Vim repl plugin
-    vim.cmd "source ~/.config/nvim/vim/repl.vim"
+    local home = os.getenv('HOME')
+    package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home) 
+    package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home) 
+    package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home) 
 end
 
 init(vim)

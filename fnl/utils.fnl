@@ -1,5 +1,6 @@
 (module utils
   {require {core aniseed.core
+            str aniseed.string
             fnl  fennel
             fun  fun
             rx   rex_pcre2
@@ -8,28 +9,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; locals
+(when (not _G.doom)
+  (set _G.doom {}))
 
+(when (not _G.doom.lambdas)
+  (set _G.doom.lambdas {}))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; globals
-(if (not _G.map-help-groups)
-  (global map-help-groups {:leader {:t "Tab operations"
-                                    :b "Buffer operations"
-                                    :q "Buffer operations"
-                                    :l "LSP operations"
-                                    :w "Window operations"
-                                    :d "Debugger operations"
-                                    :h "Help operations"
-                                    :c "Comment operations"
-                                    :m "Major mode operations"
-                                    :x "Misc operations"}
-                           :localleader {:t "Terminal operations"
-                                         :e "REPL operations"
-                                         :l "[fennel] Conjure log"
-                                         :r "[fennel] Conjure REPL"}}))
-
-(if (not _G.lambdas)
-  (global lambdas {}))
+(when (not _G.doom.map-help-groups)
+  (set _G.doom.map-help-groups {:leader {} :localleader {}}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn fmt [...] 
@@ -51,10 +38,10 @@
       false)))
 
 (defn register [f ?keybinding]
-  (table.insert lambdas f)
+  (table.insert doom.lambdas f)
   (if (not ?keybinding)
-    (fmt "lua f = lambdas[%d]; f()" (length lambdas))
-    (fmt ":lua f = lambdas[%d]; f()<CR>" (length lambdas))))
+    (fmt "lua f = doom.lambdas[%d]; f()" (length doom.lambdas))
+    (fmt ":lua f = doom.lambdas[%d]; f()<CR>" (length doom.lambdas))))
 
 (defn set-items [s]
   (icollect [k _ (pairs s.items)] k))
@@ -68,8 +55,26 @@
 (defn dump [e]
   (print (vim.inspect e)))
 
+(defn listify [?e ?force]
+  (let [?force (or ?force false)]
+    (if 
+      (not ?e)
+      nil
+
+      (not (= (type ?e) "table"))
+      [?e]
+
+      (and (= (type ?e) "table") ?force)
+      [?e]
+
+      ?e)))
+
 (defn exec [cmd ...]
   (vim.cmd (fmt cmd ...)))
+
+
+
+
 
 ; Form: {:os func ...} 
 ; First matching os will eval the function
@@ -99,7 +104,7 @@
 
 (defn split-termdebug-buffer [debugger ?args ?direction ?string ?keybinding]
   (let [args (or ?args "")
-        direction (or ?direction "sp")
+        direction (match ?direction :sp "sp" :vsp "vsp" :tab "tabnew" nil "sp")
         cmd (fmt ":execute(\":%s term://%s %s \" . bufname(\"%%\"))" direction debugger args)
         final-cmd (if ?keybinding
                     (.. cmd "<CR>")
@@ -134,6 +139,12 @@
 (defn irest [gen]
   (fun.tail gen))
 
+(defn find [t key]
+  (let [k (keys t)
+        r (vec (fun.range 1 (length t)))
+        found (core.filter #(= (. k $1) key) r)]
+    found))
+
 ; Only returns true or false
 (defn grep [s pattern]
   (rx.match s pattern))
@@ -142,19 +153,7 @@
   (let [sep (or sep "[^\n\r]+")]
     (icollect [m (rx.split s sep)] m)))
 
-(defn listify [?e ?force]
-  (let [?force (or ?force false)]
-    (if 
-      (not ?e)
-      nil
 
-      (not (= (type ?e) "table"))
-      [?e]
-
-      (and (= (type ?e) "table") ?force)
-      [?e]
-
-      ?e)))
 
 (defn vec [iter]
   (let [t []]
@@ -313,7 +312,7 @@
         cmd (if 
               (= "string" (type cmd))
               cmd
-              
+                    
               (= "function" (type cmd))
               (register cmd))]
 
@@ -375,6 +374,7 @@
       false
       s)))
 
+
 (defn to-temp-buffer [s ?direction]
   (let [direction (or ?direction "sp")
         s (listify s)
@@ -392,6 +392,20 @@
     (set-lines bufnr [0 number-of-lines] "")
     (set-lines bufnr [0 (- s-len 1)] s)
     (vim.cmd (fmt ":%s | b %s" direction buffer-name))))
+
+
+(defn sh [s ?buf]
+  (lambda get-output [s]
+    (core.spit ".temp.sh" s)
+    (str.trim (vim.call "system" "bash .temp.sh")))
+
+  (lambda show-in-buffer [s]
+    (to-temp-buffer s :sp))
+
+  (if ?buf
+    (show-in-buffer (get-output s))
+    (get-output s)))
+
 
 (defn adjust-indent [?towards ?lineno]
   (defn -indent [towards lineno]
@@ -461,37 +475,36 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybinding-related functions
-(defn register-to-wk [keys help ?help-group]
+(defn- get-help-desc [{:ll-prefix ll 
+                        :l-prefix l
+                        :first-key first-key
+                        :help-desc help-desc}] 
+  (when help-desc 
+    (if ll
+      (do 
+        (tset doom.map-help-groups.localleader first-key help-desc)
+        help-desc)
+      (do 
+        (tset doom.map-help-groups.localleader first-key help-desc)
+        help-desc)))
+  (if ll 
+    (. doom.map-help-groups.localleader first-key)
+    (. doom.map-help-groups.leader first-key)))
+
+(defn register-to-wk [keys help ?help-desc]
   "Non-leader keys will be registered directly"
 
-  (when
-   (grep keys "leader") 
+  (when (grep keys "leader") 
    (let [ll-prefix (grep keys "<localleader")
          l-prefix  (grep keys "<leader")
          keys (sed keys ["([<>]|localleader|leader)"] [""])
          first-key (rx.match keys "^.")
-         help-group (if 
-                      l-prefix
-                      (if (. map-help-groups :leader ?help-group)
-                        (. map-help-groups :leader ?help-group)
-
-                        (do (when (> (length keys) 1)
-                              (if (. map-help-groups :leader (string.sub keys 1 1))
-                                (. map-help-groups :leader (string.sub keys 1 1))
-                                (when ?help-group
-                                  ?help-group)))))
-
-                      ll-prefix
-                      (if (. map-help-groups :localleader ?help-group)
-                        (. map-help-groups :localleader ?help-group)
-
-                        (do (when (> (length keys) 1)
-                              (if (. map-help-groups :localleader (string.sub keys 1 1))
-                                (. map-help-groups :localleader (string.sub keys 1 1))
-                                (when ?help-group
-                                  ?help-group))))))
-         original-t (if help-group
-                      {first-key {:name help-group}}
+         help-desc (get-help-desc {:ll-prefix ll-prefix 
+                                    :l-prefix l-prefix 
+                                    :first-key first-key
+                                    :help-desc (or ?help-desc false)})
+         original-t (if help-desc
+                      {first-key {:name help-desc}}
                       {first-key {}})
          help-t (fun.reduce 
                   (fn [t k] (tset t k {}) (. t k))
@@ -499,9 +512,6 @@
                   (fun.iter keys))]
 
      (table.insert help-t help)
-
-     (when help-group
-       (tset (. original-t first-key) :name help-group))
 
      (if 
        ll-prefix
@@ -511,6 +521,7 @@
        (wk.register original-t {:prefix "<leader>"}))
      
      original-t)))
+
 (defn define-key [opts]
   (let [noremap (or opts.noremap true)
         key-attribs (or (listify opts.key-attribs) ["silent"])
@@ -521,7 +532,7 @@
         exec (if (= (type opts.exec) "function")
                (register opts.exec true)
                opts.exec)
-        help (or opts.help opts.exec)
+        help (or opts.help exec)
         help-group (or opts.help-group 
                        (rx.gsub opts.keys "<(?:local)?leader>(.)[^$]+" "%1"))
         repeatable (or opts.repeatable false)
@@ -591,8 +602,8 @@
     #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1))))
 
 ; Register all help-groups in <leader>
-(each [k group-name (pairs map-help-groups.leader)]
+(each [k group-name (pairs doom.map-help-groups.leader)]
   (wk.register {k {:name group-name}} {:prefix "<leader>"}))
  
-(each [k group-name (pairs map-help-groups.localleader)]
+(each [k group-name (pairs doom.map-help-groups.localleader)]
   (wk.register {k {:name group-name}} {:prefix "<localleader>"}))
