@@ -20,6 +20,7 @@
 (vim.cmd "noremap <leader>qw :xa!<CR>")
 (vim.cmd "noremap <leader>bp :bprev<CR>")
 (vim.cmd "noremap <leader>bn :bnext<CR>")
+(vim.cmd "noremap <leader>bq :Bdelete<CR>")
 (vim.cmd "noremap <leader>br :e<CR>")
 (vim.cmd "noremap <leader>bk :hide<CR>")
 (vim.cmd "noremap <leader>qq :qa!<CR>")
