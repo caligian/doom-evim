@@ -33,6 +33,8 @@
 (utils.after! :telescope.nvim
         (fn [] 
           (let [telescope (require :telescope)]
+            
+            ; Add some more default actions
             (vim.cmd "noremap <leader>ff :lua require('telescope.builtin').find_files()<CR>")
             (vim.cmd "noremap <leader>ss :lua require('telescope.builtin').live_grep()<CR>")
             (vim.cmd "noremap <leader>/  :lua require('telescope.builtin').grep_string()<CR>")
@@ -236,7 +238,12 @@
 ; file pickers
 (utils.after! :telescope.nvim
         (fn [] 
-          (let [telescope (require :telescope)]
+          (let [telescope (require :telescope)
+                actions (require :telescope.actions)]
+            ; Setup a keybinding for deleting buffers
+            (telescope.setup {:defaults {:mappings {:n {:D actions.delete_buffer}
+                                                    :i {"<C-d>" actions.delete_buffer}}}})
+
             (vim.cmd "noremap <leader>ff :lua require('telescope.builtin').find_files()<CR>")
             (vim.cmd "noremap <leader>ss :lua require('telescope.builtin').live_grep()<CR>")
             (vim.cmd "noremap <leader>/  :lua require('telescope.builtin').grep_string()<CR>")
@@ -440,6 +447,7 @@
                                :noremap true
                                :exec ":execute(\":FocusDispatch\" . input(\"Focus Dispatch % \"))<CR>"}])))
 
+
 ; ultisnips
 (utils.after! [:ultisnips
                :vim-snippets]
@@ -455,7 +463,13 @@
 ; ultisnips
 (utils.after! [:ultisnips
                :vim-snippets]
-              (vim.cmd "let g:UltiSnipsExpandTrigger='<tab>'")
-              (vim.cmd "let g:UltiSnipsJumpForwardTrigger='<C-j>'")
-              (vim.cmd "let g:UltiSnipsJumpBackwardTrigger='<C-k>'")
-              (vim.cmd "let g:UltiSnipsEditSplit='vertical'"))
+              (fn []
+                (vim.cmd "let g:UltiSnipsExpandTrigger='<tab>'")
+                (vim.cmd "let g:UltiSnipsJumpForwardTrigger='<C-j>'")
+                (vim.cmd "let g:UltiSnipsJumpBackwardTrigger='<C-k>'")
+                (vim.cmd "let g:UltiSnipsEditSplit='vertical'")))
+
+(utils.after! :dirbuf.nvim
+              (fn []
+                (vim.cmd "noremap <leader>fd :Dirbuf<CR>")
+                (vim.cmd "noremap <leader>fD :execute('Dirbuf ' . input('Directory % '))<CR>")))

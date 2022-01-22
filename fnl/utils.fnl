@@ -425,6 +425,9 @@
                                (- first-whitespace 1)
 
                                vim.bo.shiftwidth)
+              num-whitespace (if (> vim.v.count 0)
+                               (* num-whitespace vim.v.count)
+                               num-whitespace)
               modified-line (when first-whitespace
                               (if (= towards 1)
                                 (string.gsub current-line-s "^" (string.rep " " vim.bo.shiftwidth))
