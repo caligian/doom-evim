@@ -198,6 +198,12 @@
       (do (config-f) true)
       false)))
 
+; config-t form: {:packer_config_option configuration}
+(defn specs! [pkg config-t]
+  (let [pkg (. doom.packages)]
+    (each [k v (pairs config-t)]
+      (tset pkg k v))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer and window related functions
 (defn linenum [?bufnr]
@@ -307,25 +313,23 @@
 ; Work on a range of lines. However, ignore the text that lies within that range
 (defn line-range-exec [cmd]
   (let [[start end] (vpos)
-       exec-each-line (fn [cmd start end] 
-                        )
         cmd (if 
               (= "string" (type cmd))
               cmd
-                    
+
               (= "function" (type cmd))
               (register cmd))]
 
     (when (and (> start 0)
                (> end 0))
       (for [i start end] 
-        (exec "normal! %dG" i)
+        (exec "normal! %dG$" i)
         (vim.cmd cmd))))) 
 
 ; if newline is true then count will be assumed to be on each new line
 (defn respect-count [cmd ?newline ?keybinding]
   (defn -respect-count [] 
-    (let [count (if (= (or vim.v.count 0) 0)
+    (let [count (if (= vim.v.count 0)
                   1
                   vim.v.count)
           current-line (linenum)
@@ -337,34 +341,14 @@
                 (register cmd))
           last-line (+ current-line vim.v.count)
           newline (or ?newline false)]
-      (for [i current-line last-line 1]
-        (if newline 
-          (do 
-            (exec "normal! %dG" i) 
-            (vim.cmd cmd))
+      (if newline 
+        (for [i current-line last-line 1]
+              (exec "normal! %dG" i) 
+              (vim.cmd cmd))
+
+        (for [i 1 count]
           (vim.cmd cmd)))))
   (register -respect-count (or ?keybinding false)))
-
-(defn -respect-count [cmd ?newline ?keybinding] 
-    (let [count (if (= (or vim.v.count 0) 0)
-                  1
-                  vim.v.count)
-          current-line (linenum)
-          cmd (if 
-                (= (type cmd) "string")
-                cmd 
-
-                (= (type cmd) "function")
-                (register cmd))
-          last-line (+ current-line vim.v.count)
-          newline (or ?newline false)]
-      (for [i current-line last-line 1]
-        (if newline 
-          (do 
-            (print "line-num %d" i)
-            (exec "normal! %dG" i) 
-            (vim.cmd cmd))
-          (vim.cmd cmd)))))
 
 (defn get-line [?bufnr ?lineno]
   (let [bufnr (or ?bufnr 0)
@@ -494,7 +478,7 @@
     (. doom.map-help-groups.localleader first-key)
     (. doom.map-help-groups.leader first-key)))
 
-(defn register-to-wk [keys help ?help-desc]
+(defn register-to-wk [keys help ?help-desc ?not-register]
   "Non-leader keys will be registered directly"
 
   (when (grep keys "leader") 
@@ -518,12 +502,14 @@
 
      (if 
        ll-prefix
-       (wk.register original-t {:prefix "<localleader>"})
+       (if ?not-register 
+         original-t
+         (wk.register original-t {:prefix "<localleader>"})) 
        
        l-prefix
-       (wk.register original-t {:prefix "<leader>"}))
-     
-     original-t)))
+       (if ?not-register
+         original-t
+         (wk.register original-t {:prefix "<leader>"}))))))
 
 (defn define-key [opts]
   (let [noremap (or opts.noremap true)
@@ -536,25 +522,54 @@
                (register opts.exec true)
                opts.exec)
         help (or opts.help exec)
-        help-group (or opts.help-group 
-                       (rx.gsub opts.keys "<(?:local)?leader>(.)[^$]+" "%1"))
+        help-group (or opts.help-group "")
         repeatable (or opts.repeatable false)
         groups (or (listify opts.groups) false)
-        
+
         ; Not a part of opts
+        has-ll (if (grep keys "localleader")
+                 {:prefix "<localleader>"}
+                 false)
+        has-l (if (grep keys "<leader>")
+                {:prefix "<leader>"}
+                false)
+
         key-attribs-str (table.concat (vec (fun.map (fn [s] (string.format "<%s>" s)) key-attribs)) " ")
         key-command-str (string.format "%s %s %s %s" (if noremap "noremap" "map") key-attribs-str keys exec)
-        key-command-strings (vec (fun.map (fn [s] 
-                                            (if opts.repeatable
-                                              (string.format ":Repeatable %s%s" s key-command-str)
-                                              (string.format ":%s%s" s key-command-str))) 
-                                          modes))]
+        key-command-strings (core.map (fn [s] 
+                                        (if opts.repeatable
+                                          (string.format ":Repeatable %s%s" s key-command-str)
+                                          (string.format ":%s%s" s key-command-str))) 
+                                      modes)]
+
     (if events
       (fun.each 
-        (fn [e] (add-hook groups events patterns e))
+        (fn [e] 
+          (let [wk-form (register-to-wk keys help help-group true)
+                wk-form-s (if wk-form (vim.inspect wk-form) false)
+                wk-form-no-nl (if wk-form-s (string.gsub wk-form-s "[\n\r]+" "") false)
+                wk-cmd (if 
+                         (and has-ll wk-form-no-nl)
+                         (string.format ":lua require('which-key').register(%s, {prefix='<localleader>'})" wk-form-no-nl)
+
+                         (and has-l wk-form-no-nl)
+                         (string.format ":lua require('which-key').register(%s, {prefix='<leader>'})" wk-form-no-nl)
+
+                         false)]
+            (when wk-cmd 
+              (add-hook groups events patterns wk-cmd))
+            (add-hook groups events patterns e)))
         key-command-strings)
-      (fun.each vim.cmd key-command-strings))
-    (register-to-wk keys help help-group)))
+
+      (do 
+        (fun.each vim.cmd key-command-strings)
+
+        (if 
+          has-ll
+          (register-to-wk keys help help-group) 
+
+          has-l 
+          (register-to-wk keys help help-group))))))
 
 (defn define-keys [opts-a]
   (each [_ a (ipairs opts-a)]
@@ -581,6 +596,7 @@
   (let [configs ["init"
                  "utils"
                  "keybindings"
+                 "specs"
                  "configs" 
                  "lsp-configs"]]
     (convert-to-lua configs)))

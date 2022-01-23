@@ -20,6 +20,8 @@
                                :ui 
                                {:desc "These are important ui enhancements for doom-evim"
                                 :lock false
+
+                                :twilight.nvim {:repo "folke/twilight.nvim" :desc "Non-used code dimming"}
                                 :galaxyline.nvim {:repo "glepnir/galaxyline.nvim" :desc "A utilitarian mode-line for doom"}
                                 :vim-palette {:repo "gmist/vim-palette" :desc "An awesome collection of colorschemes"}
                                 :vim-devicons {:repo "ryanoasis/vim-devicons" :desc "Icons for doom ui"}
@@ -32,6 +34,7 @@
                                :editor
                                {:desc "These will make editing easier for you."
                                 :lock false
+                                :formatter.nvim {:repo "mhartington/formatter.nvim" :desc "Format code easily."}
                                 :vim-session {:repo "xolox/vim-session"}
                                 :vim-misc {:repo "xolox/vim-misc"}
                                 :vim-bbye {:repo "moll/vim-bbye"  :desc "When the last buffer is killed, the previous one is opened"}
@@ -56,11 +59,18 @@
                                      :nvim-lspconfig {:repo "neovim/nvim-lspconfig" :locked false}
                                      :nvim-treesitter {:repo "nvim-treesitter/nvim-treesitter" :locked false}
                                      :nvim-lsp-installer {:repo "williamboman/nvim-lsp-installer" :locked false}
-                                     :nvim-cmp {:repo "hrsh7th/nvim-cmp" :locked false}
-                                     :cmp-nvim-lsp {:repo "hrsh7th/cmp-nvim-lsp" :locked false}
-                                     :cmp_luasnip {:repo "saadparwaiz1/cmp_luasnip" :locked false}
-                                     :LuaSnip {:repo "L3MON4D3/LuaSnip" :locked false}
-                                     :ultisnips {:repo "SirVer/ultisnips" :locked false}}
+                                     
+                                     :friendly-snippets {:repo "rafamadriz/friendly-snippets"}
+                                     
+                                     :vim-vsnip {:repo "hrsh7th/vim-vsnip"}
+                                     :vim-vsnip-integ {:repo "hrsh7th/vim-vsnip-integ"}
+
+                                     :cmp-vsnip {:repo "hrsh7th/cmp-vsnip"}
+                                     :cmp-nvim-lsp {:repo "hrsh7th/cmp-nvim-lsp"}
+                                     :cmp-buffer {:repo "hrsh7th/cmp-buffer"}
+                                     :cmp-path {:repo "hrsh7th/cmp-path"}
+                                     :cmp-cmdline {:repo "hrsh7th/cmp-cmdline"}
+                                     :nvim-cmp {:repo "hrsh7th/nvim-cmp"} }
 
                                :langs
                                {:desc "Langauge-specific modules for doom"
@@ -140,3 +150,8 @@
 
     (tset doom :packages doom-packages)
     master-t))
+
+; Now add user and system specs
+;(utils.try-require-else :specs :DOOM)
+;(utils.try-require-else :user-fnl-specs :USER)
+;(utils.try-require-else :user-lua-specs :USER)

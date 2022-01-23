@@ -3,17 +3,17 @@ local gls = gl.section
 gl.short_line_list = {'NvimTree','vista','dbui'}
 
 local colors = {
-  bg = '#202328',
-  fg = '#bbc2cf',
-  yellow = '#fabd2f',
-  cyan = '#008080',
-  darkblue = '#081633',
-  green = '#98be65',
-  orange = '#FF8800',
-  violet = '#a9a1e1',
-  magenta = '#c678dd',
-  blue = '#51afef';
-  red = '#ec5f67';
+  bg = '#282c34',
+  fg = '#eb7575',
+  yellow = '#b58900',
+  cyan = '#2aa198',
+  darkblue = '#1a6192',
+  green = '#859900',
+  orange = '#b58900',
+  violet = '#6c71c4',
+  magenta = '#7b39a5',
+  blue = '#268bd2';
+  red = '#dc322f';
 }
 
 local buffer_not_empty = function()
@@ -66,7 +66,7 @@ gls.left[5] = {
   FileName = {
     provider = {'FileName'},
     condition = buffer_not_empty,
-    highlight = {colors.green,colors.bg,'bold'}
+    highlight = {colors.yellow ,colors.bg,'italic'}
   }
 }
 

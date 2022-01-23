@@ -17,13 +17,13 @@ local function init(vim)
     vim.o.shell="/bin/bash"
     vim.o.backspace="indent,eol,start"
     vim.o.number = true
-    vim.o.numberwidth = 4
     vim.o.cursorline = true
+    vim.o.numberwidth = 5
     vim.o.tabstop = 4
     vim.o.shiftwidth = 4
     vim.o.expandtab = true
     vim.o.foldmethod = "syntax"
-    vim.o.guifont="FuraCode NF:h12"
+    vim.o.guifont="Roboto Mono:h12"
     vim.o.backupdir = string.format("%s/%s", vim.fn.stdpath("config"), "backup")
     vim.o.directory = string.format("%s/%s", vim.fn.stdpath("config"), "tmp")
     vim.o.undodir = string.format("%s/%s", vim.fn.stdpath("config"), "undo")

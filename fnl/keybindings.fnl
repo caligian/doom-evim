@@ -20,7 +20,6 @@
 (vim.cmd "noremap <leader>qw :xa!<CR>")
 (vim.cmd "noremap <leader>bp :bprev<CR>")
 (vim.cmd "noremap <leader>bn :bnext<CR>")
-(vim.cmd "noremap <leader>bq :Bdelete<CR>")
 (vim.cmd "noremap <leader>br :e<CR>")
 (vim.cmd "noremap <leader>bk :hide<CR>")
 (vim.cmd "noremap <leader>qq :qa!<CR>")
@@ -46,14 +45,15 @@
                                (vim.cmd (.. ":Bdelete " "init.fnl")))
 
                              (vim.cmd "echom \"Successfully reloaded Doom!\""))}])
+
 ; Quickly adjust indentation
 ; Respects v:count and lines in visual range
 (utils.define-keys [{:keys "<A-h>"
-                     :exec (utils.respect-count utils.decrease-indent true true)
+                     :exec (utils.respect-count utils.decrease-indent false true)
                      :help "Decrease indent"}
 
                     {:keys "<A-l>"
-                     :exec (utils.respect-count utils.increase-indent true true)
+                     :exec (utils.respect-count utils.increase-indent false true)
                      :help "Increase indent"}
 
                     {:keys "<A-h>"

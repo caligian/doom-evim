@@ -45,48 +45,6 @@
                                         :workspace {:library (vim.api.nvim_get_runtime_file "" true)}
                                         :telemetry {:enable false}}}})))
 
-(defn setup-nvim-cmp []
-  (let [nvim-lsp (require :lspconfig)
-        cmp (require :cmp)
-        cmp-nvim-lsp (require :cmp_nvim_lsp)
-        luasnip (require :luasnip) ]
-
-    ; Setup nvim-cmp
-    (cmp.setup {:snippet {:expand (lambda [args]
-                                    (luasnip.lsp_expand args.body))}
-
-                :mapping {"<C-p>"  (cmp.mapping (cmp.mapping.select_prev_item))
-                          "<C-n>"  (cmp.mapping (cmp.mapping.select_next_item))
-                          "<C-d>"  (cmp.mapping (cmp.mapping.scroll_docs -4))
-                          "<C-f>"  (cmp.mapping (cmp.mapping.scroll_docs 4))
-                          "<C-Space>" (cmp.mapping.complete)
-                          "<C-e>"  (cmp.mapping.close)
-                          "<CR>"  (cmp.mapping.confirm {:behavior cmp.ConfirmBehavior.Replace
-                                                        :select true})
-                          "<Tab>" (fn [fallback]
-                                    (if 
-                                      (cmp.visible)
-                                      (cmp.select_next_item)
-
-                                      (luasnip.expand_or_jumpable) 
-                                      (luasnip.expand_or_jump)
-
-                                      (fallback)))
-
-                          "<S-Tab>" (fn [fallback]
-                                      (if 
-                                        (cmp.visible)
-                                        (cmp.select_prev_item)
-
-                                        (luasnip.jumpable -1)
-                                        (luasnip.jump -1)
-
-                                        (fallback)))
-                          "<CR>" (cmp.mapping.confirm {:select true})}
-
-                :sources [{:name "nvim_lsp"}
-                          {:name "luasnip"}]})))
-
 (defn setup-servers [?servers]
   (let [cmp-nvim-lsp (require :cmp_nvim_lsp)
         nvim-lsp (require :lspconfig)
@@ -102,15 +60,15 @@
               config (or (. confs i) {})]
 
           (when (not (. config :on_attach))
-            (tset config :on_attach on-attach-f))
+            (set config.on_attach on-attach-f))
           (when (not (. config :capabilities))
-            (tset config :capabilities capabilities))
+            (set config.capabilities capabilities))
           (let [current-server (. nvim-lsp server)]
             (current-server.setup config)))))))
 
 (defn setup [] 
+  (require :nvim_cmp_setup)
   (setup-keybindings)
-  (setup-nvim-cmp)
   (setup-servers)
 
   (when doom.lsp.install_sumneko_lua

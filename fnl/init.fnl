@@ -74,8 +74,11 @@
                  :nvim-lsp-installer
                  :nvim-cmp
                  :cmp-nvim-lsp
-                 :cmp_luasnip
-                 :LuaSnip]
+                 :cmp-vsnip
+                 :vim-vsnip
+                 :cmp-buffer
+                 :cmp-path
+                 :cmp-cmdline]
                 #(lsp-configs.setup)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

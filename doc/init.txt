@@ -1,7 +1,185 @@
 *Doom-evim*
 ==========================================================================
-CONTENTS                                               *doom-evim-contents*
+CONTENTS
 
-1. Introduction....................................... |doom-introduction|
-2. 
+1. Introduction .... |doom-introduction|
+2. Philosophy .... |doom-philosophy|
+3. Namespaces .... |doom-namespaces|
+4. Internals .... |doom-internals|
+5. Modules .... |doom-modules|
+6. User configuration .... |doom-user-config| 
+    6.1 Package management .... |doom-user-packages|
+    6.2 Configuration .... |doom-user-config|
+7. Recommended practices .... |doom-recommendations|
+8. Gotchas .... |doom-gotchas|
+9. Bugs .... |doom-bugs|
+10. Roadmap .... |doom-roadmap|
+
 ==========================================================================
+INTRODUCTION *doom-introduction*
+
+Why was doom-evim made in the first place? doom-emacs is an amazing
+distribution. So is doom-nvim. What I loved about emacs are some of the
+important features that are missing from vim (not exactly missing but a bit
+inconvenient): 
+
+For example: 
+Making hooks in emacs is much easier because it only accepts a function. On
+top of that, emacs' advice-add allows you to use pre and post-hooks which is
+even more awesome: >
+    (add-hook 'python-mode-hook 'smartparens-mode)
+    (advice-add :before 'smartparens-mode (lambda nil (hl-line-mode)))
+
+Whereas, the same cannot be said for vim: >
+    autocmd WinEnter *py :smartparens-mode
+>
+To be fair, it is not difficult to emulate the same in vim but each plugin
+would have to resort to boilerplate much more often. This is OK because vim
+seeks to be more pragmatic than anything and plugins have a strict
+functionality which usually does not do what do you don't expect. However,
+there are cases where you need an emacs' equivalent of hooking and this
+distribution of nvim contains exactly that: add-hook. Unlike emacs, this
+does not allow you to run hooks on specific functions but it compensates by
+providing you to hook to several groups, patterns and events with lua
+functions if you want to. This is basically a nvim-version of add-hooks!  of
+doom-emacs.
+
+Another source of emacs-envy is from emacs' really enviable keybinding system.
+While local-set-key and global-set-key are already good enough,
+define-key, define-key*, evil-define-key, etc blow vim out of the water
+completely because they accept a major-mode and only allow functions as
+bindings. Some of these functions even accept multiple bindings at once.
+This distribution eliminates emacs-keybinding-envy by providing you with
+define-key[s] - A parallel to emacs' core keybinding mechanism: Bind
+functions to events: >
+    (define-key {:keys "<leader>tt"
+                 :key-attribs "buffer"
+                 :patterns "*py"
+                 :events "WinEnter"
+                 :exec pytest-runner
+                 :help "Run pytest on the current file!"
+                 :help-group "Python testing"})
+
+This keybinding will execute in python-mode only. It will be triggered at
+`WinEnter` . Help and help's group's description will be shown in which-key
+after pressing SPC. 
+
+define-keys is exactly the same except that it accepts of a list of dicts.  
+
+Third source of emacs-envy (for me) is emacs' elisp. While it is criticized
+for a lot of things, my biggest gripe with elisp is the lack of namespaces.
+However, I still had an enjoyable time using it and for those
+who love lisp, doom-evim comes with fennel-support along with lua. You can mix
+and match fennel configurations as long as you follow some |doom-gotchas| (which are
+not that daunting).
+
+Other than that, just like doom-nvim and doom-emacs, this distribution is
+replete with plugins (unfortunately, not with vim-dap) and LSP that works out of the box
+(except the fact that you need to install your servers manually using `:LspInstall <lang>`)
+
+===========================
+PHILOSOPHY *doom-philosophy*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ modeline vim:tw=80 ft=help sw=4
