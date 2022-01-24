@@ -20,7 +20,7 @@
 ; Use this to set post-package-init configuration
 (tset _G :after! (lambda after! [pkg config-f]
                    (let [packages (utils.listify pkg)
-                         loaded   (core.filter #(. doom.packages $1) packages)
+                         loaded   (core.filter #(. packer_plugins $1) packages)
                          equals   (= (length packages) (length loaded))]
                      (if equals 
                        (do (config-f) true)
