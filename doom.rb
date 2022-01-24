@@ -22,7 +22,7 @@ class SetupDoom
   def make_user_fs
     Dir.mkdir @user_dir unless Dir.exist? @user_dir
     @user_other_dirs.map { |i| Dir.mkdir "#{@user_dir}/#{i}" unless Dir.exist? "#{@user_dir}/#{i}" }
-    @user_files.map { |i| `cp vdoomd/#{i} #{@user_dir}/` unless File.exist? "#{@user_dir}/#{i}" }
+    @user_files.map { |i| `cp sample-user-configs/#{i} #{@user_dir}/` unless File.exist? "#{@user_dir}/#{i}" }
   end
 
   def install_fonts
