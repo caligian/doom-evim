@@ -4,19 +4,6 @@
 
 (local vimp (require :vimp))
 
-(when (not doom.repl)
-  (set doom.repl {:ft {:sh "bash"
-                       :ruby "ruby"
-                       :perl "perl"
-                       :fennel "fennel"
-                       :python "python"
-                       :lua "lua"
-                       :powershell "powershell"
-                       :ps1 "powershell"}
-                  
-                  ; form: {:cmd {:id terminal_job_id :buffer bufnr}}
-                  :running_repls {}}))
-
 (defn- echo [msg]
   (vim.cmd (utils.fmt "echom \"[REPL]: %s\"" (utils.sed msg ["\""] ["\\\""]))))
 

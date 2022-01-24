@@ -36,6 +36,7 @@ cmp.setup(
                 vim.fn["vsnip#anonymous"](args.body)
             end
         },
+
         mapping = {
             ["<C-p>"] = cmp.mapping.select_prev_item(),
             ["<C-n>"] = cmp.mapping.select_next_item(),
@@ -47,27 +48,8 @@ cmp.setup(
                 behavior = cmp.ConfirmBehavior.Replace,
                 select = true
             },
-            ["<Tab>"] = cmp.mapping(function(fallback)
-                if cmp.visible() then
-                    cmp.select_next_item()
-                elseif vim.fn["vsnip#available"](1) == 1 then
-                    feedkey("<Plug>(vsnip-expand-or-jump)", "")
-                else
-                    fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
-                end
-            end, { "i", "s" }),
-
-            ["<S-Tab>"] = cmp.mapping(function()
-                if cmp.visible() then
-                    cmp.select_prev_item()
-                elseif vim.fn["vsnip#jumpable"](-1) == 1 then
-                    feedkey("<Plug>(vsnip-jump-prev)", "")
-                end
-            end, { "i", "s" }),
-
-
-            ["<cr>"] = cmp.mapping.confirm({select = true})
         },
+
         formatting = {
             format = function(entry, item)
                 item.kind = lsp_symbols[item.kind] .. " " .. item.kind

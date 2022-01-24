@@ -36,6 +36,18 @@
               ; Only matters if fnl_config = true
               :user_compile_fnl ["init" "utils" "keybindings" "configs" "lsp-configs"]
 
+              :repl {:ft {:sh "bash"
+                          :ruby "irb"
+                          :perl "perl"
+                          :fennel "fennel"
+                          :python "python"
+                          :lua "lua"
+                          :powershell "powershell"
+                          :ps1 "powershell"}
+
+                     ; form: {:cmd {:id terminal_job_id :buffer bufnr}}
+                     :running_repls {}}
+
               ; Basic setup for languages
               ; Used by doom's runner
               :langs {:python {:server "pyright" 

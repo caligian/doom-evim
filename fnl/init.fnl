@@ -9,6 +9,7 @@
 ; Doom logging starts
 (logger.ilog "=================================================")
 (logger.ilog "DOOM LOG STARTS----------------------------------")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Require globals. They will be contained in _G.doom
 (utils.try-require :globals)
@@ -25,11 +26,9 @@
                        (do (config-f) true)
                        false))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Require user-overrides
 (utils.try-require :user-init "DOOM") 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Setup LSP
 (when doom.lsp.load_default
   (utils.try-require :lsp-configs "DOOM")
@@ -68,6 +67,7 @@
                        #(logger.ilog (utils.fmt "[USER]: User fennel modules compiled successfuly to lua: %s" (vim.inspect doom.user_compile_fnl)))
                        #(logger.flog (utils.fmt "[USER]: Could not compile user fennel files. DEBUG REQUIRED\n $1"))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Doom logging stops
 (logger.ilog "DOOM LOG ENDS----------------------------------")
 (logger.ilog "=================================================")
