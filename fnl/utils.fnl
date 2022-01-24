@@ -73,10 +73,6 @@
 (defn exec [cmd ...]
   (vim.cmd (fmt cmd ...)))
 
-
-
-
-
 ; Form: {:os func ...} 
 ; First matching os will eval the function
 (defn consider-os [os-funcs]
