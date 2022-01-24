@@ -32,7 +32,7 @@ even more awesome: >
 
 Whereas, the same cannot be said for vim: >
     autocmd WinEnter *py :smartparens-mode
->
+
 To be fair, it is not difficult to emulate the same in vim but each plugin
 would have to resort to boilerplate much more often. This is OK because vim
 seeks to be more pragmatic than anything and plugins have a strict
@@ -80,17 +80,101 @@ replete with plugins (unfortunately, not with vim-dap) and LSP that works out of
 ===========================
 PHILOSOPHY *doom-philosophy*
 
+The philosophy of doom-evim is similar to that emacs itself: DRY (Don't Repeat
+Yourself). In implementation, this distribution of nvim provides everything to
+the user and by everything, I mean everything doom itself is using. This means
+that if the user wishes to make something complex in their configuration, the
+framework's composition should aid the user as if the user is extending the
+distribution itself. In simple words, many useful functions used by doom-evim
+are available to a user and the distribution sets good reusable defaults. 
+
+If you wish to extend this configuration, feel free to do so via your private
+`~/.vdoom.d`. You can do the same via `lua` or `fennel` although this
+distribution encourages the usage of fennel. 
 
+===================
+NAMESPACES *doom-namespaces*
 
+This section will contain a brief description of doom-evim API. 
+Doom has two separate namespaces for storing user configuration and system
+configuration. You should not think much about it because the system
+configuration is configured according to the user configuration provided.
+However, this section should acquaint you about the directory structure of
+doom. 
 
+*doom-system-namespaces*
+Doom primarily uses fennel for its configuration. The compiled counterparts
+are present in `~/.config/nvim/lua/`. Fennel itself is present in
+`~/.config/nvim/lua/fennel.lua`. Therefore, it can be required anywhere in
+doom's private configuration. 
 
+These are the system modules: 
+1. init 
+    This module contains the required code to start doom. 
+2. utils
+    This module contains utility functions that can be used by doom and user
+    both. 
+3. package-utils
+    This module contains utility functions to store packages. It takes into
+    consideration user package declarations also. It also creates the final
+    list of packer forms for packer usage. 
 
+    It also contains the default package declarations. This is the exact
+    declaration that will be present in `.vdoom.d/user-packages.lua`. 
+4. packages
+    This module imports stuff from package-utils and initializes packer.
+    Currently, there is no way to reload packages on the fly because packer is
+    called only once to configure doom. Therefore, the user has to restart
+    nvim everytime they modify `~/.vdoom.d/user-packages.lua`.
+5. configs
+    This module contains all the configurations that are applied to doom AFTER
+    packer initializes all the packages. It contains the majority of doom's
+    keybindings.
+6. keybindings
+    This module contains all the non-package related keybindings. It also
+    heavily utilizes `doom.utils`. It contains the majority of doom's
+    general keybindings.  
+7. repl
+    This module contains a basic REPL for doom. It keeps tracks of the
+    terminals user invokes and also provides some basic utilities such as
+    sending strings to the REPL.
+8. runner
+    This module provides keybindings and commands to run operations such as
+    compile, test, build, etc.
 
+*doom-user-namespace*
+Doom encourages the usage of `fennel` and `lua`  both for configuring the
+private stuff of the user. This is because some things are designed to be
+user-agnostic as most users of this distribution are assumed to be lua but
+non-fennel users. These lang-agnostic things include package-declarations and
+configurations declared in packer form contained in `user-packages.lua` and
+`user-specs.lua`. Additionally, user's `init.lua` is provided to override
+doom's defualt configuration. 
 
+`lua/` and `fnl/` will contain everything that will later configure whatever the user has put
+in doom. These are specially made for lua and fennel users sticking to their
+guns. You can use a combination of both but I will recommend you to stick to one
+language to avoid conflicts. 
 
+These are the lang-agnostic modules: 
+1. user-init
+    Contains doom configuration overrides as desired by the user. Also the
+    starting point to require any additional user-defined modules in the
+    private configuration.
+2. user-packages
+    Contains a master-list of packages that will be actually used by doom. This
+    allows users to quickly re-enable or disable the default module declarations
+    and also allow them to add their own plugins. 
+3. user-specs
+    Contains all the configuration that will be used in packer.use while
+    initializing a package. These are not configurations that will be used AFTER
+    but rather BEFORE all the packages are being in use. 
 
+Fennel modules:
 
+    
 
+     
 
 
 
@@ -182,4 +266,16 @@ PHILOSOPHY *doom-philosophy*
 
 
 
- modeline vim:tw=80 ft=help sw=4
+
+
+
+
+
+
+
+
+
+
+
+
+modeline vim:tw=80 ft=help sw=4

@@ -1,13 +1,16 @@
 (module configs
   {autoload {utils utils}})
 
+; Very doom-emacs-esque after!
+(local after! _G.after!)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; undotree
-(utils.after! :undotree 
+(after! :undotree 
         (fn []
           (set vim.g.undotree_SetFocusWhenToggle 1)))
 
-(utils.after! :vim-vsnip
+(after! :vim-vsnip
               (fn []
                 (vim.cmd "imap <expr> <C-j>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'")
                 (vim.cmd "smap <expr> <C-j>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'")
@@ -24,7 +27,7 @@
 
 ; formatter
 ; Stolen from doom-nvim
-(utils.after! :formatter.nvim
+(after! :formatter.nvim
               (fn [] 
                 (let [format (require :formatter)]
                   (vim.cmd "noremap <silent> <leader>mf :Format <CR>")
@@ -61,32 +64,24 @@
                                  :yaml {:cmd ["prettier -w --parser yaml"]}}))))
 
 ; zen-mode
-(utils.after! :zen-mode.nvim #(vim.cmd "noremap <leader>bz :ZenMode<CR>"))
+(after! :zen-mode.nvim #(vim.cmd "noremap <leader>bz :ZenMode<CR>"))
 
 ; treesitter
-(utils.after! :nvim-treesitter
+(after! :nvim-treesitter
         (fn []
           (let [treesitter-configs (require "nvim-treesitter.configs")]
-            (local treesitter-langs   [:python 
-                                       :yaml 
-                                       :json
-                                       :javascript 
-                                       :c 
-                                       :lua 
-                                       :perl 
-                                       :ruby])
-            (treesitter-configs.setup {:ensure_installed treesitter-langs
+            (treesitter-configs.setup {:ensure_installed doom.treesitter-langs
                                        :sync_install true
                                        :highlight {:enable true}
                                        :indent {:enable true}}))))
 
 ; vim-bbye
-(utils.after! :vim-bbye 
+(after! :vim-bbye 
         (fn [] 
           (vim.cmd "noremap <leader>bk :Bdelete<CR>")))
 
 ; file pickers
-(utils.after! :telescope.nvim
+(after! :telescope.nvim
         (fn [] 
           (let [telescope (require :telescope)
                 actions (require :telescope.actions)]
@@ -137,28 +132,28 @@
             (telescope.load_extension "file_browser")
                       (vim.cmd "noremap <leader>fF :lua require('telescope').extensions.file_browser.file_browser()<CR>")
 
-            (utils.after! :telescope-project.nvim
+            (after! :telescope-project.nvim
                     (fn []
                       (telescope.load_extension "project") 
                       (vim.cmd "noremap <C-p> :lua require('telescope').extensions.project.project({})<CR>"))))))
 
 ; vim-palette: Colorscheme provider
-(utils.after! :vim-palette
+(after! :vim-palette
        (fn []
           (vim.cmd "colorscheme atom")))
 
 ; galaxyline
-(utils.after! :galaxyline.nvim
+(after! :galaxyline.nvim
               (fn []
                 (require :modeline)))
 
 ; Tagbar
-(utils.after! :tagbar
+(after! :tagbar
         (fn []
           (vim.cmd "noremap <C-t> :TagbarToggle<CR>")))
 
 ; nvim-cmp
-(utils.after! :nvim-cmp 
+(after! :nvim-cmp 
         (fn []
           (vim.cmd "highlight! CmpItemAbbrDeprecated guibg=NONE gui=strikethrough guifg=#808080")
           (vim.cmd "highlight! CmpItemAbbrMatch guibg=NONE guifg=#569CD6")
@@ -171,7 +166,7 @@
           (vim.cmd "highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4")))
 
 ;  vim-fugitive
-(utils.after! :vim-fugitive 
+(after! :vim-fugitive 
         (fn []
           (vim.cmd  "noremap <leader>gg :Git<CR>")
           (vim.cmd  "noremap <leader>gi :Git init<CR>")
@@ -182,19 +177,19 @@
           (vim.cmd  "noremap <leader>gm :Git merge<CR>")))
 
 ; Luapad
-(utils.after! :nvim-luapad 
+(after! :nvim-luapad 
         (fn []
           (vim.cmd  "noremap <F3> :Luapad<CR>")))
 
 ; vimp
-(utils.after! :vimpeccable
+(after! :vimpeccable
         (fn []
           (let [vimp (require :vimp)]
             (vimp.add_chord_cancellations "n" "<leader>")
             (vimp.add_chord_cancellations "n" "<localleader>"))))
 
 ; which-key
-(utils.after! :which-key.nvim
+(after! :which-key.nvim
         (fn []
           (let [wk (require :which-key)]
             (wk.setup {:key_labels {"<space>" "SPC"
@@ -202,13 +197,13 @@
                                     "<tab>" "TAB"}}))))
 
 ; pytest
-(utils.after! :pytest.vim
+(after! :pytest.vim
         (fn []
           (set vim.g.pytest_executable "pytest")))
 
 ; Ruby stuff
 ; vroom
-(utils.after! :vim-vroom 
+(after! :vim-vroom 
         (fn []
           (set vim.g.vroom_map_keys 0)
           (set vim.g.vroom_write_all 1)
@@ -239,17 +234,17 @@
                                :exec ":VroomRunLastTest<CR>"}])))
 
 ; vim-bbye
-(utils.after! :vim-bbye 
+(after! :vim-bbye 
         (fn [] 
           (vim.cmd "noremap <leader>bq :Bdelete<CR>")))
 
 ; Tagbar
-(utils.after! :tagbar
+(after! :tagbar
         (fn []
           (vim.cmd "noremap <C-t> :TagbarToggle<CR>")))
 
 ; which-key
-(utils.after! :which-key.nvim
+(after! :which-key.nvim
         (fn []
           (let [wk (require :which-key)]
             (wk.setup {:key_labels {"<space>" "SPC"
@@ -257,7 +252,7 @@
                                     "<tab>" "TAB"}}))))
 
 ; vim-dispatch 
-(utils.after! :vim-dispatch 
+(after! :vim-dispatch 
         (fn []
           (utils.add-hook "GlobalHook" "FileType" "ruby" "let b:dispatch = 'ruby %'")
           (utils.add-hook "GlobalHook" "FileType" "lua" "let b:dispatch = 'lua %'")
@@ -266,11 +261,11 @@
           (utils.add-hook "GlobalHook" "FileType" "perl" "let b:dispatch = 'perl %'")))
 
 ; vim-session
-(utils.after! :vim-session
+(after! :vim-session
         (fn []
           (set vim.g.session_directory "~/.config/nvim/sessions")))
 ; ultisnips
-(utils.after! [:ultisnips
+(after! [:ultisnips
                :vim-snippets]
               (fn []
                 (vim.cmd "let g:UltiSnipsExpandTrigger='<tab>'")
@@ -278,7 +273,7 @@
                 (vim.cmd "let g:UltiSnipsJumpBackwardTrigger='<C-k>'")
                 (vim.cmd "let g:UltiSnipsEditSplit='vertical'")))
 
-(utils.after! :dirbuf.nvim
+(after! :dirbuf.nvim
               (fn []
                 (vim.cmd "noremap <leader>fd :Dirbuf<CR>")
                 (vim.cmd "noremap <leader>fD :execute('Dirbuf ' . input('Directory % '))<CR>")))

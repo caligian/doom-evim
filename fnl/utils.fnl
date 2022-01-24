@@ -1,5 +1,6 @@
 (module utils
   {require {core aniseed.core
+            logger logger
             str aniseed.string
             fnl  fennel
             fun  fun
@@ -153,8 +154,6 @@
   (let [sep (or sep "[^\n\r]+")]
     (icollect [m (rx.split s sep)] m)))
 
-
-
 (defn vec [iter]
   (let [t []]
     (fun.each (fn [e] (table.insert t e)) iter)
@@ -189,20 +188,6 @@
         rest-r
         rest-s))
     s))
-
-(defn after! [pkg config-f]
-  (let [packages (listify pkg)
-        loaded   (vec (fun.filter #(. doom.packages $1) packages))
-        equals   (= (length packages) (length loaded))]
-    (if equals 
-      (do (config-f) true)
-      false)))
-
-; config-t form: {:packer_config_option configuration}
-(defn specs! [pkg config-t]
-  (let [pkg (. doom.packages)]
-    (each [k v (pairs config-t)]
-      (tset pkg k v))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer and window related functions
@@ -576,8 +561,9 @@
     (define-key a)))
 
 ; Convert fnl to lua
-(defn convert-to-lua [filenames]
-  (let [compiled-user-lua-path (join_path (os.getenv "HOME") ".vdoom.d" "compiled")
+(defn convert-to-lua [?filenames]
+  (let [filenames (or ?filenames doom.user_compile_fnl)
+        compiled-user-lua-path (join_path (os.getenv "HOME") ".vdoom.d" "compiled")
         fnl-user-configs-path (join_path (os.getenv "HOME") ".vdoom.d" "fnl")
         filenames (listify filenames)
         src-filenames (core.map #(join_path fnl-user-configs-path (.. $1 ".fnl")) filenames)
@@ -585,21 +571,11 @@
         zipped-paths (fun.zip src-filenames dest-filenames)]
     (fun.each 
       (fn [src dest] 
-        (let [s (core.slurp src)
-              compiled (fnl.compileString s)]
-          (core.spit dest compiled)))
+        (when (path-exists src)
+          (let [s (core.slurp src)
+                compiled (fnl.compileString s)]
+            (core.spit dest compiled))))
       zipped-paths)))
-
-; Ensure that these files exist. 
-; Don't worry, they will be made by default
-(defn compile-user-fnl-configs []
-  (let [configs ["init"
-                 "utils"
-                 "keybindings"
-                 "specs"
-                 "configs" 
-                 "lsp-configs"]]
-    (convert-to-lua configs)))
 
 ; For error handling
 (defn try-then-else [try-f success-f failure-f]
@@ -614,7 +590,7 @@
   (let [(status message) (xpcall try-f handle-f)]
     (then-f)))
 
-(defn try-require-else [module-name type-module]
+(defn try-require [module-name type-module]
   (try-then-else 
     #(require module-name)
     #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name)) 

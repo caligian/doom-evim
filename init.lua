@@ -1,8 +1,3 @@
-local function add_user_package_path(dirname)
-    package.path = string.format('%s/%s/?.lua', vim.fn.stdpath("config"), dirname) 
-    package.path = string.format('%s/%s/lua/?.lua', vim.fn.stdpath("config"), dirname) 
-end
-
 local function init(vim)
     vim.o.completeopt = "menu,menuone,noselect"
     vim.o.mouse="a"
