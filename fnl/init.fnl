@@ -31,8 +31,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Setup LSP
-(utils.try-require :lsp-configs "DOOM")
 (when doom.lsp.load_default
+  (utils.try-require :lsp-configs "DOOM")
+
   (after! [:nvim-lspconfig 
            :nvim-treesitter
            :nvim-lsp-installer
@@ -46,21 +47,26 @@
           #(lsp-configs.setup)))
 
 ; Setup basic utility functions for running files
-(utils.try-require :runners :DOOM)
+(when doom.default_runner
+  (utils.try-require :runners :DOOM))
 
 ; Load doom's basic repl
-(utils.try-require :repl :DOOM)
+(when doom.default_repl
+  (utils.try-require :repl :DOOM))
 
 ; Load package-configs
-(utils.try-require :configs)
+(when doom.default_package_configs
+  (utils.try-require :configs))
 
 ; Load keybindings
-(utils.try-require :keybindings)
+(when doom.default_keybindings
+  (utils.try-require :keybindings))
 
 ; Compile user fennel configs
-(utils.try-then-else #(utils.convert-to-lua)
-                     #(logger.ilog (utils.fmt "[USER]: User fennel modules compiled successfuly to lua: %s" (vim.inspect doom.user_compile_fnl)))
-                     #(logger.flog (utils.fmt "[USER]: Could not compile user fennel files. DEBUG REQUIRED\n $1")))
+(when doom.fnl_config 
+  (utils.try-then-else #(utils.convert-to-lua)
+                       #(logger.ilog (utils.fmt "[USER]: User fennel modules compiled successfuly to lua: %s" (vim.inspect doom.user_compile_fnl)))
+                       #(logger.flog (utils.fmt "[USER]: Could not compile user fennel files. DEBUG REQUIRED\n $1"))))
 
 ; Doom logging stops
 (logger.ilog "DOOM LOG ENDS----------------------------------")

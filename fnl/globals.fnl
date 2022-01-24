@@ -2,22 +2,42 @@
 
 (set _G.doom {:fnl_config true
 
+              ; Use doom's basic async runner
+              :default_runner true
+
+              ; Use doom's basic repl
+              :default_repl true
+
+              ; Use doom's non-package keybindings
+              :default_keybindings true
+
+              ; Use doom's default configuration
+              :default_package_configs true
+
+              ; Languages to use with treesitter
               :treesitter_langs [:python :yaml :json :javascript :c :lua :perl :fennel :ruby]
 
+              ; Contains all the anonymous functions used in autocmds and keybindings
               :lambdas {}
 
+              ; which-key queries this to get the description of <leader>[PREFIX]
               :map-help-groups {:leader {}
                                 :localleader {}}
 
+              ; LSP defaults
               :lsp {:install_sumneko_lua true
                     :load_default true
                     :servers {:solargraph {} :pyright {}}}
  
 
+              ; Contains user-package declarations
               :user_packages  (require :user-packages)
 
+              ; Only matters if fnl_config = true
               :user_compile_fnl ["init" "utils" "keybindings" "configs" "lsp-configs"]
 
+              ; Basic setup for languages
+              ; Used by doom's runner
               :langs {:python {:server "pyright" 
                                :compile "python3"
                                :pattern "*py"
@@ -40,6 +60,7 @@
                             :test "lua"
                             :build false}}
 
+              ; Default package declarations
               :default_packages {; essentials
                                  :packer.nvim {1 "wbthomason/packer.nvim" :lock true}
                                  :vimpeccable {1 "svermeulen/vimpeccable" :lock true}
@@ -106,5 +127,6 @@
                                  ; Lua
                                  :nvim-luapad {1 "rafcamlet/nvim-luapad" :lock true}}})
 
+; Create some important autocmds
 (vim.cmd "augroup GlobalHook\n  autocmd!\naugroup END")
 (vim.cmd "autocmd GlobalHook WinLeave _temp_output_buffer :q")
