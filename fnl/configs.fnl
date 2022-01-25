@@ -5,6 +5,57 @@
 (local after! _G.after!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(after! :persistence (fn []
+                       (let [persistence (require :persistence)
+                             save-dir (.. (vim.fn.stdpath "data") "/sessions/")]
+                         (persistence.setup {:dir save-dir}))))
+
+(after! :dashboard-nvim (fn []
+                          (set vim.g.indentLine_fileTypeExclude [:dashboard])
+                          (set vim.g.dashboard_custom_header (vim.split "
+                 °*oO##@@@@@@@@##Oo*°                  
+             .*O#@@@@@@@@@@@@@@@@@@@@#Oo°              
+           °O@@@@#####@@@@@@@@@@#####@@@@#o°           
+         *#@@@###@@@@@@@@@@@@@@@@@@@@####@@@O°         
+       .#@@##@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@@o        
+       O@###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@o       
+       #@@@@#####@@@@@@@@@@@@@@@@@@@@@####@@@##@       
+      .#####@@@@@####@@@@@@@@@@@@@####@@@@@##@@#       
+       ooo. .*oO#@@@@@############@@@@#O*°.  ***       
+       #@@o      °*o#@@@@@@@@@@@@@#O*.      °##°       
+       °@@@o.         °*O#####Oo°.        .*@@O        
+        °O#@##Ooo**°°°**O#OOO#Oo*°°°°**oO##@#@°        
+         .O#@@@@@@@@@@@@@o.#**@@@@@@@@@@@@@##O         
+         ######@@###@@##o o@O *#@@##@#######@#         
+         O@@@@@o°.  OOooO#@#@#OOo#@@o    #@@#*         
+          **°°*°    o##@@@#@#@@oOooO     **°           
+                    o@@###@°O#O°@@#°                   
+                    .@@OO@@.o@oo@#O                    
+                    .#@Oo@@.o@oo@@o                    
+                     #@O*@@.o@oo@@o                    
+                     ##O*@@.o@*o@#*                    
+                     O@O*@@.o@°o@@.                    
+                     °Oo°@@.o# o#o                     
+
+                        E V I M"  "\n"))
+
+                          (vim.cmd "noremap <leader>sl :SessionLoad")
+                          (vim.cmd "noremap <leader>ss :SessionSave<CR>")
+                          (set vim.g.dashboard_default_executive "telescope")
+                          (set vim.g.dashboard_custom_section {:a {:description   ["  Load Session                        SPC s l"]
+                                                                   :command "lua require('persistence').load({last=true})"}
+                                                               :b {:description   ["  Recently Opened Files               SPC f r"]
+                                                                   :command  "Telescope oldfiles"}
+                                                               :c {:description   ["  Change colorscheme                  SPC h t"]
+                                                                   :command  "Telescope colorscheme"}
+                                                               :d {:description   ["  Split window with terminal          COM t s"]
+                                                                   :command ":REPLSplitShell<CR>"} 
+                                                               :e {:description   ["  Find File                           SPC f f"]
+                                                                   :command  "Telescope find_files"}
+                                                               :f {:description   ["  Open system configuration           SPC f p"]
+                                                                   :command ":Dirbuf ~/.vdoom.d/<CR>"}
+                                                               :g {:description   ["  Open private configuration          SPC f P"]
+                                                                   :command ":Dirbuf ~/.vdoom.d/<CR>"}}))) 
 ; undotree
 (after! :undotree 
         (fn []
@@ -89,7 +140,7 @@
                                                     :i {"<C-d>" actions.delete_buffer}}}})
             ; Add some more default actions
             (vim.cmd "noremap <leader>ff :lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>ss :lua require('telescope.builtin').live_grep(require('telescope.themes').get_ivy())<CR>")
+            (vim.cmd "noremap <localleader>/ :lua require('telescope.builtin').live_grep(require('telescope.themes').get_ivy())<CR>")
             (vim.cmd "noremap <leader>/  :lua require('telescope.builtin').grep_string(require('telescope.themes').get_ivy())<CR>")
             (vim.cmd "noremap <leader>fg :lua require('telescope.builtin').git_files(require('telescope.themes').get_ivy())<CR>")
             (vim.cmd "noremap  <leader>hk :lua require('telescope.builtin').keymaps(require('telescope.themes').get_ivy())<CR>")
@@ -140,7 +191,7 @@
 ; vim-palette: Colorscheme provider
 (after! :vim-palette
        (fn []
-          (vim.cmd "colorscheme atom")))
+          (vim.cmd "colorscheme one")))
 
 ; galaxyline
 (after! :galaxyline.nvim

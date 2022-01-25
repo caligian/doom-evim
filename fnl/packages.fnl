@@ -39,6 +39,13 @@
     (set doom.packages doom-packages)
     master-t))
 
+; Setup packer
+; SPC hrr can now reload packages!
+(vim.cmd "packadd packer.nvim")
+(packer.init {:git {:clone_timeout 300
+                    :subcommands {:install "clone --depth %i --progress"} }
+              :profile {:enable true}})
+
 (packer.startup (fn [use]
                   (each [pkg conf (ipairs (get-master-list))]
                      (use conf))))

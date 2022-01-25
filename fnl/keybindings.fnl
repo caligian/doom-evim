@@ -4,7 +4,8 @@
 ; File management
 (vim.cmd "noremap <leader>fs :w<CR>")
 (vim.cmd "noremap <leader>fv :w <bar> source %<CR>")
-(vim.cmd "noremap <leader>fp :e! ~/.config/nvim/lua<CR>")
+(vim.cmd "noremap <leader>fp :Dirbuf ~/.config/nvim/fnl<CR>")
+(vim.cmd "noremap <leader>fP :Dirbuf ~/.vdoom.d<CR>")
 (vim.cmd "noremap <leader>fV :source ~/.config/nvim/init.vim<CR>")
 
 ; Font size 

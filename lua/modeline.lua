@@ -4,7 +4,7 @@ gl.short_line_list = {'NvimTree','vista','dbui'}
 
 local colors = {
   bg = '#282c34',
-  fg = '#eb7575',
+  fg = '#ebbc2c',
   yellow = '#b58900',
   cyan = '#2aa198',
   darkblue = '#1a6192',
