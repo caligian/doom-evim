@@ -5,10 +5,25 @@
 (local after! _G.after!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(after! :vimspector (fn []
-                      (set vim.g.vimspector_enable_mappngs :HUMAN)
-                      (vim.cmd "packadd! vimspector")
+; nvim-tree
+(after! :nvim-tree.lua
+        (fn []
+          ((. (require :nvim-tree) :setup))
+          (vim.cmd "noremap <leader>` :NvimTreeToggle<CR>")))
 
+; vim-sexp
+(after! :vim-sexp
+        (fn []
+          (set vim.g.sexp_filetypes (table.concat doom.lisp_langs ","))))
+
+; delimitMate
+(after! :delimitMate
+        (fn []
+          (set vim.g.delimitMate_excluded_ft (table.concat doom.lisp_langs ","))))
+
+; vimspector
+(after! :vimspector (fn []
+                      (vim.cmd "packadd! vimspector")
                       (vim.cmd "nnoremap <Leader>dd :call vimspector#Launch()<CR>")
                       (vim.cmd "nnoremap <Leader>de :call vimspector#Reset()<CR>")
                       (vim.cmd "nnoremap <Leader>dc :call vimspector#Continue()<CR>")
@@ -24,7 +39,7 @@
                              save-dir (.. (vim.fn.stdpath "data") "/sessions/")]
                          (persistence.setup {:dir save-dir}))))
 
-(after! :trouble.nvim 
+(after! :trouble.nvim
         (fn []
           (let [trouble (require :trouble)]
             (trouble.setup)
@@ -33,29 +48,29 @@
 (after! :dashboard-nvim (fn []
                           (set vim.g.indentLine_fileTypeExclude [:dashboard])
                           (set vim.g.dashboard_custom_header (vim.split "
-                 °*oO##@@@@@@@@##Oo*°                  
-             .*O#@@@@@@@@@@@@@@@@@@@@#Oo°              
-           °O@@@@#####@@@@@@@@@@#####@@@@#o°           
-         *#@@@###@@@@@@@@@@@@@@@@@@@@####@@@O°         
-       .#@@##@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@@o        
-       O@###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@o       
-       #@@@@#####@@@@@@@@@@@@@@@@@@@@@####@@@##@       
-      .#####@@@@@####@@@@@@@@@@@@@####@@@@@##@@#       
-       ooo. .*oO#@@@@@############@@@@#O*°.  ***       
-       #@@o      °*o#@@@@@@@@@@@@@#O*.      °##°       
-       °@@@o.         °*O#####Oo°.        .*@@O        
-        °O#@##Ooo**°°°**O#OOO#Oo*°°°°**oO##@#@°        
-         .O#@@@@@@@@@@@@@o.#**@@@@@@@@@@@@@##O         
-         ######@@###@@##o o@O *#@@##@#######@#         
-         O@@@@@o°.  OOooO#@#@#OOo#@@o    #@@#*         
-          **°°*°    o##@@@#@#@@oOooO     **°           
-                    o@@###@°O#O°@@#°                   
-                    .@@OO@@.o@oo@#O                    
-                    .#@Oo@@.o@oo@@o                    
-                     #@O*@@.o@oo@@o                    
-                     ##O*@@.o@*o@#*                    
-                     O@O*@@.o@°o@@.                    
-                     °Oo°@@.o# o#o                     
+                 °*oO##@@@@@@@@##Oo*°
+             .*O#@@@@@@@@@@@@@@@@@@@@#Oo°
+           °O@@@@#####@@@@@@@@@@#####@@@@#o°
+         *#@@@###@@@@@@@@@@@@@@@@@@@@####@@@O°
+       .#@@##@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@@o
+       O@###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@o
+       #@@@@#####@@@@@@@@@@@@@@@@@@@@@####@@@##@
+      .#####@@@@@####@@@@@@@@@@@@@####@@@@@##@@#
+       ooo. .*oO#@@@@@############@@@@#O*°.  ***
+       #@@o      °*o#@@@@@@@@@@@@@#O*.      °##°
+       °@@@o.         °*O#####Oo°.        .*@@O
+        °O#@##Ooo**°°°**O#OOO#Oo*°°°°**oO##@#@°
+         .O#@@@@@@@@@@@@@o.#**@@@@@@@@@@@@@##O
+         ######@@###@@##o o@O *#@@##@#######@#
+         O@@@@@o°.  OOooO#@#@#OOo#@@o    #@@#*
+          **°°*°    o##@@@#@#@@oOooO     **°
+                    o@@###@°O#O°@@#°
+                    .@@OO@@.o@oo@#O
+                    .#@Oo@@.o@oo@@o
+                     #@O*@@.o@oo@@o
+                     ##O*@@.o@*o@#*
+                     O@O*@@.o@°o@@.
+                     °Oo°@@.o# o#o
 
                         E V I M"  "\n"))
 
@@ -69,22 +84,22 @@
                                                                :c {:description   ["  Change colorscheme                  SPC h t"]
                                                                    :command  "Telescope colorscheme"}
                                                                :d {:description   ["  Split window with terminal          COM t s"]
-                                                                   :command ":REPLSplitShell"} 
+                                                                   :command ":REPLSplitShell"}
                                                                :e {:description   ["  Find File                           SPC f f"]
                                                                    :command  "Telescope find_files"}
                                                                :f {:description   ["  Open system configuration           SPC f p"]
                                                                    :command ":Dirbuf ~/.vdoom.d/"}
                                                                :g {:description   ["  Open private configuration          SPC f P"]
-                                                                   :command ":Dirbuf ~/.vdoom.d/"}}))) 
+                                                                   :command ":Dirbuf ~/.vdoom.d/"}})))
 ; undotree
-(after! :undotree 
+(after! :undotree
         (fn []
           (set vim.g.undotree_SetFocusWhenToggle 1)))
 
 ; formatter
 ; Stolen from doom-nvim
 (after! :formatter.nvim
-              (fn [] 
+              (fn []
                 (let [format (require :formatter)]
                   (vim.cmd "noremap <silent> <leader>mf :Format <CR>")
                   (format.setup {"*" {:cmd ["sed -i 's/[ \t]*$//'"]}
@@ -106,17 +121,17 @@
                                  :typescript {:cmd ["prettier -w --parser typescript"]}
 
                                  :html {:cmd ["prettier -w --parser html"]}
-                                 
+
                                  :markdown {:cmd ["prettier -w --parser markdown"]}
-                                 
+
                                  :css {:cmd ["prettier -w --parser css"]}
-                                 
+
                                  :scss {:cmd ["prettier -w --parser scss"]}
-                                 
+
                                  :json {:cmd ["prettier -w --parser json"]}
-                                 
+
                                  :toml {:cmd ["prettier -w --parser toml"]}
-                                 
+
                                  :yaml {:cmd ["prettier -w --parser yaml"]}}))))
 
 ; zen-mode
@@ -132,13 +147,13 @@
                                        :indent {:enable true}}))))
 
 ; vim-bbye
-(after! :vim-bbye 
-        (fn [] 
+(after! :vim-bbye
+        (fn []
           (vim.cmd "noremap <leader>bk :Bdelete<CR>")))
 
 ; file pickers
 (after! :telescope.nvim
-        (fn [] 
+        (fn []
           (let [telescope (require :telescope)
                 actions (require :telescope.actions)]
             (telescope.setup {:defaults {:path_display [:smart]
@@ -192,7 +207,7 @@
 
             (after! :telescope-project.nvim
                     (fn []
-                      (telescope.load_extension "project") 
+                      (telescope.load_extension "project")
                       (vim.cmd "noremap <C-p> :lua require('telescope').extensions.project.project(require('telescope.themes').get_ivy())<CR>"))))))
 
 ; vim-palette: Colorscheme provider
@@ -211,7 +226,7 @@
           (vim.cmd "noremap <C-t> :TagbarToggle<CR>")))
 
 ; nvim-cmp
-(after! :nvim-cmp 
+(after! :nvim-cmp
         (fn []
           (vim.cmd "highlight! CmpItemAbbrDeprecated guibg=NONE gui=strikethrough guifg=#808080")
           (vim.cmd "highlight! CmpItemAbbrMatch guibg=NONE guifg=#569CD6")
@@ -224,7 +239,7 @@
           (vim.cmd "highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4")))
 
 ;  vim-fugitive
-(after! :vim-fugitive 
+(after! :vim-fugitive
         (fn []
           (vim.cmd  "noremap <leader>gg :Git<CR>")
           (vim.cmd  "noremap <leader>gi :Git init<CR>")
@@ -235,7 +250,7 @@
           (vim.cmd  "noremap <leader>gm :Git merge<CR>")))
 
 ; Luapad
-(after! :nvim-luapad 
+(after! :nvim-luapad
         (fn []
           (vim.cmd  "noremap <F3> :Luapad<CR>")))
 
@@ -261,7 +276,7 @@
 
 ; Ruby stuff
 ; vroom
-(after! :vim-vroom 
+(after! :vim-vroom
         (fn []
           (set vim.g.vroom_map_keys 0)
           (set vim.g.vroom_write_all 1)
@@ -292,8 +307,8 @@
                                :exec ":VroomRunLastTest<CR>"}])))
 
 ; vim-bbye
-(after! :vim-bbye 
-        (fn [] 
+(after! :vim-bbye
+        (fn []
           (vim.cmd "noremap <leader>bq :Bdelete<CR>")))
 
 ; Tagbar
@@ -309,8 +324,8 @@
                                     "<cr>" "RET"
                                     "<tab>" "TAB"}}))))
 
-; vim-dispatch 
-(after! :vim-dispatch 
+; vim-dispatch
+(after! :vim-dispatch
         (fn []
           (utils.add-hook "GlobalHook" "FileType" "ruby" "let b:dispatch = 'ruby %'")
           (utils.add-hook "GlobalHook" "FileType" "lua" "let b:dispatch = 'lua %'")

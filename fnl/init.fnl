@@ -72,6 +72,15 @@
 (when doom.default_keybindings
   (utils.try-require :keybindings))
 
+; Register help
+; Register all help-groups in <leader>
+(let [wk (require :which-key)]
+  (each [k group-name (pairs doom.map-help-groups.leader)]
+    (wk.register {k {:name group-name}} {:prefix "<leader>"}))
+
+  (each [k group-name (pairs doom.map-help-groups.localleader)]
+    (wk.register {k {:name group-name}} {:prefix "<localleader>"})))
+
 ; Compile user fennel configs
 ; They shall be required by users when needed
 (when doom.fnl_config 

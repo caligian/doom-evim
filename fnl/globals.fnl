@@ -14,6 +14,9 @@
               ; Use doom's default configuration
               :default_package_configs true
 
+              ; Lisp langs to which delimitMate will not start
+              :lisp_langs ["fennel" "clojure" "scheme"]
+
               ; Languages to use with treesitter
               :treesitter_langs [:python :yaml :json :javascript :c :lua :perl :fennel :ruby]
 
@@ -21,8 +24,20 @@
               :lambdas {}
 
               ; which-key queries this to get the description of <leader>[PREFIX]
-              :map-help-groups {:leader {}
-                                :localleader {}}
+              :map-help-groups {:leader {:b "Buffers"
+                                         :q "Buffers+Close"
+                                         :c "Commenting"
+                                         :l "LSP"
+                                         :h "Help+Telescope"
+                                         :f "Files"
+                                         :d "Debug"
+                                         :x "Misc"
+                                         :m "Filetype Actions"
+                                         :s "Session"
+                                         :g "Git"}
+                                :localleader {"," "REPL"
+                                              "t" "REPL"
+                                              "e" "REPL"}}
 
               ; LSP defaults
               :lsp {:install_sumneko_lua true

@@ -18,7 +18,7 @@ local function init(vim)
     vim.o.shiftwidth = 4
     vim.o.expandtab = true
     vim.o.foldmethod = "syntax"
-    vim.o.guifont="Menlo Nerd Font Mono:h12"
+    vim.o.guifont="RobotoMono NF:h12"
     vim.o.backupdir = string.format("%s/%s", vim.fn.stdpath("config"), "backup")
     vim.o.directory = string.format("%s/%s", vim.fn.stdpath("config"), "tmp")
     vim.o.undodir = string.format("%s/%s", vim.fn.stdpath("config"), "undo")
