@@ -48,6 +48,10 @@
                      ; form: {:cmd {:id terminal_job_id :buffer bufnr}}
                      :running_repls {}}
 
+              :dap {:default {:python "debugpy"
+                              :javascript "vscode-node-debug2"
+                              :lua "local-lua-debugger-vscode"}}
+
               ; Basic setup for languages
               ; Used by doom's runner
               :langs {:python {:server "pyright" 

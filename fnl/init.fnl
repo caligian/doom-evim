@@ -8,23 +8,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Doom logging starts
 (logger.ilog "=================================================")
-(logger.ilog "DOOM LOG STARTS----------------------------------")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Require globals. They will be contained in _G.doom
-(utils.try-require :globals)
+(when (not (. _G :doom))
+  (utils.try-require :globals))
+
+; Use this to set post-package-init configuration
+(set _G.after! (lambda after! [pkg config-f]
+                 (let [packages (utils.listify pkg)
+                       loaded   (core.filter #(. doom.packages $1) packages)
+                       equals   (= (length packages) (length loaded))]
+                   (if equals 
+                     (do (config-f) true)
+                     false))))
+
+(set _G.specs! (lambda specs! [pkg specs]
+                 (let [required-pkg (. doom.packages pkg)]
+                   (if required-pkg 
+                     (each [k v (pairs specs)]
+                       (tset (. doom.packages pkg) k v))))))
 
 ; Require packages
 (utils.try-require :packages)
-
-; Use this to set post-package-init configuration
-(tset _G :after! (lambda after! [pkg config-f]
-                   (let [packages (utils.listify pkg)
-                         loaded   (core.filter #(. doom.packages $1) packages)
-                         equals   (= (length packages) (length loaded))]
-                     (if equals 
-                       (do (config-f) true)
-                       false))))
 
 ; Require user-overrides
 (utils.try-require :user-init "DOOM") 
@@ -40,10 +46,15 @@
            :cmp-nvim-lsp
            :cmp-vsnip
            :vim-vsnip
+           :trouble.nvim
            :cmp-buffer
            :cmp-path
            :cmp-cmdline]
           #(lsp-configs.setup)))
+
+; Setup vimspector
+(after! :vimspector 
+        #(utils.try-require :dap-config :DOOM))
 
 ; Setup basic utility functions for running files
 (when doom.default_runner
@@ -62,12 +73,10 @@
   (utils.try-require :keybindings))
 
 ; Compile user fennel configs
+; They shall be required by users when needed
 (when doom.fnl_config 
   (utils.try-then-else #(utils.convert-to-lua)
                        #(logger.ilog (utils.fmt "[USER]: User fennel modules compiled successfuly to lua: %s" (vim.inspect doom.user_compile_fnl)))
                        #(logger.flog (utils.fmt "[USER]: Could not compile user fennel files. DEBUG REQUIRED\n $1"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Doom logging stops
-(logger.ilog "DOOM LOG ENDS----------------------------------")
-(logger.ilog "=================================================")

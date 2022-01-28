@@ -5,10 +5,30 @@
 (local after! _G.after!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(after! :vimspector (fn []
+                      (set vim.g.vimspector_enable_mappngs :HUMAN)
+                      (vim.cmd "packadd! vimspector")
+
+                      (vim.cmd "nnoremap <Leader>dd :call vimspector#Launch()<CR>")
+                      (vim.cmd "nnoremap <Leader>de :call vimspector#Reset()<CR>")
+                      (vim.cmd "nnoremap <Leader>dc :call vimspector#Continue()<CR>")
+                      (vim.cmd "nnoremap <Leader>dt :call vimspector#ToggleBreakpoint()<CR>")
+                      (vim.cmd "nnoremap <Leader>dT :call vimspector#ClearBreakpoints()<CR>")
+                      (vim.cmd "nmap <Leader>dk <Plug>VimspectorRestart")
+                      (vim.cmd "nmap <Leader>dh <Plug>VimspectorStepOut")
+                      (vim.cmd "nmap <Leader>dl <Plug>VimspectorStepInto")
+                      (vim.cmd "nmap <Leader>dj <Plug>VimspectorStepOver")))
+
 (after! :persistence (fn []
                        (let [persistence (require :persistence)
                              save-dir (.. (vim.fn.stdpath "data") "/sessions/")]
                          (persistence.setup {:dir save-dir}))))
+
+(after! :trouble.nvim 
+        (fn []
+          (let [trouble (require :trouble)]
+            (trouble.setup)
+            (vim.cmd "noremap <leader>lt :TroubleToggle<CR>"))))
 
 (after! :dashboard-nvim (fn []
                           (set vim.g.indentLine_fileTypeExclude [:dashboard])
@@ -49,32 +69,17 @@
                                                                :c {:description   ["  Change colorscheme                  SPC h t"]
                                                                    :command  "Telescope colorscheme"}
                                                                :d {:description   ["  Split window with terminal          COM t s"]
-                                                                   :command ":REPLSplitShell<CR>"} 
+                                                                   :command ":REPLSplitShell"} 
                                                                :e {:description   ["  Find File                           SPC f f"]
                                                                    :command  "Telescope find_files"}
                                                                :f {:description   ["  Open system configuration           SPC f p"]
-                                                                   :command ":Dirbuf ~/.vdoom.d/<CR>"}
+                                                                   :command ":Dirbuf ~/.vdoom.d/"}
                                                                :g {:description   ["  Open private configuration          SPC f P"]
-                                                                   :command ":Dirbuf ~/.vdoom.d/<CR>"}}))) 
+                                                                   :command ":Dirbuf ~/.vdoom.d/"}}))) 
 ; undotree
 (after! :undotree 
         (fn []
           (set vim.g.undotree_SetFocusWhenToggle 1)))
-
-(after! :vim-vsnip
-              (fn []
-                (vim.cmd "imap <expr> <C-j>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'")
-                (vim.cmd "smap <expr> <C-j>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'")
-                (vim.cmd "imap <expr> <C-l>   vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'")
-                (vim.cmd "smap <expr> <C-l>   vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'")
-                (vim.cmd "imap <expr> <Tab>   vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)'      : '<Tab>'")
-                (vim.cmd "smap <expr> <Tab>   vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)'      : '<Tab>'")
-                (vim.cmd "imap <expr> <S-Tab> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)'      : '<S-Tab>'")
-                (vim.cmd "smap <expr> <S-Tab> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)'      : '<S-Tab>'")
-                (vim.cmd "nmap        s   <Plug>(vsnip-select-text)")
-                (vim.cmd "xmap        s   <Plug>(vsnip-select-text)")
-                (vim.cmd "nmap        S   <Plug>(vsnip-cut-text)")
-                (vim.cmd "xmap        S   <Plug>(vsnip-cut-text)")))
 
 ; formatter
 ; Stolen from doom-nvim
@@ -138,6 +143,7 @@
                 actions (require :telescope.actions)]
             (telescope.setup {:defaults {:mappings {:n {:D actions.delete_buffer}
                                                     :i {"<C-d>" actions.delete_buffer}}}})
+
             ; Add some more default actions
             (vim.cmd "noremap <leader>ff :lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())<CR>")
             (vim.cmd "noremap <localleader>/ :lua require('telescope.builtin').live_grep(require('telescope.themes').get_ivy())<CR>")
@@ -181,12 +187,12 @@
 
             ; Load file browser
             (telescope.load_extension "file_browser")
-                      (vim.cmd "noremap <leader>fF :lua require('telescope').extensions.file_browser.file_browser()<CR>")
+                      (vim.cmd "noremap <leader>fF :lua require('telescope').extensions.file_browser.file_browser(require('telescope.themes').get_ivy())<CR>")
 
             (after! :telescope-project.nvim
                     (fn []
                       (telescope.load_extension "project") 
-                      (vim.cmd "noremap <C-p> :lua require('telescope').extensions.project.project({})<CR>"))))))
+                      (vim.cmd "noremap <C-p> :lua require('telescope').extensions.project.project(require('telescope.themes').get_ivy())<CR>"))))))
 
 ; vim-palette: Colorscheme provider
 (after! :vim-palette

@@ -2,6 +2,7 @@
   {autoload {utils utils
              core aniseed.core
              str aniseed.string
+             Job plenary.job
              vimp vimp}})
 
 (defn- format-output [s]
@@ -10,12 +11,14 @@
                            (.. final o)) 
                "[\n\r]+"))
 
+
+
 (defn- get-output-and-split [s]
-  (let [s (vim.call :system s)
-        s (if (= (type s) "table")
-            (format-output s)
-            (utils.split s "[\n\r]+"))]
-    (utils.to-temp-buffer s :sp)))
+  (vim.fn.jobstart s
+                   {:on_stdout (fn [id data event]
+                                 (if data
+                                   (utils.to-temp-buffer data)))
+                    :stdout_buffered true}))
 
 (defn- uppercase [s]
   (string.gsub s "^." string.upper))

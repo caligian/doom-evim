@@ -367,9 +367,12 @@
   (lambda show-in-buffer [s]
     (to-temp-buffer s :sp))
 
-  (if ?buf
-    (show-in-buffer (get-output s))
-    (get-output s)))
+  (let [out (get-output s)]
+    (vim.call :system "rm .temp.sh")
+
+    (if ?buf 
+      (show-in-buffer out)
+      out)))
 
 
 (defn adjust-indent [?towards ?lineno]

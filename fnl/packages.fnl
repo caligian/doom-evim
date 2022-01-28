@@ -39,6 +39,9 @@
     (set doom.packages doom-packages)
     master-t))
 
+(get-master-list)
+(require :specs)
+
 ; Setup packer
 ; SPC hrr can now reload packages!
 (vim.cmd "packadd packer.nvim")
@@ -46,6 +49,14 @@
                     :subcommands {:install "clone --depth %i --progress"} }
               :profile {:enable true}})
 
+; Now setup everything
 (packer.startup (fn [use]
-                  (each [pkg conf (ipairs (get-master-list))]
+                  (each [pkg conf (pairs doom.packages)]
                      (use conf))))
+
+(utils.define-keys [{:keys "<leader>hpi" :exec packer.install :help "Install new"}
+                    {:keys "<leader>hpu" :exec packer.update :help "Update current"}
+                    {:keys "<leader>hpc" :exec packer.clean :help "Remove unused"}
+                    {:keys "<leader>hps" :exec packer.sync :help "Sync current"}
+                    {:keys "<leader>hpl" :exec packer.status :help "Show status"}
+                    {:keys "<leader>hpw" :exec packer.compile :help "Compile current"}])

@@ -1,0 +1,22 @@
+{
+    "configurations": {
+        "python-debug": {
+            "default": true,
+            "adapter": "debugpy",
+            "filetypes": [ "python" ],
+            "breakpoints": {
+                "exception": {
+                    "all": "N",
+                    "uncaught": "Y"
+                }
+            },
+            "configuration": {
+                "type": "python",
+                "request": "launch",
+                "stopOnEntry": true,
+                "python": "python3",
+                "program": "${file}"
+            }
+        }
+    }
+}

@@ -82,3 +82,5 @@ EndString
 else
   puts "Invalid command passed: #{args}"
 end
+
+puts "hello world"

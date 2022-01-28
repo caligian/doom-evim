@@ -234,7 +234,8 @@
 (defn send-to-debugger [what ?cmd]
   (let [debugger (get-debugger ?cmd)]
     (when (start-debugger ?cmd)
-      (send debugger what))))
+      (send debugger what)
+      what)))
 
 (defn kill-debugger [?cmd]
   (shutdown (or ?cmd (get-debugger))))
