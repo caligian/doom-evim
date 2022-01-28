@@ -594,10 +594,3 @@
     #(require module-name)
     #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name)) 
     #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1))))
-
-; Register all help-groups in <leader>
-(each [k group-name (pairs doom.map-help-groups.leader)]
-  (wk.register {k {:name group-name}} {:prefix "<leader>"}))
- 
-(each [k group-name (pairs doom.map-help-groups.localleader)]
-  (wk.register {k {:name group-name}} {:prefix "<localleader>"}))
