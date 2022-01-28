@@ -18,7 +18,7 @@ local function init(vim)
     vim.o.shiftwidth = 4
     vim.o.expandtab = true
     vim.o.foldmethod = "syntax"
-    vim.o.guifont="Roboto Mono:h12"
+    vim.o.guifont="Menlo Nerd Font Mono:h12"
     vim.o.backupdir = string.format("%s/%s", vim.fn.stdpath("config"), "backup")
     vim.o.directory = string.format("%s/%s", vim.fn.stdpath("config"), "tmp")
     vim.o.undodir = string.format("%s/%s", vim.fn.stdpath("config"), "undo")
@@ -40,9 +40,9 @@ local function init(vim)
     vim.cmd [[ let g:aniseed#env = v:true ]]
 
     local home = os.getenv('HOME')
-    package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home) 
-    package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home) 
-    package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home) 
+    package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home)
+    package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home)
+    package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home)
 end
 
 init(vim)

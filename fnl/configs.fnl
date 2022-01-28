@@ -141,7 +141,8 @@
         (fn [] 
           (let [telescope (require :telescope)
                 actions (require :telescope.actions)]
-            (telescope.setup {:defaults {:mappings {:n {:D actions.delete_buffer}
+            (telescope.setup {:defaults {:path_display [:smart]
+                                         :mappings {:n {:D actions.delete_buffer}
                                                     :i {"<C-d>" actions.delete_buffer}}}})
 
             ; Add some more default actions
