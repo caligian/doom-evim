@@ -5,13 +5,13 @@
              Job plenary.job
              vimp vimp}})
 
+(local valid-commands {})
+
 (defn- format-output [s]
   (utils.split (accumulate [final ""
                             _ o (ipairs s)]
                            (.. final o)) 
                "[\n\r]+"))
-
-
 
 (defn- get-output-and-split [s]
   (vim.fn.jobstart s
@@ -41,12 +41,24 @@
   (let [binary (. doom.langs ft of)
         cmd-name (.. "Runner" (uppercase of) (uppercase ft))]
     (when binary 
+      (tset valid-commands cmd-name true)
       (vimp.map_command cmd-name #(_runner binary)))))
+
+(defn- current-buffer-runner [op]
+  (let [ft vim.bo.filetype
+        sample-cmd (.. :Runner (uppercase op) (uppercase ft))
+        is-valid-op (. valid-commands sample-cmd)]
+    (when is-valid-op
+      (vim.cmd (.. ":" sample-cmd))
+      true)))
 
 (each [_ lang (ipairs (utils.keys doom.langs))]
   (each [_ op (ipairs [:build :test :compile])]
     (make-runner lang op)))
 
-(utils.define-keys [{:keys "<leader>mc" :exec ":RunnerCompile" :help "Compile <lang>"}
-                    {:keys "<leader>mb" :exec ":RunnerBuild" :help "Build <lang>"}
-                    {:keys "<leader>mt" :exec ":RunnerTest" :help "Test <lang>"}])
+(utils.define-keys [{:keys "<leader>mC" :exec ":RunnerCompile" :help "Compile <lang>"}
+                    {:keys "<leader>mB" :exec ":RunnerBuild" :help "Build <lang>"}
+                    {:keys "<leader>mT" :exec ":RunnerTest" :help "Test <lang>"}
+                    {:keys "<leader>mc" :exec #(current-buffer-runner :compile) :help "Compile buffer file"}
+                    {:keys "<leader>mb" :exec #(current-buffer-runner :build) :help "Build buffer file"}
+                    {:keys "<leader>mt" :exec #(current-buffer-runner :test) :help "Compile buffer file"}])

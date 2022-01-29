@@ -74,7 +74,6 @@
 
 (defn on-attach-f [arg bufnr]
       (vim.api.nvim_buf_set_option bufnr "omnifunc" "v:lua.vim.lsp.omnifunc")
-      (vim.cmd "autocmd CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()")
       (vim.cmd "command! Format execute lua vim.lsp.buf.formatting()"))
 
 (defn setup-sumneko-lua []

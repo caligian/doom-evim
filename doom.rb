@@ -30,15 +30,18 @@ class SetupDoom
 
     Dir.chdir doom_fonts_dir
 
-    Dir
-      .children('.')
-      .select { |i| i if i =~ /zip$/ }
-      .map { |font| `unzip #{font}` }
+    available_fonts = Dir.glob '*zip'
 
-    `find -name '*tf' -exec cp {} #{font_install_path}/ \\;`
-    `find -name '*tf' -exec rm {} \\;`
-    `fc-cache -vfr`
-
+    available_fonts.map do |font|
+      fonts = `unzip -l #{font}`.split /\n/
+      fonts = fonts.select {|i| i.match /^\s*[0-9]/}
+      fonts = fonts.map {|f| _f = f.split /\s+/; %{"#{_f[4..].join ' '}"} }
+      fonts = fonts.select {|f| f.match /(ttf|otf)"$/ }
+      `unzip -o #{font}`
+      fonts.each {|f| `mv #{f} ~/.local/share/fonts/`}
+      `fc-cache -fv`
+    end
+   
     puts 'Please restart your shell to load the fonts.'
   end
 
