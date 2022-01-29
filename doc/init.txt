@@ -318,7 +318,10 @@ lsp.servers {table}
 
 
 *doom-utils*
-Doom utils contain some functions that the user may use in their configuration. These functions are contained in `doom.utils`. Lua users will have to use table indexing by string to access many of these functions because their names contain '-'.
+Doom utils contain some functions that the user may use in their configuration. 
+These functions are contained in `doom.utils`.
+Lua users will have to use table indexing by string to access many of these functions
+because their names contain '-'.
 
 path-exists({path:str}) *doom.utils.path-exists*
     Returns true if path exists or false. 
