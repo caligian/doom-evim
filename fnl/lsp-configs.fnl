@@ -18,13 +18,14 @@
   (vim.cmd "noremap <leader>lR  :lua vim.lsp.buf.references()<CR>")
   (vim.cmd "noremap <leader>la  :lua vim.lsp.buf.code_action()<CR>")
   (vim.cmd "noremap <leader>lc  :lua vim.lsp.buf.range_code_action()<CR>")
-  (vim.cmd "noremap <leader>le  :lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
+  (vim.cmd "noremap <leader>le  :lua vim.diagnostic.open_float()<CR>")
   (vim.cmd "noremap [d          :lua vim.lsp.diagnostic.goto_prev()<CR>")
   (vim.cmd "noremap ]d          :lua vim.lsp.diagnostic.goto_next()<CR>")
   (vim.cmd "noremap <leader>lq  :lua vim.lsp.diagnostic.set_loclist()<CR>"))
 
 (defn on-attach-f [arg bufnr]
       (vim.api.nvim_buf_set_option bufnr "omnifunc" "v:lua.vim.lsp.omnifunc")
+      (vim.cmd "autocmd CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()")
       (vim.cmd "command! Format execute lua vim.lsp.buf.formatting()"))
 
 (defn setup-sumneko-lua []

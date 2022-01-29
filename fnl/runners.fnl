@@ -27,10 +27,15 @@
   (let [binary (. doom.langs ft of)
         cmd-name (.. "Runner" (uppercase of) (uppercase ft))]
     (when binary 
+
+      ; In case if use-current-file is not ^y$ then simply return the string.
       (vimp.map_command cmd-name #(get-output-and-split (string.format "%s %s %s"
                                                                        binary 
                                                                        (vim.call :input (utils.fmt "Args for %s > " binary))
-                                                                       (vim.fn.expand "%:p"))) f))))
+                                                                       (let [use-current-file (str.trim (vim.call :input "Use current file? (y/n) > "))
+                                                                             file (if (string.match use-current-file "^y$")
+                                                                                    (vim.fn.expand "%:p")
+                                                                                    use-current-file)] file)))))))
 
 (each [_ lang (ipairs (utils.keys doom.langs))]
   (each [_ op (ipairs [:build :test :compile])]

@@ -41,8 +41,7 @@
 
               ; LSP defaults
               :lsp {:install_sumneko_lua true
-                    :load_default true
-                    :servers {:solargraph {} :pyright {}}}
+                    :load_default true}}
  
 
               ; Contains user-package declarations
@@ -63,29 +62,22 @@
                      ; form: {:cmd {:id terminal_job_id :buffer bufnr}}
                      :running_repls {}}
 
-              :dap {:default {:python "debugpy"
-                              :javascript "vscode-node-debug2"
-                              :lua "local-lua-debugger-vscode"}}
-
               ; Basic setup for languages
               ; Used by doom's runner
               :langs {:python {:server "pyright" 
                                :compile "python3"
-                               :pattern "*py"
                                :debug "python3 -m pdb"
                                :test "pytest"
                                :build false}
 
                       :ruby {:server "solargraph"
                              :compile "ruby"
-                             :pattern "*rb"
                              :debug "ruby -r debug"
                              :test "rspec"
                              :build "rake"}
 
                       :lua {:server "sumneko_lua"
                             :compile "/usr/bin/lua"
-                            :pattern "*lua"
                             :manual true
                             :debug "lua"
                             :test "lua"

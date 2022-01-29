@@ -1,19 +1,12 @@
-*Doom-evim*
+*doom-evim*
+
 ==========================================================================
-CONTENTS
+CONTENTS *doom-toc*
 
 1. Introduction .... |doom-introduction|
 2. Philosophy .... |doom-philosophy|
-3. Namespaces .... |doom-namespaces|
-4. Internals .... |doom-internals|
-5. Modules .... |doom-modules|
-6. User configuration .... |doom-user-config| 
-    6.1 Package management .... |doom-user-packages|
-    6.2 Configuration .... |doom-user-config|
-7. Recommended practices .... |doom-recommendations|
-8. Gotchas .... |doom-gotchas|
-9. Bugs .... |doom-bugs|
-10. Roadmap .... |doom-roadmap|
+3. Filesystem .... |doom-fs|
+4. Modules .... |doom.modules|
 
 ==========================================================================
 INTRODUCTION *doom-introduction*
@@ -74,8 +67,7 @@ and match fennel configurations as long as you follow some |doom-gotchas| (which
 not that daunting).
 
 Other than that, just like doom-nvim and doom-emacs, this distribution is
-replete with plugins (unfortunately, not with vim-dap) and LSP that works out of the box
-(except the fact that you need to install your servers manually using `:LspInstall <lang>`)
+replete with plugins that you are most likely to use.
 
 ===========================
 PHILOSOPHY *doom-philosophy*
@@ -89,193 +81,639 @@ distribution itself. In simple words, many useful functions used by doom-evim
 are available to a user and the distribution sets good reusable defaults. 
 
 If you wish to extend this configuration, feel free to do so via your private
-`~/.vdoom.d`. You can do the same via `lua` or `fennel` although this
-distribution encourages the usage of fennel. 
+`~/.vdoom.d`. You can do the same via `lua` or `fennel`.
 
 ===================
-NAMESPACES *doom-namespaces*
+FILESYSTEM *doom-fs*
 
 This section will contain a brief description of doom-evim API. 
-Doom has two separate namespaces for storing user configuration and system
-configuration. You should not think much about it because the system
-configuration is configured according to the user configuration provided.
-However, this section should acquaint you about the directory structure of
-doom. 
+By default, user configs are not stored in the global table because the user
+can do it by themselves if they wish to do so. 
 
-*doom-system-namespaces*
+*doom-system-fs*
 Doom primarily uses fennel for its configuration. The compiled counterparts
 are present in `~/.config/nvim/lua/`. Fennel itself is present in
 `~/.config/nvim/lua/fennel.lua`. Therefore, it can be required anywhere in
 doom's private configuration. 
 
 These are the system modules: 
-1. init 
+1. `init` 
     This module contains the required code to start doom. 
-2. utils
+2. `utils`
     This module contains utility functions that can be used by doom and user
-    both. 
-3. package-utils
+    both. Functions are accessible via |doom.utils|
+3. `package-utils`
     This module contains utility functions to store packages. It takes into
     consideration user package declarations also. It also creates the final
     list of packer forms for packer usage. 
 
     It also contains the default package declarations. This is the exact
-    declaration that will be present in `.vdoom.d/user-packages.lua`. 
-4. packages
+    declaration that will be present in `~/.vdoom.d/user-packages.lua`. 
+4. `packages`
     This module imports stuff from package-utils and initializes packer.
     Currently, there is no way to reload packages on the fly because packer is
     called only once to configure doom. Therefore, the user has to restart
     nvim everytime they modify `~/.vdoom.d/user-packages.lua`.
-5. configs
+5. `configs`
     This module contains all the configurations that are applied to doom AFTER
     packer initializes all the packages. It contains the majority of doom's
     keybindings.
-6. keybindings
+6. `keybindings`
     This module contains all the non-package related keybindings. It also
     heavily utilizes `doom.utils`. It contains the majority of doom's
     general keybindings.  
-7. repl
+7. `repl`
     This module contains a basic REPL for doom. It keeps tracks of the
     terminals user invokes and also provides some basic utilities such as
     sending strings to the REPL.
-8. runner
+8. `runner`
     This module provides keybindings and commands to run operations such as
     compile, test, build, etc.
+9. `specs`
+    This module contains some packer configurations for packages before they
+    are initialized by packer. This file is LOADED BEFORE PACKER loads the
+    packages mentioned here. These packages should be present in doom.packages
+10. `dap-config`
+    This module configures vimspector to be used as a Debugger Adapter client
+11. `logger`
+    This is the global logger that doom uses to track startup errors.
+12. `globals`
+    This module contains the default configuration of doom. It can be overrided
+    anywhere in the private/system configuration.
 
-*doom-user-namespace*
+*doom-user-fs*
 Doom encourages the usage of `fennel` and `lua`  both for configuring the
-private stuff of the user. This is because some things are designed to be
-user-agnostic as most users of this distribution are assumed to be lua but
-non-fennel users. These lang-agnostic things include package-declarations and
-configurations declared in packer form contained in `user-packages.lua` and
-`user-specs.lua`. Additionally, user's `init.lua` is provided to override
-doom's defualt configuration. 
+private stuff of the user. However, some files should be defined in lua. This is
+to prevent this distro from being too niche. 
+
+These are the necessary lua files required:
+1. `user-init`
+    Contains doom configuration overrides as desired by the user. Also the
+    starting point to require any additional user-defined modules in the
+    private configuration.
+2. `user-packages`
+    Contains a master-list of packages that will be actually used by doom. This
+    allows users to quickly re-enable or disable the default module declarations
+    and also allow them to add their own plugins. 
+3. `user-specs`
+    Contains all the configuration that will be used in packer.use while
+    initializing a package. These are NOT configurations that will be used AFTER
+    but rather BEFORE all the packages are being in use. 
 
 `lua/` and `fnl/` will contain everything that will later configure whatever the user has put
 in doom. These are specially made for lua and fennel users sticking to their
 guns. You can use a combination of both but I will recommend you to stick to one
 language to avoid conflicts. 
 
-These are the lang-agnostic modules: 
-1. user-init
-    Contains doom configuration overrides as desired by the user. Also the
-    starting point to require any additional user-defined modules in the
-    private configuration.
-2. user-packages
-    Contains a master-list of packages that will be actually used by doom. This
-    allows users to quickly re-enable or disable the default module declarations
-    and also allow them to add their own plugins. 
-3. user-specs
-    Contains all the configuration that will be used in packer.use while
-    initializing a package. These are not configurations that will be used AFTER
-    but rather BEFORE all the packages are being in use. 
+Since `lua/` and `fnl/` are present in package.path, it is up to the user to
+require and use them as they wish. Everything contained in `fnl/` will be
+present in `compiled/`which contains the compiled lua files. 
 
-Fennel modules:
+Every file in `lua/` should be prefixed with `user-lua` and every file in `fnl/`
+should be prefixed with `user-fnl` and then you can require them in your private
+configuration. Keep in mind that only compiled files of fennel will be used.
+They will usually seem like - `user-fnl-<NAME>.lua`. 
 
-    
+Lastly, don't forget to add your fennel filenames to `doom.user_compile_fnl` or
+else they won't be compiled before startup. You can also use: >
+
+   doom.utils['convert-to-lua']([...]) -- Name of files present in fnl/
+
+   -- or this
+   (doom.utils.convert-to-lua [...])
+
+to compile a list of files present in `~/.vdoom.d/fnl`. 
+
+========================
+MODULES *doom-modules*
+
+This section contains the guide to use the doom api in your private
+configuration. 
+
+Most doom modules have functions that users won't need except `utils`,
+`lsp-configs` and `logger`. 
+
+*doom-globals*
+Doom's globals are defined in globals.fnl. They can be accessed by indexing
+doom when required, example: `doom.fnl_config = true`  
+
+These are the configurable ones:
+
+fnl_config {bool} 
+    If set, compiles user fennel configurations files to lua. They can be
+    required after compilation via prefix `user-fnl-<filename>`. 
+
+    Default: true
+
+
+default_runner {bool}
+    If set, use utilities in |doom-runner|. Please visit the link to
+    understand more about doom's runner. 
+
+    Default: true
+
+
+default_repl {bool}
+    If set, use the REPL module provided with doom-evim. Please visit
+    |doom-repl| for more information.
+
+    Default: true
+
+
+default_keybindings {bool}
+    Set doom's defualt keybindings? 
+
+    Default: true
+
+
+default_package_configs {bool}
+    Use doom's default package configuration? 
+
+    Default: true
+
+
+lisp_langs {list}
+    These languages will have guns/vim-sexp package's functionality available
+    to them. vim-sexp is similar to emacs's smartparens.
+
+    Default: ["fennel" "clojure" "scheme"]
+
+
+treesitter_langs {list}
+    Treesitter parser for these languages will be installed automatically.
+    Only works if default_package_configs is true.
+
+    Default: ["python" 
+              "ruby"
+              "json"
+              "yaml"
+              "javascript"
+              "c"
+              "lua"
+              "fennel"
+              "perl"]
+
+
+map-help-groups {table}
+    Contains the key-prefix descriptions for <leader> and <localleader> keys.
+    Please check |doom.utils.register-to-wk| to understand what a key-prefix
+    description is. 
+
+    Default: {:leader {:b "Buffers"
+                       :q "Buffers+Close"
+                       :c "Commenting"
+                       :l "LSP"
+                       :h "Help+Telescope"
+                       :f "Files"
+                       :d "Debug"
+                       :x "Misc"
+                       :m "Filetype Actions"
+                       :s "Session"
+                       :g "Git"}
+
+              :localleader {"," "REPL"
+                            "t" "REPL"
+                            "e" "REPL"}} 
+
+
+user_compile_fnl {list}
+    Filenames that will be compiled by |doom.utils.convert-to-lua| if no args
+    are passed to it. 
+
+    Default: ["init" "utils" "keybindings" "configs" "lsp-configs"]
+
+
+repl.ft {table} 
+    Form: {<filetype> <repl-command>}
+    These repl-commands will be used for the filetypes mentioned as keys in
+    repl.ft
+
+    Default: {:sh "bash"
+              :ruby "irb"
+              :perl "perl"
+              :fennel "fennel"
+              :python "python"
+              :lua "lua"
+              :powershell "powershell"
+              :ps1 "powershell"}
+
+
+langs.<lang> {table}
+    Form: {<lang> <opts>}
+
+    Please visit |doom-repl| to understand how doom's default debugger works
+    and |doom-runner| to understand what compile, build and test is and
+    |doom-lsp-configs| to understand how server key is used.
+
+    <opts> accepts these keys: 
+        {server:str} 
+        Server name to use for this filetype
+
+        {compile:str}
+        Filetype async compiler command to use to run current file or anything
+        else. 
+
+        {manual:bool}
+        Manually configure this language's LSP server. This server won't be
+        setup using doom's defaults. 
+
+        {debug:str}
+        Debugger command to use with doom's REPL for ft. This splits the
+        window and opens the debugger for the current file. It does not use
+        DAP-protocol.
+
+        {build:str}
+        Filetype async cmd to build the current file or anything else. 
+
+        {test:str}
+        This command is used to run a test suite for the current file or
+        anything else 
+
+    Default: {:python {:server "pyright" 
+                        :compile "python3"
+                        :debug "python3 -m pdb"
+                        :test "pytest"
+                        :build false}
+
+              :ruby {:server "solargraph"
+                     :compile "ruby"
+                     :debug "ruby -r debug"
+                     :test "rspec"
+                     :build "rake"}
+
+              :lua {:server "sumneko_lua"
+                    :compile "/usr/bin/lua"
+                    :manual true
+                    :debug "lua"
+                    :test "lua"
+                    :build false}}
+
+
+lsp.load_default {bool}
+    If true, load all the default doom's lsp configurations. 
+
+
+lsp.install_sumneko_lua {bool}
+    If true, doom will automatically install and setup sumneko_lua. Requires
+    the above to be set true.
+
+    Default: true
+
+
+*doom-utils*
+Doom utils contain some functions that the user may use in their configuration. These functions are contained in `doom.utils`. Lua users will have to use table indexing by string to access many of these functions because their names contain '-'.
+
+path-exists({path:str}) *doom.utils.path-exists*
+    Returns true if path exists or false. 
+
+    Returns: false or true
+
+
+list-dir({path:str}) *doom.utils.list-dir*
+    If path is valid, returns a table of children or false. 
+
+    Returns: false or list
+
+
+register({f:function}, {keybinding:bool}) *doom.utils.register*
+    Creates a new global function under a random name and returns a string
+    that can be used in command mode. 
+
+    If keybinding is true then return a string that can be used in a
+    keybinding. This is made separate because often commands used in
+    keybindings contain '<CR>', etc that don't work in command mod
+
+    Returns: string
+
+
+keys({t:table}) *doom.utils.keys*
+    Returns all the keys in a table.
+
+    Returns: list
+
+
+vals({t:table}) *doom.utils.vals*
+    Returns all the values in a table.
+
+    Returns: list
+
+
+consider-os({os-funcs:table}) *doom.utils.consider-os*
+    Table form: {{os} {function}}
+
+    If vim.has({os}) then the corresponding function is called. Return values
+    of the function are returned. 
+
+    Returns: anything returned from {function}
+
+
+rest({v:list}) *doom.utils.rest*
+    Returns all the elements except the first one in a list.
+
+    Returns: list
+
+
+first({v:list}) *doom.utils.first*
+    Returns the first element of a list. 
+
+    Returns: first element of {v}
+
+
+find({t:list} {key:str}) *doom.utils.find*
+    Returns the element found in {t} matched by {key}. {key} can be a valid
+    regex string also. 
+
+    Returns: Anything found in {t} matched {key}
+
+
+join_path({[str]}) *doom.utils.join_path*
+    List of strings will be concatenated with '/' and returned as a single
+    string.
+
+    Returns: string
+
+
+confp({[str]}) *doom.utils.confp*
+    Suffix `stdpath('config')` with list of strings passed ahead. 
+
+    Example: confp('a', 'b', 'c') will return $HOME/.config/nvim/a/b/c
+
+    Returns: string
+
+
+sed({s:str} {replacement-a:list} {substitute-a:list}) *doom.utils.sed*
+    Works like GNU sed. This replaces all the strings according to patterns mentioned in
+    {replacement-a} with strings mentioned in {substitute-a}.
+
+    Asserts: length(replacement-a) == length(substitute-a)
+
+    Returns: string
+
+
+linenum([{bufnr:int}]) *doom.utils.linenum*
+   Returns the 1-indexed line number (this is the line number that you see) of
+   the current buffer is {bufnr} is missing or line number of the buffer
+   associated with bufnr. 
+
+   Returns: integer
+
+
+vpos([{bufnr:int}]) *doom.utils.vpos*
+    Returns the starting and ending line number of the visual selection in a
+    buffer mentioned by bufnr. If no bufnr is provided, the current buffer
+    will be used. 
+
+    Returns: list(int, int)
+
+
+eval-at-line([{bufnr:int}] [{lineno:int}] {cmd:function/string}) *doom.utils.eval-at-line*
+    If {bufnr} is missing, use current buffer. If {lineno} is missing, use
+    current line number and execute {cmd} at that line. 
+
+    If {cmd} is a function, the string representation will be obtained via
+    |doom.utils.register| or if cmd is a string, use it as is. 
+
+    Returns: nil
+
+
+set-text([{bufnr:int}] {start-coordinates:list} {end-coordinates:list} {s:str/list})
+*doom.utils.set-text*
+    If {bufnr} is missing, use current buffer.
+
+    {start-coordinates} and {end-coordinates} should be lists. 
+
+    {s} should be a non-newline-containing string or a list of strings. The
+    strings should not have a newlines. 
+
+    The coordinates will be used to set the provided text in the buffer
+    specified by default or provided value of {bufnr}.
+
+    Form: 
+    {start-coordinates} [<start-row> <start-column>]
+    {end-coordinates}   [<end-row> <end-column>]
+    {s}                 <string>/[<string>]
+
+    Returns: 
+    nil
+
+
+set-lines([{bufnr:int}] {coordinates:list} {s:str/list}) *doom.utils.set-lines*
+    Coordinates should be in the form: [<start-line> <end-line>]. String
+    specification is the same as |doom.utils.set-text|. String[s] are set in
+    the buffer specified by default or user value of {bufnr}.
+
+    Returns: nil
+
+
+save-excursion([{bufnr:int}] {f:function}) *doom.utils.save-excursion*
+    Function will be executed in the buffer specified by {bufnr} and return
+    the cursor position before that function is executed. 
+
+    Returns: Anything from {f}
+
+
+get-line-count([{bufnr:int}]) *doom.utils.get-line-count*
+    Get the number of lines in buffer specified by default or user value of
+    {bufnr}.
+
+    Returns: integer
+
+
+get-buf-name([{bufnr:int}]) *doom.utils.get-buf-name*
+    Get the name of the current buffer or user value of {bufnr}.  
+
+    Returns: string
+
+
+buffer-string([{bufnr:int}] {coordinates:list} {concat:bool})
+*doom.utils.buffer-string*
+    Get the strings according to {coordinates} in the form: 
+    [<start-line> <end-line>]. If {concat} is true then return a
+    newline-concatened string obtained or return a table. 
+
+    Returns: string/list
+
+
+vtext([{concat:bool}]) *doom.utils.vtext*
+    Get the text specified in visual selection. If {concat} is true, return a
+    newline concateneted string. 
+
+    Returns: string/list
+
+
+line-range-exec({cmd:string/function}) *doom.utils.line-range-exec*
+    Execute {cmd} on every line specified in a visual selection. 
+
+    Returns: nil
+
+
+respect-count({cmd:str/function} {newline:bool} {keybinding:bool})
+*doom.utils.respect-count*
+    This makes a command respect `v:count`. Basically a count can be specified
+    for a command. If {newline} is true, the command is executed on the next
+    consecutive lines. If not, the command will executed `v:count` times on the
+    same line. If {keybinding} is true then return a string that can be used
+    in a keybinding else return a string that can be command mode. 
+
+    Returns: string
+
+
+get-line([{bufnr:int}] [{lineno:int}]) *doom.utils.get-line*
+    Returns the string at {lineno} in {bufnr}.  
+
+    Returns: string
+
+
+to-temp-buffer({s:str/list} {direction:str}) *doom.utils.to-temp-buffer*
+    Open a window that exits as soon user leaves it. This window is split
+    according to {direction} where the default direction is "sp" (split). 
+
+    String specification is the same as |doom.utils.set-text|. 
+
+    Returns: nil
 
      
 
+sh({s:str} [{buf:bool}])  *doom.utils.sh*   
+    Synchronously execute a bash command in {s}. If {buf} is true then open a
+    temporary buffer and show the output else simply echo the output. Returns
+    the output obtained. 
 
+    Returns: string 
+    
 
+autocmd({group:str} {event:str} {pattern:str} {exec:str/function}) *doom.utils.autocmd*
+    This is very similar to vim's `autocmd`. {group} is the name of the group
+    to hook to {exec}. {event} is the triggering event of {exec}. Patterns
+    pertaining to {event} are used to match the parameters to execute {exec}. 
 
+    Returns: nil
 
 
+augroup({name:str} [{autocmd-forms:list}]) *doom.utils.augroup*
+    Create a new augroup and make autocmds based on this group if
+    {autocmd-forms} is a list of parameters acceptable to
+    |doom.utils.autocmd|. If no {autocmd-forms} exist then make an empty
+    augroup.
 
+    Returns: nil
 
 
+add-hook([{groups:str/list}] [{events:str/list}] [{patterns:str/list}]
+{exec:str/function}) *doom.utils.add-hook*
+    Doom recommends you to use this function instead of |doom.utils.autocmd|. 
+    This function can be thought of |doom.utils.autocmd| on steriods. Multiple
+    {groups}, {events} and {patterns} can be specified to use with {exec}.
+    This function will create all the necessary autocmds for the user.
 
+    Returns: nil
 
 
+register-to-wk({keys:str} {help:str} [{help-desc:str}] [{not-register}])
+*doom.utils.register-to-wk*
+    Register to display in which-key popup at keypress. {keys} are normal key
+    declarations without attributes that you would use in `map`. {help} is
+    string to show for {keys}.
 
+    If {help-desc} is specified, the prefix key for {keys} will also be
+    documented in which-key popup. 
 
+    If {not-register} is true then return the table that can be used with: 
+    `require('which-key').register` manually by the user.
 
+    Returns: nil or which-key table.
+    
+    
+define-key({opts:table}) *doom.utils.define-key*   
+    {opts} have the following keys:
+        [{noremap:bool}] 
+        Make a non-recursive keybinding? 
+        Default: true
 
+        [{key-attribs:list}]
+        List of keybinding attributes such as `{buffer} {silent} ...`
+        Just pass the name of the attribute or a list of attributes without
+        the surround braces. eg "buffer" or ["buffer" "silent"]
+        Default: silent
 
+        {keys:str}
+        Keys to map depending on {noremap} and {modes}
 
+        [{modes:str/list}]
+        Modes to bind to
+        Default: ["n"]
 
+        [{events:str/list}]
+        Bind the keybinding to these events. This also requires {patterns} to
+        be passed by the user.
+        Default: nil. 
 
+        [{patterns:str/list}]
+        Make an event-based keybinding based on patterns acceptable to the
+        bound event. This requires {events} to be passed.
+        Default: nil
 
+        [{groups:str/list}]
+        These are the groups that an event-based keybinding will be bound to. 
+        Default: nil. If {events} and {patterns} are set then "GlobalHook" is
+        the default group sed.
 
+        {exec:str/function}
+        Use this str or function in the keybinding. 
 
+        [{help:str}] 
+        Help string to show in which-key popup
+        Default: nil
 
+        [{help-group:str}]
+        Description of the prefix of {keys}
+        Default: nil
 
+        [{repeatable:bool}]
+        Make the keybinding repeatable? 
+        Default: false
 
+    Returns: nil
 
+     
+define-keys({...}) *doom.utils.define-keys*
+    Wrapper for |doom.utils.define-key| except that it can accept any number
+    of forms required by |doom.utils.define-key|.
 
+    Returns: nil
 
 
+convert-to-lua([{filename:list}])  *doom.utils.convert-to-lua*  
+    This compiles the default or user fennel filenames present in `~/.vdoom.d/fnl`
+to lua. The compiled file is saved in `~/.vdoom.d/compiled`.
 
+    The default filenames are present in |doom.user_compile_fnl|.
 
+    Returns: nil
 
 
+try-then-else({try-f:function} {success-f:function} {failure-f:function})
+*doom.utils.try-then-else*
+    If {try-f} does not throw errors then {success-f} will be called and 
+    its returns values will be returned else {failure-f} will be called and
+    its return values will be returned.
 
+    Returns: anything from {success-f} or {failure-f}
 
 
+try-catch-then({try-f:function} {handle-f:function} [{then-f:function}])
+*doom.utils.try-catch-then*
+    If {try-f} emits an error then {handle-f} is used to handle it. If {then-f} is passed, {then-f} is called at the end of handling.
 
+    Returns: anything from {then-f} if it is supplied or nil
 
 
+try-require({module-name} {type-module}) *doom.utils.try-require*   
+    Try to require {module-name}. If it throws errors, the error is logged in
+    `stdpath('data')/doom-evim.log`. {type-module} can be any string. doom
+    uses "DOOM" for its error handling and by user modules use "USER".
 
+    Returns: nil
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-modeline vim:tw=80 ft=help sw=4
+*doom-lsp-configs*

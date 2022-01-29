@@ -10,7 +10,6 @@ class SetupDoom
   end
 
   def setup_lua
-    puts 'Please ensure that you have installed lua 5.1 on your system'
     puts 'Installing: set-lua, lualogging, lpath, luafun'
     `luarocks --lua-version 5.1 --local install set-lua`
     `luarocks --lua-version 5.1 --local install lualogging`
@@ -37,6 +36,7 @@ class SetupDoom
       .map { |font| `unzip #{font}` }
 
     `find -name '*tf' -exec cp {} #{font_install_path}/ \\;`
+    `find -name '*tf' -exec rm {} \\;`
     `fc-cache -vfr`
 
     puts 'Please restart your shell to load the fonts.'
@@ -46,9 +46,11 @@ class SetupDoom
     package_dest = "#{ENV['HOME']}/.local/share/nvim/site/pack/packer/start"
     `mkdir -p '#{package_dest}' &>/dev/null`
     `git clone --depth 1 https://github.com/wbthomason/packer.nvim #{package_dest}/packer.nvim`
-    `git clone https://github.com/Olical/aniseed #{package_dest}/aniseed`
-    `git clone https://github.com/Olical/conjure #{package_dest}/conjure`
-    `git clone https://github.com/bakpakin/fennel.vim #{package_dest}/fennel.vim`
+
+    # These are the bootstrap packages!
+    %w[Olical/aniseed Olical/conjure bakpakin/fennel.vim nvim-lua/plenary.nvim svermeulen/vimpeccable folke/which-key.nvim kreskij/Repeatable.vim guns/vim-sexp folke/persistence.nvim].each do |repo|
+      `git clone https://github.com/#{repo} #{package_dest}/#{repo.match(%r{/([^$]+)})[1]}`
+    end
   end
 end
 
@@ -69,18 +71,15 @@ elsif args =~ /install-fonts/
 elsif args =~ /make-user-fs/
   SetupDoom.new.make_user_fs
 elsif args =~ /help/
-  puts <<"EndString"
-  $0: A utility script for first-time users.
-
-  Commands:
+  puts <<"ENDSTRING"
   bootstrap         Installs essentials packages required by doom
   setup-lua         Install the required luarocks
   make-user-fs      Make ~/.vdoom.d/ and insert sample files in it
   install-fonts     Install several fonts to ~/.local/share/fonts
   setup-all         Do all of the above
-EndString
+ENDSTRING
+elsif args == ''
+  puts "No command passed. Pass `help` to see the commands."
 else
   puts "Invalid command passed: #{args}"
 end
-
-puts "hello world"

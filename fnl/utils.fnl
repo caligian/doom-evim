@@ -139,7 +139,7 @@
 (defn find [t key]
   (let [k (keys t)
         r (vec (fun.range 1 (length t)))
-        found (core.filter #(= (. k $1) key) r)]
+        found (core.filter #(rx.match (. k $1) key) r)]
     found))
 
 ; Only returns true or false
@@ -156,11 +156,7 @@
     t))
 
 (defn join_path [...]
-  (if 
-    (= (vim.fn.has "win32") 1)
-    (table.concat [...] "\\")
-    
-    (table.concat [...] "/")))
+  (table.concat [...] "/"))
 
 (defn datap [...]
   (let [data-path (vim.fn.stdpath "data")]
@@ -195,6 +191,7 @@
 (defn pos [?bufnr]
   (vim.api.nvim_win_get_cursor (or ?bufnr 0)))
 
+
 (defn current-line [?bufnr]
   (table.concat (vim.api.nvim_buf_get_lines (or ?bufnr 0) 
                                             (- (linenum) 1) 
@@ -211,6 +208,9 @@
 
 (defn eval-at-line [?bufnr ?lineno cmd]
   (let [bufnr  (or ?bufnr  0)
+        cmd (if (= (type cmd) "string")
+              cmd
+              (register cmd))
         lineno (or ?lineno (linenum))]
     (set-pos bufnr [lineno])
     (vim.cmd cmd)))
@@ -415,7 +415,10 @@
 ;; autocmd-str
 ;; Get an autocmd string that can be executed with vim.cmd
 (defn autocmd-str [group event pattern exec]
-  (string.format "autocmd %s %s %s %s" group event pattern exec))
+  (let [exec (if (= (type exec) "string")
+               exec
+               (register exec))]
+    (string.format "autocmd %s %s %s %s" group event pattern exec)))
 
 (defn autocmd [...]
   (vim.cmd (autocmd-str ...)))
@@ -500,7 +503,8 @@
         key-attribs (or (listify opts.key-attribs) ["silent"])
         keys opts.keys
         modes (or (listify opts.modes) ["n"])
-        events (or (listify opts.events) false)
+        events (or (listify opts.events) 
+                   (if opts.patterns "BufEnter" false))
         patterns (or (listify opts.patterns) false)
         exec (if (= (type opts.exec) "function")
                (register opts.exec true)
@@ -526,7 +530,8 @@
                                           (string.format ":%s%s" s key-command-str))) 
                                       modes)]
 
-    (if events
+    (if (and events
+             patterns)
       (fun.each 
         (fn [e] 
           (let [wk-form (register-to-wk keys help help-group true)
@@ -580,14 +585,12 @@
 (defn try-then-else [try-f success-f failure-f]
   (let [(status message) (pcall try-f)]
     (if status 
-      (do 
-        (success-f)
-        status)
+      (success-f)
       (failure-f message))))
 
-(defn try-catch-then [try-f handle-f then-f]
+(defn try-catch-then [try-f handle-f ?then-f]
   (let [(status message) (xpcall try-f handle-f)]
-    (then-f)))
+    (when ?then-f (?then-f))))
 
 (defn try-require [module-name type-module]
   (try-then-else 

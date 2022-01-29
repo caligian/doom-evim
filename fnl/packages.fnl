@@ -41,6 +41,7 @@
 
 (get-master-list)
 (require :specs)
+(require :user-specs)
 
 ; Setup packer
 ; SPC hrr can now reload packages!
