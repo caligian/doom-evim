@@ -38,7 +38,7 @@
     (get-output-and-split cmd)))
 
 (defn- make-runner [ft of]
-  (let [binary (. doom.langs ft of)
+  (let [binary (?. doom.langs ft of)
         cmd-name (.. "Runner" (uppercase of) (uppercase ft))]
     (when binary 
       (tset valid-commands cmd-name true)
