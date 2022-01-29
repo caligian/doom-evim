@@ -11,65 +11,14 @@ CONTENTS *doom-toc*
 ==========================================================================
 INTRODUCTION *doom-introduction*
 
-Why was doom-evim made in the first place? doom-emacs is an amazing
-distribution. So is doom-nvim. What I loved about emacs are some of the
-important features that are missing from vim (not exactly missing but a bit
-inconvenient): 
+Doom-evim seeks to not only emulate doom-emacs's features in some manner but
+also try to make the vim experience a little-more emacsy. 
 
-For example: 
-Making hooks in emacs is much easier because it only accepts a function. On
-top of that, emacs' advice-add allows you to use pre and post-hooks which is
-even more awesome: >
-    (add-hook 'python-mode-hook 'smartparens-mode)
-    (advice-add :before 'smartparens-mode (lambda nil (hl-line-mode)))
+This distribution has been inspired by doom-nvim and doom-emacs both. You
+should check them out in order to get a feel of how this distro would fare for
+you.
 
-Whereas, the same cannot be said for vim: >
-    autocmd WinEnter *py :smartparens-mode
-
-To be fair, it is not difficult to emulate the same in vim but each plugin
-would have to resort to boilerplate much more often. This is OK because vim
-seeks to be more pragmatic than anything and plugins have a strict
-functionality which usually does not do what do you don't expect. However,
-there are cases where you need an emacs' equivalent of hooking and this
-distribution of nvim contains exactly that: add-hook. Unlike emacs, this
-does not allow you to run hooks on specific functions but it compensates by
-providing you to hook to several groups, patterns and events with lua
-functions if you want to. This is basically a nvim-version of add-hooks!  of
-doom-emacs.
-
-Another source of emacs-envy is from emacs' really enviable keybinding system.
-While local-set-key and global-set-key are already good enough,
-define-key, define-key*, evil-define-key, etc blow vim out of the water
-completely because they accept a major-mode and only allow functions as
-bindings. Some of these functions even accept multiple bindings at once.
-This distribution eliminates emacs-keybinding-envy by providing you with
-define-key[s] - A parallel to emacs' core keybinding mechanism: Bind
-functions to events: >
-    (define-key {:keys "<leader>tt"
-                 :key-attribs "buffer"
-                 :patterns "*py"
-                 :events "WinEnter"
-                 :exec pytest-runner
-                 :help "Run pytest on the current file!"
-                 :help-group "Python testing"})
-
-This keybinding will execute in python-mode only. It will be triggered at
-`WinEnter` . Help and help's group's description will be shown in which-key
-after pressing SPC. 
-
-define-keys is exactly the same except that it accepts of a list of dicts.  
-
-Third source of emacs-envy (for me) is emacs' elisp. While it is criticized
-for a lot of things, my biggest gripe with elisp is the lack of namespaces.
-However, I still had an enjoyable time using it and for those
-who love lisp, doom-evim comes with fennel-support along with lua. You can mix
-and match fennel configurations as long as you follow some |doom-gotchas| (which are
-not that daunting).
-
-Other than that, just like doom-nvim and doom-emacs, this distribution is
-replete with plugins that you are most likely to use.
-
-===========================
+==========================================================================
 PHILOSOPHY *doom-philosophy*
 
 The philosophy of doom-evim is similar to that emacs itself: DRY (Don't Repeat
@@ -83,7 +32,7 @@ are available to a user and the distribution sets good reusable defaults.
 If you wish to extend this configuration, feel free to do so via your private
 `~/.vdoom.d`. You can do the same via `lua` or `fennel`.
 
-===================
+==========================================================================
 FILESYSTEM *doom-fs*
 
 This section will contain a brief description of doom-evim API. 
@@ -184,7 +133,7 @@ else they won't be compiled before startup. You can also use: >
 
 to compile a list of files present in `~/.vdoom.d/fnl`. 
 
-========================
+==========================================================================
 MODULES *doom-modules*
 
 This section contains the guide to use the doom api in your private
@@ -358,6 +307,14 @@ lsp.install_sumneko_lua {bool}
     the above to be set true.
 
     Default: true
+
+lsp.servers {table}
+    Form: {<server-name> <configuration>}
+    If lsp.servers contains any configurations, it will be used to setup. If
+    you use {} as config, doom will minimally set it up by itself.
+
+    Default: {"solargraph" {} 
+              "pyright"    {}}
 
 
 *doom-utils*

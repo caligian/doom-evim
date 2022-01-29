@@ -41,7 +41,9 @@
 
               ; LSP defaults
               :lsp {:install_sumneko_lua true
-                    :load_default true}
+                    :load_default true
+                    :servers {:solargraph {}
+                              :pyright {}}}
  
 
               ; Contains user-package declarations
