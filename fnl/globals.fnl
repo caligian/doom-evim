@@ -28,6 +28,7 @@
                                          :q "Buffers+Close"
                                          :c "Commenting"
                                          :l "LSP"
+                                         :t "Tabs"
                                          :h "Help+Telescope"
                                          :f "Files"
                                          :p "Project"

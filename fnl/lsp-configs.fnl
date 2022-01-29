@@ -4,24 +4,73 @@
              str aniseed.string}})
 
 (defn setup-keybindings []
-  (vim.cmd "noremap <leader>lD  :lua vim.lsp.buf.declaration()<CR>")
-  (vim.cmd "noremap <leader>ld  :lua vim.lsp.buf.definition()<CR>")
-  (vim.cmd "noremap <leader>lk  :lua vim.lsp.buf.hover ()<CR>")
-  (vim.cmd "noremap K           :lua vim.lsp.buf.hover()<CR>")
-  (vim.cmd "noremap <leader>li  :lua vim.lsp.buf.implementation()<CR>")
-  (vim.cmd "noremap <leader>lS  :lua vim.lsp.buf.signature_help()<CR>")
-  (vim.cmd "noremap <leader>lA  :lua vim.lsp.buf.add_workspace_folder()<CR>")
-  (vim.cmd "noremap <leader>lR  :lua vim.lsp.buf.remove_workspace_folder()<CR>")
-  (vim.cmd "noremap <leader>lL  :lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))()<CR>")
-  (vim.cmd "noremap <leader>lT  :lua vim.lsp.buf.type_definition()<CR>")
-  (vim.cmd "noremap <leader>lr  :lua vim.lsp.buf.rename()<CR>")
-  (vim.cmd "noremap <leader>lR  :lua vim.lsp.buf.references()<CR>")
-  (vim.cmd "noremap <leader>la  :lua vim.lsp.buf.code_action()<CR>")
-  (vim.cmd "noremap <leader>lc  :lua vim.lsp.buf.range_code_action()<CR>")
-  (vim.cmd "noremap <leader>le  :lua vim.diagnostic.open_float()<CR>")
-  (vim.cmd "noremap [d          :lua vim.lsp.diagnostic.goto_prev()<CR>")
-  (vim.cmd "noremap ]d          :lua vim.lsp.diagnostic.goto_next()<CR>")
-  (vim.cmd "noremap <leader>lq  :lua vim.lsp.diagnostic.set_loclist()<CR>"))
+  (utils.define-keys [{:keys "<leader>lb"
+                       :exec ":lua vim.lsp.buf.declaration()<CR>"
+                       :help "Show declarations"}
+
+                      {:keys "<leader>l?"
+                       :exec ":lua vim.lsp.buf.definition()<CR>"
+                       :help "Show definitions"}
+
+                      {:keys "<leader>lk"
+                       :exec ":lua vim.lsp.buf.hover ()<CR>"
+                       :help "Show documentation"}
+
+                      {:keys "<leader>li"
+                       :exec ":lua vim.lsp.buf.implementation()<CR>"
+                       :help "Show implementations"}
+
+                      {:keys "<leader>lS"
+                       :exec ":lua vim.lsp.buf.signature_help()<CR>"
+                       :help "Show signature help"}
+
+                      {:keys "<leader>lA"
+                       :exec ":lua vim.lsp.buf.add_workspace_folder()<CR>"
+                       :help "Add workspace folder"}
+
+                      {:keys "<leader>lR"
+                       :exec ":lua vim.lsp.buf.remove_workspace_folder()<CR>"
+                       :help "Remove workspace folder"}
+
+                      {:keys "<leader>lL"
+                       :exec ":lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>"
+                       :help "List workspace folders"}
+
+                      {:keys "<leader>lT"
+                       :exec ":lua vim.lsp.buf.type_definition()<CR>"
+                       :help "Show type definitions"}
+
+                      {:keys "<leader>lr"
+                       :exec ":lua vim.lsp.buf.rename()<CR>"
+                       :help "Rename buffer"}
+
+                      {:keys "<leader>lR"
+                       :exec ":lua vim.lsp.buf.references()<CR>"
+                       :help "Show buffer references"}
+
+                      {:keys "<leader>la"
+                       :exec ":lua vim.lsp.buf.code_action()<CR>"
+                       :help "Show code actions"}
+
+                      {:keys "<leader>lc"
+                       :exec ":lua vim.lsp.buf.range_code_action()<CR>"
+                       :help "Show range code actions"}
+
+                      {:keys "<leader>le"
+                       :exec ":lua vim.diagnostic.open_float()<CR>"
+                       :help "Open diagnostics in float"}
+
+                      {:keys "<leader>ldp"
+                       :exec ":lua vim.lsp.diagnostic.goto_prev()<CR>"
+                       :help "Show previous diagnostic"}
+
+                      {:keys "<leader>ldn"
+                       :exec ":lua vim.lsp.diagnostic.goto_next()<CR>"
+                       :help "Show next diagnostic"}
+
+                      {:keys "<leader>lq"
+                       :exec ":lua vim.lsp.diagnostic.set_loclist()<CR>"
+                       :help "Set loclist"}]))
 
 (defn on-attach-f [arg bufnr]
       (vim.api.nvim_buf_set_option bufnr "omnifunc" "v:lua.vim.lsp.omnifunc")

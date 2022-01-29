@@ -241,19 +241,19 @@
                                 ; LSP
                                 {:keys "<leader>lhr"
                                  :exec ":lua require('telescope.builtin').lsp_references(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Show references"}
+                                 :help "Show references"}
 
                                 {:keys "<leader>lhs"
                                  :exec ":lua require('telescope.builtin').lsp_document_symbols(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Document symbols"}
+                                 :help "Document symbols"}
 
                                 {:keys "<leader>lhw"
                                  :exec ":lua require('telescope.builtin').lsp_workspace_symbols(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Show workspace symbols"}
+                                 :help "Show workspace symbols"}
 
                                 {:keys "<leader>lhW"
                                  :exec ":lua require('telescope.builtin').lsp_dynamic_workspace_symbols(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Show dynamic ws symbols"}
+                                 :help "Show dynamic ws symbols"}
 
                                 {:keys "<leader>lhc"
                                  :exec ":lua require('telescope.builtin').lsp_code_actions(require('telescope.themes').get_ivy())<CR>"
@@ -261,23 +261,23 @@
 
                                 {:keys "<leader>lhr"
                                  :exec ":lua require('telescope.builtin').lsp_range_code_actions(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Show range code actions"}
+                                 :help "Show range code actions"}
 
                                 {:keys "<leader>lhd"
                                  :exec ":lua require('telescope.builtin').lsp_diagnostics(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Show diagnostics"}
+                                 :help "Show diagnostics"}
 
                                 {:keys "<leader>lhi"
                                  :exec ":lua require('telescope.builtin').lsp_implementations(require('telescope.themes').get_ivy())<CR>"
-                                 :help "[LSP] Show LSP implementations"}
+                                 :help "Show LSP implementations"}
 
 {:keys "<leader>lhd"
  :exec ":lua require('telescope.builtin').lsp_definitions(require('telescope.themes').get_ivy())<CR>"
- :help "[LSP] Show LSP definitions"}
+ :help "Show LSP definitions"}
 
 {:keys "<leader>lht"
  :exec ":lua require('telescope.builtin').lsp_type_definitions(require('telescope.themes').get_ivy())<CR>"
- :help "[LSP] Show type definitions"}
+ :help "Show type definitions"}
 
 ; Treesitter
 {:keys "<leader>mhs"
@@ -373,6 +373,10 @@
             (wk.setup {:key_labels {"<space>" "SPC"
                                     "<cr>" "RET"
                                     "<tab>" "TAB"}}))))
+
+; vim-bbye
+(after! :vim-bbye 
+        #(utils.define-key {:keys "<leader>bq" :exec ":Bdelete<CR>" :help "Delete current buffer"}))
 
 ; vim-dispatch
 (after! :vim-dispatch
