@@ -252,7 +252,7 @@ langs.<lang> {table}
 
     Please visit |doom-repl| to understand how doom's default debugger works
     and |doom-runner| to understand what compile, build and test is and
-    |doom-lsp-configs| to understand how server key is used.
+    |doom-lsp-configs| to understand how the key 'server' is used.
 
     <opts> accepts these keys: 
         {server:str} 
@@ -279,10 +279,10 @@ langs.<lang> {table}
         anything else 
 
     Default: {:python {:server "pyright" 
-                        :compile "python3"
-                        :debug "python3 -m pdb"
-                        :test "pytest"
-                        :build false}
+                       :compile "python3"
+                       :debug "python3 -m pdb"
+                       :test "pytest"
+                       :build false}
 
               :ruby {:server "solargraph"
                      :compile "ruby"
@@ -436,8 +436,7 @@ eval-at-line([{bufnr:int}] [{lineno:int}] {cmd:function/string}) *doom.utils.eva
     Returns: nil
 
 
-set-text([{bufnr:int}] {start-coordinates:list} {end-coordinates:list} {s:str/list})
-*doom.utils.set-text*
+set-text([{bufnr:int}] {start-coordinates:list} {end-coordinates:list} {s:str/list}) *doom.utils.set-text*
     If {bufnr} is missing, use current buffer.
 
     {start-coordinates} and {end-coordinates} should be lists. 
@@ -485,8 +484,7 @@ get-buf-name([{bufnr:int}]) *doom.utils.get-buf-name*
     Returns: string
 
 
-buffer-string([{bufnr:int}] {coordinates:list} {concat:bool})
-*doom.utils.buffer-string*
+buffer-string([{bufnr:int}] {coordinates:list} {concat:bool}) *doom.utils.buffer-string*
     Get the strings according to {coordinates} in the form: 
     [<start-line> <end-line>]. If {concat} is true then return a
     newline-concatened string obtained or return a table. 
@@ -507,8 +505,7 @@ line-range-exec({cmd:string/function}) *doom.utils.line-range-exec*
     Returns: nil
 
 
-respect-count({cmd:str/function} {newline:bool} {keybinding:bool})
-*doom.utils.respect-count*
+respect-count({cmd:str/function} {newline:bool} {keybinding:bool}) *doom.utils.respect-count*
     This makes a command respect `v:count`. Basically a count can be specified
     for a command. If {newline} is true, the command is executed on the next
     consecutive lines. If not, the command will executed `v:count` times on the
@@ -559,8 +556,7 @@ augroup({name:str} [{autocmd-forms:list}]) *doom.utils.augroup*
     Returns: nil
 
 
-add-hook([{groups:str/list}] [{events:str/list}] [{patterns:str/list}]
-{exec:str/function}) *doom.utils.add-hook*
+add-hook([{groups:str/list}] [{events:str/list}] [{patterns:str/list}] {exec:str/function}) *doom.utils.add-hook*
     Doom recommends you to use this function instead of |doom.utils.autocmd|. 
     This function can be thought of |doom.utils.autocmd| on steriods. Multiple
     {groups}, {events} and {patterns} can be specified to use with {exec}.
@@ -569,8 +565,7 @@ add-hook([{groups:str/list}] [{events:str/list}] [{patterns:str/list}]
     Returns: nil
 
 
-register-to-wk({keys:str} {help:str} [{help-desc:str}] [{not-register}])
-*doom.utils.register-to-wk*
+register-to-wk({keys:str} {help:str} [{help-desc:str}] [{not-register}]) *doom.utils.register-to-wk*
     Register to display in which-key popup at keypress. {keys} are normal key
     declarations without attributes that you would use in `map`. {help} is
     string to show for {keys}.
@@ -652,8 +647,7 @@ to lua. The compiled file is saved in `~/.vdoom.d/compiled`.
     Returns: nil
 
 
-try-then-else({try-f:function} {success-f:function} {failure-f:function})
-*doom.utils.try-then-else*
+try-then-else({try-f:function} {success-f:function} {failure-f:function})  *doom.utils.try-then-else*
     If {try-f} does not throw errors then {success-f} will be called and 
     its returns values will be returned else {failure-f} will be called and
     its return values will be returned.
@@ -661,9 +655,9 @@ try-then-else({try-f:function} {success-f:function} {failure-f:function})
     Returns: anything from {success-f} or {failure-f}
 
 
-try-catch-then({try-f:function} {handle-f:function} [{then-f:function}])
-*doom.utils.try-catch-then*
-    If {try-f} emits an error then {handle-f} is used to handle it. If {then-f} is passed, {then-f} is called at the end of handling.
+try-catch-then({try-f:function} {handle-f:function} [{then-f:function}])  *doom.utils.try-catch-then*
+    If {try-f} emits an error then {handle-f} is used to handle it. 
+    If {then-f} is passed, {then-f} is called at the end of handling.
 
     Returns: anything from {then-f} if it is supplied or nil
 
@@ -677,3 +671,97 @@ try-require({module-name} {type-module}) *doom.utils.try-require*
 
 
 *doom-lsp-configs*
+Module `lsp-configs` does not contain any useful functions that will be
+required for general tasks. On the other hand, it contains some defaults that
+can aid the users in setting up their LSP configuration quickly. 
+
+Associated configuration:
+    doom.lsp.install_sumneko_lua 
+    doom.lsp.load_default 
+    doom.lsp.servers
+
+Functions available: 
+    - on-attach-f 
+      This function is used in initializing servers with nvim-lspconfig. You
+      can use this function instead of copying the on-attach function from
+      nvim-lspconfig's repo.
+
+Other than that, this module sets up a bunch of keybindings to use with
+neovim's builtin LSP. 
+
+*doom-logger*
+This modules presents 5 to use for logging. Doom's log file is present at
+`stdpath('data')/doom-evim.log`.
+
+log({level:str} {message:str}) *doom.logger.log*
+    Level should one of debug, info, error, fatal or warn. Message should be a
+    string to log. 
+
+dlog({message:str})
+    Translates to log(:debug, message)
+
+elog({message:str})
+    Translates to log(:error, message)
+
+flog({message:str})
+    Translates to log(:fatal, message)
+
+ilog({message:str})
+    Translates to log(:info message)
+
+*doom-repl*
+This module contains stuff to make doom's repl work. This module exposes some
+functions which can be used by the user. Other than that, the module sets up a
+couple of keybindings to <localleader>. It also provides a very basic debugger
+which just splits the buffer and launches the script with its filetype's
+associated debugger.
+
+Associated configuration:
+    doom.repl.ft 
+    doom.repl.running_repls 
+
+Associated commands:
+    :REPLNew {cmd:str} *REPLNew*
+        Start a new REPL using {cmd}
+    
+    :REPLSend {cmd:str} {s:str} *REPLSend*
+        Send {cmd} associated REPL string {s} if it is not one of line, visual,
+        till-point or buffer. 
+
+        If {s} is
+            :line       Send current line
+            :till-point Send everything until cursor
+            :visual     Send the visual selection
+            :buffer     Send the whole buffer
+
+    :REPLSplit {cmd:str} *REPLSplit*
+        Split current window and launch and REPL using {cmd}. 
+        If REPL has not been launched, it will done be so. 
+
+    :REPLVsplit {cmd:str} *REPLVsplit*
+        Vertically split current window and launch and REPL using {cmd}. 
+        If REPL has not been launched, it will done be so. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+modeline:vim:ft=help

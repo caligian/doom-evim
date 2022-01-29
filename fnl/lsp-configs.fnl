@@ -116,6 +116,13 @@
             (current-server.setup config)))))))
 
 (defn setup [] 
+  ; Disable the annoying lsp virtual text. We got trouble.nvim
+  (vim.diagnostic.config {:virtual_text false
+                          :signs true
+                          :underline true
+                          :update_in_insert true
+                          :severity_sort true})
+
   (require :nvim_cmp_setup)
   (setup-keybindings)
   (setup-servers)

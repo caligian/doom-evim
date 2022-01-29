@@ -129,10 +129,9 @@
 ; REPL stuff
 (vimp.map_command :REPLNew #(buffer-new $1))
 (vimp.map_command :REPLSend #(send $1 $2))
-(vimp.map_command :REPLGetString #(get-string $1))
-(vimp.map_command :REPLSplit #(split))
-(vimp.map_command :REPLVsplit #(vsplit))
-(vimp.map_command :REPLTab #(tabnew))
+(vimp.map_command :REPLSplit #(split $1))
+(vimp.map_command :REPLVsplit #(vsplit $1))
+(vimp.map_command :REPLTab #(tabnew $1))
 
 ; Shell stuff
 (vimp.map_command :REPLTabShell tabnew-shell)
