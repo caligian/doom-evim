@@ -29,7 +29,8 @@
         use-current-file (vim.call :input "Use current file? > ")
         use-current-file (str.trim use-current-file)
         file (if (~= use-current-file "y")
-                (if (= use-current-file "n")
+                (if (or (= use-current-file "n")
+                        (= use-current-file ""))
                   ""
                   use-current-file) 
                 (vim.fn.expand "%:p"))
