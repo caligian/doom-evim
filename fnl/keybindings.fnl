@@ -2,37 +2,94 @@
   {autoload {utils utils}})
 
 ; File management
-(vim.cmd "noremap <leader>fs :w<CR>")
-(vim.cmd "noremap <leader>fv :w <bar> source %<CR>")
-(vim.cmd "noremap <leader>fp :Dirbuf ~/.config/nvim/fnl<CR>")
-(vim.cmd "noremap <leader>fP :Dirbuf ~/.vdoom.d<CR>")
-(vim.cmd "noremap <leader>fV :source ~/.config/nvim/init.vim<CR>")
+(utils.define-keys [{:keys "<leader>fs"
+                     :exec ":w<CR>"
+                     :help "Save curent file"}
 
-; Font size 
-; Tab management 
-(vim.cmd "noremap <leader>tk :tabclose<CR>")
-(vim.cmd "noremap <leader>tn :tabnext<CR>")
-(vim.cmd "noremap <leader>tp :tabprevious<CR>")
-(vim.cmd "noremap <leader>tf :tabfind<CR>")
-(vim.cmd "noremap <leader>te :tabedit<CR>")
-(vim.cmd "noremap <leader>tt :tabnew<CR>")
+                    {:keys "<leader>fv"
+                     :exec ":w <bar> source %<CR>"
+                     :help "Source current file"}
 
-; Buffers 
-(vim.cmd "noremap <leader>qw :xa!<CR>")
-(vim.cmd "noremap <leader>bp :bprev<CR>")
-(vim.cmd "noremap <leader>bn :bnext<CR>")
-(vim.cmd "noremap <leader>br :e<CR>")
-(vim.cmd "noremap <leader>bk :hide<CR>")
-(vim.cmd "noremap <leader>qq :qa!<CR>")
-(vim.cmd "noremap <del> :noh<CR>")
-(vim.cmd "noremap <leader><leader> : ")
+                    {:keys "<leader>fp"
+                     :exec ":e ~/.config/nvim/fnl<CR>"
+                     :help "Open doom config dir"}
 
-; Open terminal quickly
-(vim.cmd "noremap <F1> :tabnew <bar> term bash<CR>")
+                    {:keys "<leader>fP"
+                     :exec ":e ~/.vdoom.d<CR>"
+                     :help "Open private config dir"}
 
-; Clipboard stuff
-(vim.cmd "noremap <leader>xp :normal! \"+p<CR>") 
-(vim.cmd "vnoremap <leader>xy :'<'>normal! \"+y<CR>")
+                    {:keys "<leader>fV"
+                     :exec ":source ~/.config/nvim/init.lua<CR>"
+                     :help "Source doom's init.lua"}
+
+                    ; Tab management 
+                    {:keys "<leader>tk"
+                     :exec ":tabclose<CR>"
+                     :help "Close current tab"}
+
+                    {:keys "<leader>tn"
+                     :exec ":tabnext<CR>"
+                     :help "Go to next tab"}
+
+                    {:keys "<leader>tp"
+                     :exec ":tabprevious<CR>"
+                     :help "Go to previous tab"}
+
+                    {:keys "<leader>tf"
+                     :exec ":tabfind"
+                     :help "Find tab"}
+
+                    {:keys "<leader>te"
+                     :exec ":tabedit<CR>"
+                     :help "Open file in a new tab"}
+
+                    {:keys "<leader>tt"
+                     :exec ":tabnew<CR>"
+                     :help "Open a new tab"}
+
+                    ; Buffers 
+                    {:keys "<leader>qw"
+                     :exec ":xa!<CR>"
+                     :help "Save buffers and quit"}
+
+                    {:keys "<leader>bp"
+                     :exec ":bprev<CR>"
+                     :help "Previous buffer"}
+
+                    {:keys "<leader>bn"
+                     :exec ":bnext<CR>"
+                     :help "Next buffer"}
+
+                    {:keys "<leader>br"
+                     :exec ":e<CR>"
+                     :help "Revert buffer"}
+
+                    {:keys "<leader>bk"
+                     :exec ":hide<CR>"
+                     :help "Hide current buffer"}
+
+                    {:keys "<leader>qq"
+                     :exec ":qa!<CR>"
+                     :help "Quit unconditionally"}
+
+                    {:keys "<del>"
+                     :exec ":noh<CR>"
+                     :help "No highlight"}
+
+                    ; Easy command access
+                    {:keys ";"
+                     :exec ": "
+                     :help "Open command mode"}
+                    
+                    {:keys "!"
+                     :exec ":! "
+                     :help "Execute an sh command"}
+                    
+                    ; Clipboad
+                    {:keys "<leader>xp"
+                     :help "Paste from clipboard"
+                     :exec ":normal! \"+p<CR>"}])
+
 
 ; Reload entire config
 (utils.define-keys [{:keys "<leader>hrr"
@@ -49,20 +106,20 @@
 
 ; Quickly adjust indentation
 ; Respects v:count and lines in visual range
-(utils.define-keys [{:keys "<A-h>"
+(utils.define-keys [{:keys "<C-A-h>"
                      :exec (utils.respect-count utils.decrease-indent false true)
                      :help "Decrease indent"}
 
-                    {:keys "<A-l>"
+                    {:keys "<C-A-l>"
                      :exec (utils.respect-count utils.increase-indent false true)
                      :help "Increase indent"}
 
-                    {:keys "<A-h>"
+                    {:keys "<C-A-h>"
                      :modes ["v"]
                      :exec #(utils.line-range-exec utils.decrease-indent)
                      :help "Decrease indent in range"}
 
-                    {:keys "<A-l>"
+                    {:keys "<C-A-l>"
                      :modes ["v"]
                      :exec #(utils.line-range-exec utils.increase-indent) 
                      :help "Increase indent in range"}])

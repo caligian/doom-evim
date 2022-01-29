@@ -1,5 +1,6 @@
 (module configs
-  {autoload {utils utils}})
+  {autoload {utils utils
+             core aniseed.core}})
 
 ; Very doom-emacs-esque after!
 (local after! _G.after!)
@@ -24,73 +25,81 @@
 ; vimspector
 (after! :vimspector (fn []
                       (vim.cmd "packadd! vimspector")
-                      (vim.cmd "nnoremap <Leader>dd :call vimspector#Launch()<CR>")
-                      (vim.cmd "nnoremap <Leader>de :call vimspector#Reset()<CR>")
-                      (vim.cmd "nnoremap <Leader>dc :call vimspector#Continue()<CR>")
-                      (vim.cmd "nnoremap <Leader>dt :call vimspector#ToggleBreakpoint()<CR>")
-                      (vim.cmd "nnoremap <Leader>dT :call vimspector#ClearBreakpoints()<CR>")
-                      (vim.cmd "nmap <Leader>dk <Plug>VimspectorRestart")
-                      (vim.cmd "nmap <Leader>dh <Plug>VimspectorStepOut")
-                      (vim.cmd "nmap <Leader>dl <Plug>VimspectorStepInto")
-                      (vim.cmd "nmap <Leader>dj <Plug>VimspectorStepOver")))
 
-(after! :persistence (fn []
-                       (let [persistence (require :persistence)
-                             save-dir (.. (vim.fn.stdpath "data") "/sessions/")]
-                         (persistence.setup {:dir save-dir}))))
+                      (utils.define-keys [{:keys "<leader>de"
+                                           :exec ":call vimspector#Reset()<CR>"
+                                           :help "Reset vimspector"}
+
+                                          {:keys "<leader>dc"
+                                           :exec ":call vimspector#Continue()<CR>"
+                                           :help "Continue"}
+
+                                          {:keys "<leader>dt"
+                                           :exec ":call vimspector#ToggleBreakpoint()<CR>"
+                                           :help "Toggle breakpoint"}
+
+                                          {:keys "<leader>dT"
+                                           :exec ":call vimspector#ClearBreakpoints()<CR>"
+                                           :help "Clear breakpoints"}
+
+                                          {:keys "<leader>dk"
+                                           :exec "<Plug>VimspectorRestart"
+                                           :help "Restart vimspector"}
+
+                                          {:keys "<leader>dh"
+                                           :exec "<Plug>VimspectorStepOut"
+                                           :help "Step out/finish"}
+
+                                          {:keys "<leader>dl"
+                                           :exec "<Plug>VimspectorStepInto"
+                                           :help "Step in/step"}
+
+                                          {:keys "<leader>dj"
+                                           :exec "<Plug>VimspectorStepOver"
+                                           :help "Step over/next"}])))
+
+(after! :persistence.nvim (fn []
+                            (let [persistence (require :persistence)
+                                  save-dir (.. (vim.fn.stdpath "data") "/sessions/")]
+
+                              (utils.define-keys [{:keys "<leader>sl"
+                                                   :exec ":SessionLoad"
+                                                   :help "Load session"}
+
+                                                  {:keys "<leader>ss"
+                                                   :exec ":SessionSave<CR>"
+                                                   :help "Load session"}])
+
+                              (persistence.setup {:dir save-dir}))))
 
 (after! :trouble.nvim
         (fn []
           (let [trouble (require :trouble)]
             (trouble.setup)
-            (vim.cmd "noremap <leader>lt :TroubleToggle<CR>"))))
+            (utils.define-key {:keys "<leader>lt" 
+                               :exec ":TroubleToggle<CR>" 
+                               :help "Toggle trouble"}))))
 
 (after! :dashboard-nvim (fn []
-                          (set vim.g.indentLine_fileTypeExclude [:dashboard])
-                          (set vim.g.dashboard_custom_header (vim.split "
-                 °*oO##@@@@@@@@##Oo*°
-             .*O#@@@@@@@@@@@@@@@@@@@@#Oo°
-           °O@@@@#####@@@@@@@@@@#####@@@@#o°
-         *#@@@###@@@@@@@@@@@@@@@@@@@@####@@@O°
-       .#@@##@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@@o
-       O@###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@###@o
-       #@@@@#####@@@@@@@@@@@@@@@@@@@@@####@@@##@
-      .#####@@@@@####@@@@@@@@@@@@@####@@@@@##@@#
-       ooo. .*oO#@@@@@############@@@@#O*°.  ***
-       #@@o      °*o#@@@@@@@@@@@@@#O*.      °##°
-       °@@@o.         °*O#####Oo°.        .*@@O
-        °O#@##Ooo**°°°**O#OOO#Oo*°°°°**oO##@#@°
-         .O#@@@@@@@@@@@@@o.#**@@@@@@@@@@@@@##O
-         ######@@###@@##o o@O *#@@##@#######@#
-         O@@@@@o°.  OOooO#@#@#OOo#@@o    #@@#*
-          **°°*°    o##@@@#@#@@oOooO     **°
-                    o@@###@°O#O°@@#°
-                    .@@OO@@.o@oo@#O
-                    .#@Oo@@.o@oo@@o
-                     #@O*@@.o@oo@@o
-                     ##O*@@.o@*o@#*
-                     O@O*@@.o@°o@@.
-                     °Oo°@@.o# o#o
-
-                        E V I M"  "\n"))
-
-                          (vim.cmd "noremap <leader>sl :SessionLoad")
-                          (vim.cmd "noremap <leader>ss :SessionSave<CR>")
-                          (set vim.g.dashboard_default_executive "telescope")
-                          (set vim.g.dashboard_custom_section {:a {:description   ["  Load Session                        SPC s l"]
-                                                                   :command "lua require('persistence').load({last=true})"}
-                                                               :b {:description   ["  Recently Opened Files               SPC f r"]
-                                                                   :command  "Telescope oldfiles"}
-                                                               :c {:description   ["  Change colorscheme                  SPC h t"]
-                                                                   :command  "Telescope colorscheme"}
-                                                               :d {:description   ["  Split window with terminal          COM t s"]
-                                                                   :command ":REPLSplitShell"}
-                                                               :e {:description   ["  Find File                           SPC f f"]
-                                                                   :command  "Telescope find_files"}
-                                                               :f {:description   ["  Open system configuration           SPC f p"]
-                                                                   :command ":Dirbuf ~/.vdoom.d/"}
-                                                               :g {:description   ["  Open private configuration          SPC f P"]
-                                                                   :command ":Dirbuf ~/.vdoom.d/"}})))
+                          (let [banner (core.slurp (utils.confp "misc" "punisher-logo.txt"))
+                                banner (utils.split banner "\n")]
+                            (set vim.g.dashboard_custom_header banner)
+                            (set vim.g.indentLine_fileTypeExclude [:dashboard])
+                            (set vim.g.dashboard_default_executive "telescope")
+                            (set vim.g.dashboard_custom_section {:a {:description   ["  Load Session                        SPC s l"]
+                                                                     :command "lua require('persistence').load({last=true})"}
+                                                                 :b {:description   ["  Recently Opened Files               SPC f r"]
+                                                                     :command  "Telescope oldfiles"}
+                                                                 :c {:description   ["  Change colorscheme                  SPC h t"]
+                                                                     :command  "Telescope colorscheme"}
+                                                                 :d {:description   ["  Split window with terminal          COM t s"]
+                                                                     :command ":REPLSplitShell"}
+                                                                 :e {:description   ["  Find File                           SPC f f"]
+                                                                     :command  "Telescope find_files"}
+                                                                 :f {:description   ["  Open system configuration           SPC f p"]
+                                                                     :command ":e ~/.vdoom.d/"}
+                                                                 :g {:description   ["  Open private configuration          SPC f P"]
+                                                                     :command ":e ~/.vdoom.d/"}}))))
 ; undotree
 (after! :undotree
         (fn []
@@ -135,7 +144,7 @@
                                  :yaml {:cmd ["prettier -w --parser yaml"]}}))))
 
 ; zen-mode
-(after! :zen-mode.nvim #(vim.cmd "noremap <leader>bz :ZenMode<CR>"))
+(after! :zen-mode.nvim #(utils.define-key {:keys "<leader>bz" :help "Activate ZenMode" :exec ":ZenMode<CR>"}))
 
 ; treesitter
 (after! :nvim-treesitter
@@ -146,13 +155,10 @@
                                        :highlight {:enable true}
                                        :indent {:enable true}}))))
 
-; vim-bbye
-(after! :vim-bbye
-        (fn []
-          (vim.cmd "noremap <leader>bk :Bdelete<CR>")))
-
 ; file pickers
-(after! :telescope.nvim
+(after! [:telescope.nvim
+         :telescope-project.nvim
+         :telescope-file-browser.nvim]
         (fn []
           (let [telescope (require :telescope)
                 actions (require :telescope.actions)]
@@ -160,60 +166,157 @@
                                          :mappings {:n {:D actions.delete_buffer}
                                                     :i {"<C-d>" actions.delete_buffer}}}})
 
-            ; Add some more default actions
-            (vim.cmd "noremap <leader>ff :lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <localleader>/ :lua require('telescope.builtin').live_grep(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>/  :lua require('telescope.builtin').grep_string(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>fg :lua require('telescope.builtin').git_files(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>hk :lua require('telescope.builtin').keymaps(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>ht :lua require('telescope.builtin').colorscheme(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>bb :lua require('telescope.builtin').buffers(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>fr :lua require('telescope.builtin').oldfiles(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <A-x> :lua require('telescope.builtin').commands(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>hr :lua require('telescope.builtin').command_history(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>sr :lua require('telescope.builtin').search_history(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>hm :lua require('telescope.builtin').man_pages(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>hj :lua require('telescope.builtin').jumplist(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <leader>h  :lua require('telescope.builtin').registers(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap  <M-y>      :lua require('telescope.builtin').registers(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader><leader>s :lua require('telescope.builtin').resume(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>hq :lua require('telescope.builtin').quickfix(require('telescope.themes').get_ivy())<CR>")
-
-            ; LSP
-            (vim.cmd "noremap <leader>lhr :lua require('telescope.builtin').lsp_references(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhs :lua require('telescope.builtin').lsp_document_symbols(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhw :lua require('telescope.builtin').lsp_workspace_symbols(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhW :lua require('telescope.builtin').lsp_dynamic_workspace_symbols(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhc :lua require('telescope.builtin').lsp_code_actions(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhr :lua require('telescope.builtin').lsp_range_code_actions(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhd :lua require('telescope.builtin').lsp_diagnostics(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhi :lua require('telescope.builtin').lsp_implementations(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lhd :lua require('telescope.builtin').lsp_definitions(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>lht :lua require('telescope.builtin').lsp_type_definitions(require('telescope.themes').get_ivy())<CR>")
-
-            ; Treesitter
-            (vim.cmd "noremap <leader>mhs :lua require('telescope.builtin').treesitter(require('telescope.themes').get_ivy())<CR>")
-
-            ; Git
-            (vim.cmd "noremap <leader>ghc :lua require('telescope.builtin').git_commits(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>ghC :lua require('telescope.builtin').git_bcommits(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>ghb :lua require('telescope.builtin').git_branches(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>ghs :lua require('telescope.builtin').git_status(require('telescope.themes').get_ivy())<CR>")
-            (vim.cmd "noremap <leader>ghS :lua require('telescope.builtin').git_stash(require('telescope.themes').get_ivy())<CR>")
-
-            ; Load file browser
             (telescope.load_extension "file_browser")
-                      (vim.cmd "noremap <leader>fF :lua require('telescope').extensions.file_browser.file_browser(require('telescope.themes').get_ivy())<CR>")
+            (telescope.load_extension "project")
 
-            (after! :telescope-project.nvim
-                    (fn []
-                      (telescope.load_extension "project")
-                      (vim.cmd "noremap <C-p> :lua require('telescope').extensions.project.project(require('telescope.themes').get_ivy())<CR>"))))))
+            ; Add some more default actions
+            (utils.define-keys [{:keys "<leader>ff"
+                                 :exec ":lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Find file"}
+
+                                {:keys "<localleader>/"
+                                 :exec ":lua require('telescope.builtin').live_grep(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Live grep in cwd"}
+
+                                {:keys "<leader>/"
+                                 :exec ":lua require('telescope.builtin').grep_string(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Grep string in cwd"}
+
+                                {:keys "<leader>fg"
+                                 :exec ":lua require('telescope.builtin').git_files(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show git files"}
+
+                                {:keys "<leader>hk"
+                                 :exec ":lua require('telescope.builtin').keymaps(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show keymaps"}
+
+                                {:keys "<leader>ht"
+                                 :exec ":lua require('telescope.builtin').colorscheme(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Select theme"}
+
+                                {:keys "<leader>bb"
+                                 :exec ":lua require('telescope.builtin').buffers(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show buffers"}
+
+                                {:keys "<leader>fr"
+                                 :exec ":lua require('telescope.builtin').oldfiles(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show old files"}
+
+                                {:keys "<A-x>"
+                                 :exec ":lua require('telescope.builtin').commands(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show commands"}
+
+                                {:keys "<leader>hr"
+                                 :exec ":lua require('telescope.builtin').command_history(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show command history"}
+
+                                {:keys "<leader>sr"
+                                 :exec ":lua require('telescope.builtin').search_history(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show search history"}
+
+                                {:keys "<leader>hm"
+                                 :exec ":lua require('telescope.builtin').man_pages(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show man page for a program"}
+
+                                {:keys "<leader>hj"
+                                 :exec ":lua require('telescope.builtin').jumplist(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show jumplist"}
+
+                                {:keys "<leader>h\""
+                                 :exec " :lua require('telescope.builtin').registers(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show all registers"}
+
+                                {:keys "<M-y>"
+                                 :exec ":lua require('telescope.builtin').registers(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show all registers"}
+
+                                {:keys "<leader><leader>s"
+                                 :exec ":lua require('telescope.builtin').resume(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Resume telescope"}
+
+                                {:keys "<leader>hq"
+                                 :exec ":lua require('telescope.builtin').quickfix(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show quickfix list"}
+
+                                ; LSP
+                                {:keys "<leader>lhr"
+                                 :exec ":lua require('telescope.builtin').lsp_references(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Show references"}
+
+                                {:keys "<leader>lhs"
+                                 :exec ":lua require('telescope.builtin').lsp_document_symbols(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Document symbols"}
+
+                                {:keys "<leader>lhw"
+                                 :exec ":lua require('telescope.builtin').lsp_workspace_symbols(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Show workspace symbols"}
+
+                                {:keys "<leader>lhW"
+                                 :exec ":lua require('telescope.builtin').lsp_dynamic_workspace_symbols(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Show dynamic ws symbols"}
+
+                                {:keys "<leader>lhc"
+                                 :exec ":lua require('telescope.builtin').lsp_code_actions(require('telescope.themes').get_ivy())<CR>"
+                                 :help "Show code actions"}
+
+                                {:keys "<leader>lhr"
+                                 :exec ":lua require('telescope.builtin').lsp_range_code_actions(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Show range code actions"}
+
+                                {:keys "<leader>lhd"
+                                 :exec ":lua require('telescope.builtin').lsp_diagnostics(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Show diagnostics"}
+
+                                {:keys "<leader>lhi"
+                                 :exec ":lua require('telescope.builtin').lsp_implementations(require('telescope.themes').get_ivy())<CR>"
+                                 :help "[LSP] Show LSP implementations"}
+
+{:keys "<leader>lhd"
+ :exec ":lua require('telescope.builtin').lsp_definitions(require('telescope.themes').get_ivy())<CR>"
+ :help "[LSP] Show LSP definitions"}
+
+{:keys "<leader>lht"
+ :exec ":lua require('telescope.builtin').lsp_type_definitions(require('telescope.themes').get_ivy())<CR>"
+ :help "[LSP] Show type definitions"}
+
+; Treesitter
+{:keys "<leader>mhs"
+ :exec ":lua require('telescope.builtin').treesitter(require('telescope.themes').get_ivy())<CR>"
+ :help "Show treesitter symbols"}
+
+; Git
+{:keys "<leader>ghc"
+ :exec ":lua require('telescope.builtin').git_commits(require('telescope.themes').get_ivy())<CR>"
+ :help "Show commits"}
+
+{:keys "<leader>ghC"
+ :exec ":lua require('telescope.builtin').git_bcommits(require('telescope.themes').get_ivy())<CR>"
+ :help "Show branch commits"}
+
+{:keys "<leader>ghb"
+ :exec ":lua require('telescope.builtin').git_branches(require('telescope.themes').get_ivy())<CR>"
+ :help "Show branches"}
+
+{:keys "<leader>ghs"
+ :exec ":lua require('telescope.builtin').git_status(require('telescope.themes').get_ivy())<CR>"
+ :help "Show status"} 
+
+{:keys "<leader>ghS"
+ :exec ":lua require('telescope.builtin').git_stash(require('telescope.themes').get_ivy())<CR>"
+ :help "Show stashes"}
+
+{:keys "<leader>fF"
+ :exec ":lua require('telescope').extensions.project.project(require('telescope.themes').get_ivy())<CR>"
+ :help "Open file browser"}
+
+{:keys "<leader>pp"
+ :exec ":lua require'telescope'.extensions.project.project{}<CR>"
+ :help "Open project"}]))))
 
 ; vim-palette: Colorscheme provider
 (after! :vim-palette
        (fn []
-          (vim.cmd "colorscheme one")))
+          (vim.cmd "colorscheme base16-dracula")))
 
 ; galaxyline
 (after! :galaxyline.nvim
@@ -223,7 +326,9 @@
 ; Tagbar
 (after! :tagbar
         (fn []
-          (vim.cmd "noremap <C-t> :TagbarToggle<CR>")))
+          (utils.define-key {:keys "<C-t>"
+                             :help "Open Tagbar"
+                             :exec ":TagbarToggle<CR>"})))
 
 ; nvim-cmp
 (after! :nvim-cmp
@@ -241,18 +346,18 @@
 ;  vim-fugitive
 (after! :vim-fugitive
         (fn []
-          (vim.cmd  "noremap <leader>gg :Git<CR>")
-          (vim.cmd  "noremap <leader>gi :Git init<CR>")
-          (vim.cmd  "noremap <leader>ga :Git add %<CR>")
-          (vim.cmd  "noremap <leader>gs :Git stage %<CR>")
-          (vim.cmd  "noremap <leader>gc :Git commit %<CR>")
-          (vim.cmd  "noremap <leader>gp :Git push<CR>")
-          (vim.cmd  "noremap <leader>gm :Git merge<CR>")))
+          (utils.define-keys [{:keys "<leader>gg" :exec ":Git<CR>" :help "Open Fugitive in cwd"}
+                              {:keys "<leader>gi" :exec ":Git init<CR>" :help "Initialize git in cwd"}
+                              {:keys "<leader>ga" :exec ":Git add %<CR>" :help "Track current file"}
+                              {:keys "<leader>gs" :exec ":Git stage %<CR>" :help "Stage current file"}
+                              {:keys "<leader>gc" :exec ":Git commit %<CR>" :help "Commit changes"}
+                              {:keys "<leader>gp" :exec ":Git push<CR>" :help "Push commits"}
+                              {:keys "<leader>gm" :exec ":Git merge<CR>" :help "Merge from remote"}])))
 
 ; Luapad
 (after! :nvim-luapad
         (fn []
-          (vim.cmd  "noremap <F3> :Luapad<CR>")))
+          (utils.define-key {:keys "<F3>" :exec ":Luapad<CR>" :help "Start Luapad"})))
 
 ; vimp
 (after! :vimpeccable
@@ -260,61 +365,6 @@
           (let [vimp (require :vimp)]
             (vimp.add_chord_cancellations "n" "<leader>")
             (vimp.add_chord_cancellations "n" "<localleader>"))))
-
-; which-key
-(after! :which-key.nvim
-        (fn []
-          (let [wk (require :which-key)]
-            (wk.setup {:key_labels {"<space>" "SPC"
-                                    "<cr>" "RET"
-                                    "<tab>" "TAB"}}))))
-
-; pytest
-(after! :pytest.vim
-        (fn []
-          (set vim.g.pytest_executable "pytest")))
-
-; Ruby stuff
-; vroom
-(after! :vim-vroom
-        (fn []
-          (set vim.g.vroom_map_keys 0)
-          (set vim.g.vroom_write_all 1)
-          (set vim.g.vroom_use_terminal 1)
-
-          (utils.define-keys [{:noremap true
-                               :keys "<leader>mvf"
-                               :modes "n"
-                               :patterns "*rb"
-                               :key-attribs ["buffer"]
-                               :events ["WinEnter"]
-                               :exec ":VroomRunTestFile<CR>"}
-
-                              {:noremap true
-                               :keys "<leader>mvn"
-                               :modes "n"
-                               :patterns "*rb"
-                               :key-attribs ["buffer"]
-                               :events ["WinEnter"]
-                               :exec ":VroomRunNearestTestFile<CR>"}
-
-                              {:noremap true
-                               :keys "<leader>mvF"
-                               :modes "n"
-                               :patterns "*rb"
-                               :key-attribs ["buffer"]
-                               :events ["WinEnter"]
-                               :exec ":VroomRunLastTest<CR>"}])))
-
-; vim-bbye
-(after! :vim-bbye
-        (fn []
-          (vim.cmd "noremap <leader>bq :Bdelete<CR>")))
-
-; Tagbar
-(after! :tagbar
-        (fn []
-          (vim.cmd "noremap <C-t> :TagbarToggle<CR>")))
 
 ; which-key
 (after! :which-key.nvim
@@ -332,21 +382,3 @@
           (utils.add-hook "GlobalHook" "FileType" "python" "let b:dispatch = 'perl %'")
           (utils.add-hook "GlobalHook" "FileType" "sh" "let b:dispatch = 'bash %'")
           (utils.add-hook "GlobalHook" "FileType" "perl" "let b:dispatch = 'perl %'")))
-
-; vim-session
-(after! :vim-session
-        (fn []
-          (set vim.g.session_directory "~/.config/nvim/sessions")))
-; ultisnips
-(after! [:ultisnips
-               :vim-snippets]
-              (fn []
-                (vim.cmd "let g:UltiSnipsExpandTrigger='<tab>'")
-                (vim.cmd "let g:UltiSnipsJumpForwardTrigger='<C-j>'")
-                (vim.cmd "let g:UltiSnipsJumpBackwardTrigger='<C-k>'")
-                (vim.cmd "let g:UltiSnipsEditSplit='vertical'")))
-
-(after! :dirbuf.nvim
-              (fn []
-                (vim.cmd "noremap <leader>fd :Dirbuf<CR>")
-                (vim.cmd "noremap <leader>fD :execute('Dirbuf ' . input('Directory % '))<CR>")))

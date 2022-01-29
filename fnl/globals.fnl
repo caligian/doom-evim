@@ -30,11 +30,13 @@
                                          :l "LSP"
                                          :h "Help+Telescope"
                                          :f "Files"
+                                         :p "Project"
                                          :d "Debug"
                                          :x "Misc"
                                          :m "Filetype Actions"
                                          :s "Session"
                                          :g "Git"}
+
                                 :localleader {"," "REPL"
                                               "t" "REPL"
                                               "e" "REPL"}}
