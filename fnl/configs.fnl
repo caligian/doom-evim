@@ -8,7 +8,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; git-signs
 (after! :gitsigns.nvim
-        #(. (require :gitsigns) :setup))
+        #((. (require :gitsigns) :setup)))
 
 ; nvim-tree
 (after! :nvim-tree.lua
