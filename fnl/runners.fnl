@@ -7,12 +7,6 @@
 
 (local valid-commands {})
 
-(defn- format-output [s]
-  (utils.split (accumulate [final ""
-                            _ o (ipairs s)]
-                           (.. final o)) 
-               "[\n\r]+"))
-
 (defn- get-output-and-split [s]
   (vim.fn.jobstart s
                    {:on_stdout (fn [id data event]
