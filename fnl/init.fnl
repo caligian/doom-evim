@@ -14,6 +14,10 @@
 (when (not (. _G :doom))
   (utils.try-require :globals))
 
+; Append required modules to doom
+(set doom.utils utils)
+(set doom.logger logger)
+
 ; Use this to set post-package-init configuration
 (set _G.after! (lambda after! [pkg config-f]
                  (let [packages (utils.listify pkg)
