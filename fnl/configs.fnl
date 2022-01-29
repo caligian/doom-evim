@@ -320,7 +320,7 @@
 ; vim-palette: Colorscheme provider
 (after! :vim-palette
        (fn []
-          (vim.cmd "colorscheme base16-dracula")))
+          (vim.cmd "colorscheme base16-solarized")))
 
 ; galaxyline
 (after! :galaxyline.nvim

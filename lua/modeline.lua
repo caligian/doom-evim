@@ -3,17 +3,17 @@ local gls = gl.section
 gl.short_line_list = {'NvimTree','vista','dbui'}
 
 local colors = {
-  bg = '#282c34',
-  fg = '#ebbc2c',
+  bg = '#002b36',
+  fg = '#065783',
   yellow = '#b58900',
   cyan = '#2aa198',
-  darkblue = '#1a6192',
+  darkblue = '#268bd2',
   green = '#859900',
-  orange = '#b58900',
+  orange = '#cb4b16',
   violet = '#6c71c4',
-  magenta = '#7b39a5',
-  blue = '#268bd2';
-  red = '#dc322f';
+  magenta = '#d33682',
+  blue = '#268bd2',
+  red = '#dc322f',
 }
 
 local buffer_not_empty = function()
@@ -26,7 +26,7 @@ end
 gls.left[1] = {
   RainbowRed = {
     provider = function() return '▊ ' end,
-    highlight = {colors.blue,colors.bg}
+    highlight = {colors.magenta, colors.bg}
   },
 }
 gls.left[2] = {
@@ -66,7 +66,7 @@ gls.left[5] = {
   FileName = {
     provider = {'FileName'},
     condition = buffer_not_empty,
-    highlight = {colors.yellow ,colors.bg,'italic'}
+    highlight = {colors.yellow ,colors.bg,'bold'}
   }
 }
 
