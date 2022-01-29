@@ -23,19 +23,24 @@
 (defn- uppercase [s]
   (string.gsub s "^." string.upper))
 
+(defn- _runner [binary]
+  (let [args (string.format "Args for %s > " binary) 
+        args (vim.call :input args)
+        use-current-file (vim.call :input "Use current file? > ")
+        use-current-file (str.trim use-current-file)
+        file (if (~= use-current-file "y")
+                (if (= use-current-file "n")
+                  ""
+                  use-current-file) 
+                (vim.fn.expand "%:p"))
+        cmd (string.format "%s %s %s" binary args file)]
+    (get-output-and-split cmd)))
+
 (defn- make-runner [ft of]
   (let [binary (. doom.langs ft of)
         cmd-name (.. "Runner" (uppercase of) (uppercase ft))]
     (when binary 
-
-      ; In case if use-current-file is not ^y$ then simply return the string.
-      (vimp.map_command cmd-name #(get-output-and-split (string.format "%s %s %s"
-                                                                       binary 
-                                                                       (vim.call :input (utils.fmt "Args for %s > " binary))
-                                                                       (let [use-current-file (str.trim (vim.call :input "Use current file? (y/n) > "))
-                                                                             file (if (string.match use-current-file "^y$")
-                                                                                    (vim.fn.expand "%:p")
-                                                                                    use-current-file)] file)))))))
+      (vimp.map_command cmd-name #(_runner binary)))))
 
 (each [_ lang (ipairs (utils.keys doom.langs))]
   (each [_ op (ipairs [:build :test :compile])]
