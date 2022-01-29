@@ -6,11 +6,15 @@
 (local after! _G.after!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; git-signs
+(after! :gitsigns.nvim
+        #(. (require :gitsigns) :setup))
+
 ; nvim-tree
 (after! :nvim-tree.lua
         (fn []
           ((. (require :nvim-tree) :setup))
-          (vim.cmd "noremap <leader>` :NvimTreeToggle<CR>")))
+          (utils.define-key {:keys "<leader>`" :exec ":NvimTreeToggle<CR>" :help "Open nvim-tree" })))
 
 ; vim-sexp
 (after! :vim-sexp
