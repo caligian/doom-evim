@@ -42,7 +42,7 @@ gls.left[2] = {
                           rm = colors.cyan, ['r?'] = colors.cyan,
                           ['!']  = colors.red,t = colors.red}
       vim.api.nvim_command('hi GalaxyViMode guifg='..mode_color[vim.fn.mode()])
-      return '  '
+      return '   '
     end,
     highlight = {colors.red,colors.bg,'bold'},
   },
@@ -167,7 +167,7 @@ gls.right[5] = {
   DiffAdd = {
     provider = 'DiffAdd',
     condition = checkwidth,
-    icon = '  ',
+    icon = '  ',
     highlight = {colors.green,colors.bg},
   }
 }
@@ -175,7 +175,7 @@ gls.right[6] = {
   DiffModified = {
     provider = 'DiffModified',
     condition = checkwidth,
-    icon = ' 柳',
+    icon = '  ',
     highlight = {colors.orange,colors.bg},
   }
 }
@@ -183,15 +183,15 @@ gls.right[7] = {
   DiffRemove = {
     provider = 'DiffRemove',
     condition = checkwidth,
-    icon = '  ',
+    icon = '  ',
     highlight = {colors.red,colors.bg},
   }
 }
 
 gls.right[8] = {
   RainbowBlue = {
-    provider = function() return ' ▊' end,
-    highlight = {colors.blue,colors.bg}
+    provider = function() return '  ▊' end,
+    highlight = {colors.magenta,colors.bg}
   },
 }
 
@@ -200,7 +200,7 @@ gls.short_line_left[1] = {
     provider = 'FileTypeName',
     separator = ' ',
     separator_highlight = {'NONE',colors.bg},
-    highlight = {colors.blue,colors.bg,'bold'}
+    highlight = {colors.blue,colors.bg,'italic'}
   }
 }
 

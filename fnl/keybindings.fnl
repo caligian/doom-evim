@@ -64,6 +64,10 @@
                      :exec ":e<CR>"
                      :help "Revert buffer"}
 
+                    {:keys "<leader>bR"
+                     :exec ":set readonly<CR>"
+                     :help "Read-only buffer"}
+
                     {:keys "<leader>bk"
                      :exec ":hide<CR>"
                      :help "Hide current buffer"}
