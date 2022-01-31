@@ -1096,6 +1096,61 @@ Indentation:
       :modes ["v"]
       :help "Increase indent in range"}
 
+Doom REPL:
+>
+    {:keys "<localleader>,t"
+     :help "Open a ft REPL in a new tab"}
+    
+    {:keys "<localleader>,T"
+     :help "Open a new bash REPL in a new tab"}
+    
+    {:keys "<localleader>mee"
+     :help "Send current line to ft REPL"}
+    
+    {:keys "<localleader>me."
+     :help "Send strings till-point to ft REPL"}
+    
+    {:keys "<localleader>meb"
+     :help "Send current line to ft REPL"}
+    
+    {:keys "<localleader>meE"
+     :help "Send current line to bash REPL"}
+    
+    {:keys "<localleader>me>"
+     :help "Send strings till-point to bash REPL"}
+    
+    {:keys "<localleader>meB"
+     :help "Send current line to ft REPL"}
+    
+    {:keys "<localleader>meE"
+     :modes "v"
+     :help "Send visual range to bash REPL"}
+    
+    {:keys "<localleader>mee"
+     :modes "v"
+     :help "Send visual range to ft REPL"}
+    
+    {:keys "<localleader>ts" 
+     :help "Split buffer and open shell"}
+    
+    {:keys "<localleader>tv" 
+     :help "Split buffer and open shell"}
+    
+    {:keys "<localleader>,s" 
+     :help "Split buffer and open ft REPL"}
+    
+    {:keys "<localleader>,v" 
+     :help "Vsplit buffer and open ft REPL"}
+    
+    {:keys "<localleader>,k"
+     :help "Shutdown current ft REPL"}
+    
+    {:keys "<localleader>,K"
+     :help "Shutdown all REPLs"}
+    
+    {:keys "<localleader>tk"
+     :help "Shutdown bash shell"}
+
 Doom runner:
 >
     {:keys "<leader>mC" 

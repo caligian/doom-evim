@@ -40,7 +40,7 @@ local function init(vim)
     vim.cmd [[ let g:aniseed#env = {'input': stdpath('config') . '/fnl/', 'output': stdpath('config') . '/compiled/'} ]]
 
     local home = os.getenv('HOME')
-    package.path = string.format('%s;%s/compiled', package.path, vim.fn.stdpath('config'))
+    package.path = string.format('%s;%s/compiled/?.lua', package.path, vim.fn.stdpath('config'))
     package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home)

@@ -30,6 +30,7 @@
               :map-help-groups {:leader {:b "Buffers"
                                          :q "Buffers+Close"
                                          :c "Commenting"
+                                         :i "Insert"
                                          "<space>" "Misc"
                                          :l "LSP"
                                          :t "Tabs"
