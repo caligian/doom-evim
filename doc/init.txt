@@ -3,10 +3,12 @@
 ==========================================================================
 CONTENTS *doom-toc*
 
-1. Introduction .... |doom-introduction|
-2. Philosophy .... |doom-philosophy|
-3. Filesystem .... |doom-fs|
-4. Modules .... |doom.modules|
+1. Introduction  |doom-introduction|
+2. Philosophy |doom-philosophy|
+3. Filesystem |doom-fs|
+4. Modules  |doom-modules|
+5. Keybindings |doom-keybindings|
+6. Caveats |doom-caveats|
 
 ==========================================================================
 INTRODUCTION *doom-introduction*
@@ -247,7 +249,7 @@ repl.ft {table}
               :ps1 "powershell"}
 
 
-langs.<lang> {table}
+langs.<lang> {table} *doom.langs*
     Form: {<lang> <opts>}
 
     Please visit |doom-repl| to understand how doom's default debugger works
@@ -742,26 +744,606 @@ Associated commands:
         Vertically split current window and launch and REPL using {cmd}. 
         If REPL has not been launched, it will done be so. 
 
+    :REPLTab {cmd:str} *REPLTab*
+        Open REPL with {cmd} in a new tab. 
+
+    :REPLTabShell *REPLTabShell*
+        Equals :REPLTab bash
+
+    :REPLVsplitShell *REPLVsplitShell* 
+        Equals :REPLVsplit bash
+
+    :REPLSplitShell *REPLSplitShell*
+        Equals :REPLSplit bash
+
+    :REPLShellSend {s:str} *REPLShellSend*
+        Equals :REPLSend bash {s}
+
+    :StartDebugger [{cmd:str}] *StartDebugger*
+        Start a debugger with command {cmd}. If {cmd} is unspecified,
+        `doom.langs.<filetype>.debug` will be queried to get the debugger for
+        current filetype. If none is found, the command will fail.
+
+    :SplitDebugger [{cmd:str}] *SplitDebugger*
+        Command specifications are same as |StartDebugger|.
+        Split current window and open terminal with the debugger.
+
+    :VsplitDebugger [{cmd:str}] *VsplitDebugger*
+        Command specifications are same as |StartDebugger|.
+        Vertically split current window and open terminal with the debugger.
+ 
+    :DebuggerSend {what:str} [{cmd:str}] *DebuggerSend*
+        Command specifications are same as |StartDebugger|.
+        {what} specifications are same as |REPLSend|
+        Send {what} to debugger in a terminal.
+
+    :KillDebugger [{cmd:str}] *KillDebugger*
+        Command specifications are same as |StartDebugger|.
+        {cmd} is used to get the running debugger to kill it.
+
+    :GetDebugger *GetDebugger*
+        Get the debugger for the current file.
+
+Functions are analogous to commands accept shutdown and shutdown-all.
+Here are the mappings:
+
+buffer-new -> |REPLNew|
+    Also accepts an additional {id} parameter that is used to index the job id
+    of the associated REPL.
+
+split -> |REPLSplit|
+
+vsplit -> |REPLVsplit|
+
+tabnew -> |REPLTab|
+
+shutdown {cmd:str}
+    Shuts down the {cmd} associated REPL. 
+
+shutdown-all
+    Shuts down all REPLs
+
+split-shell -> |REPLSplitShell|
+
+vsplit-shell -> |REPLVsplitShell|
+
+tabnew-shell -> |REPLTabShell|
+
+... I suppose that you can figure out the rest of the mappings. 
+You can check the source file yourself. It won't be that difficult. I promise.
 
 
+*doom-runner*
+This module has no functions that can be used by the user. However, it will
+explain the purpose of this module.
+
+Oftentimes you need to compile some stuff and you have to unnecessarily open
+the terminal for that single task. doom-runner provides you with commands to
+simply do that in an async job. 
+
+There are 3 types of runners supported: 
+    compile
+        Used to compile the current file. Compile means simply running the
+        current file using its interpreter.
+
+    test
+        Used to run suite tests. You can specify the base command and later
+        provide additional args for the same. 
+
+    build
+        Used to build stuff. You can specify the base command and later
+        provide additional args for the same. 
+
+All the runners will be defined in |doom.langs|. If you want to simple compile
+the current file then just add a {compile} key to |doom.langs|. 
 
 
+*doom-packages*
+This module has nothing the user can use. This module defines some keybindings
+for doom's package manager packer and makes the final list to pass to packer
+for initializing packages.
+
+Associated globals:
+    doom.packages [table]
+        Contains the master list of all the packages passed to packer.startup
+
+    doom.user_packages [table]
+        Contains the table obtained from `user-packages.lua`.
+
+Furthermore, `specs` and `user-specs` are also required which configure post
+and pre package-init hooks. 
+
+Associated functions:
+    after! {packages:list/str} {f:function} *after!*
+        If all the {packages} provided are present in doom.packages, {f} is
+        called. This only occurs after all the packages are initialized.
+
+    specs! {package:str} {t:table} *specs!*
+        Configure a {package} using {t}. {t}'s specs should conform with
+        `packer.use`.
 
 
+*doom-dap*
+This module contains nothing that can be used by the user. It sets up DAP with
+vimspector for doom and sets up keybindings. 
+
+Associated Globals:
+    doom.dap.default 
+        Contains a list of dap servers to install by default when function 
+        `dap-config.install-default`is called.
+
+Your vimspector filetype configurations are to be put in
+`stdpath('data')/vimspector/<filetype>/default.json`
+
+If you have not specified any then doom comes with its own configurations for
+lua, python and javascript which will be used otherwise.
+not one. These are present in
+`~/.config/nvim/support/vimspector/<filetype>/default.json`
+
+However, if there is a .vimspector.json in the workspace directory of the
+script then nothing is copied and that file is used.
+
+If you want to install all the langs that have been configured by doom, 
+first require 'dap-config' and run `dap-config.install-default`. Otherwise,
+you can simply `:VimspectorInstall <debugger>` yourself.
 
 
+*doom-packages*
+These are the packages that are shipped with doom. Only the essentials are
+installed and the rest are installed by :PackerInstall at first startup.
+>
+Master list: 
+>
+    -- essentials
+    packer.nvim                     | The default package manager for doom         
+    vimpeccable                     | Required for keymappings   
+    plenary.nvim                    | Very important module used by many packages
+    aniseed                         | Extra goodies for fennel   
+    conjure                         | An REPL for fennel, hy, clojure, etc 
+    fennel.vim                      | Syntax highlighting for fennel   
+    which-key.nvim                  | Show keymappings in a popup window 
+    Repeatable.vim                  | Make keybindings Repeatable   
+
+    -- ui
+    dashboard-nvim                  | A beautiful startup screen for vim
+    galaxyline.nvim                 | A simple modeline for doom   
+    vim-palette                     | Plenty of colorschemes included   
+    vim-devicons                    | Important UI icons   
+    nvim-web-devicons               | Important UI icons   
+    telescope.nvim                  | Ivy-like dropdown menu functionality   
+    telescope-project.nvim          | Project extension for telescope   
+    telescope-file-browser.nvim     | File browser extension for telescope
+    zen-mode.nvim                   | Distraction-free coding/writing   
+    twilight.nvim                   | Extension for zen-mode.nvim   
+    nvim-tree.lua                   | File tree for nvim   
+
+    -- editor
+    formatter.nvim                  | Automatically format your file    
+    vim-misc                        | Necessity for vim-vsnip
+    vim-bbye                        | Intelligently delete buffers without shutting vim   
+    vim-dispatch                    | Async dispatcher for nvim   
+    tagbar                          | Show a tagbar beside the script window   
+    undotree                        | A better undo-redo implementation   
+    nerdcommenter                   | Easy commenting!   
+    vim-markdown                    | Markdown syntax for vim   
+    markdown-preview.nvim           | Preview markdown in your file browser.    
+    vim-surround                    | Quickly surround text with text   
+    delimitMate                     | For autoclosing parenthesis of most kinds   
+    indent-blankline.nvim           | Show indent-guide for blanklines   
+    tabular                         | Quickly align    
+    vim-projectionist               | For better project management   
+    vim-sexp                        | Smartparens for vim   
+    persistence.nvim                | Make your sessions persistent across startups   
+
+    -- git
+    vim-fugitive                    | Magit's counterpart for vim   
+    vim-rhubarb                     | Quickly push commits without reopening the browser   
+    gitsigns.nvim                   | Show git gutter in the signcolumn   
+
+    -- lsp
+    trouble.nvim                    | No more annoying virtual text for LSP. 
+    vimspector                      | For using DAP in vim   
+
+    -- treesitter
+    nvim-lspconfig                  | Default LSP configurations   
+    nvim-treesitter                 | Treesitter syntax highlighting   
+    nvim-lsp-installer              | Install treesitter parsers   
+
+    -- snippets
+    friendly-snippets               |    
+    vim-vsnip                       |    
+    cmp-vsnip                       |    
+    vim-vsnip-integ                 |    
+    cmp-nvim-lsp                    | These are all snippets-related packages.   
+    cmp-buffer                      |    
+    cmp-path                        |    
+    cmp-cmdline                     |    
+    nvim-cmp                        |    
+
+    -- langs
+    vim-rails                       | For ruby-on-rails
+    nvim-luapad                     | Interested in seeing quick evaluations of lua expressions?   
 
 
+*doom-package-groups*
+Doom uses groups of these packages to configure a certain functionality. Many
+times if you remove even one package, an entire functionality won't be
+working. These are the groups used: 
+
+    Doom's LSP configuration: >
+        nvim-lspconfig 
+        nvim-treesitter
+        nvim-lsp-installer
+        nvim-cmp
+        cmp-nvim-lsp
+        cmp-vsnip
+        vim-vsnip
+        trouble.nvim
+        cmp-buffer
+        cmp-path
+        cmp-cmdline
+<
+    Doom's telescope configuration: >
+        telescope.nvim
+        telescope-project.nvim
+        telescope-file-browser.nvim
+<
+Rest of the packages are not configured in groups.
 
 
+*doom-package-configuration*
+There are only two functions that can be used to configure packages. 
+
+    after! {pkgs:list/str} {f:function}                     *after!*
+        If all the {pkgs} are present, only then {f} is called. 
+        
+        This function is used AFTER all the packages are loaded.
 
 
+    specs! {pkgs:str} {t:table}                             *specs!*
+        Set the packer specs of individual packages.  
+
+        These are read BEFORE the packages are loaded.
 
 
+==============================================================================
+KEYBINDINGS *doom-keybindings*
+
+File operations: 
+>
+    {:keys "<leader>fs"
+     :help "Save curent file"}
+    
+    {:keys "<leader>fv"
+     :help "Source current file"}
+    
+    {:keys "<leader>fp"
+     :help "Open doom config dir"}
+    
+    {:keys "<leader>fP"
+     :help "Open private config dir"}
+    
+    {:keys "<leader>fV"
+     :help "Source doom's init.lua"}
+<
+Tab operations:
+>
+    {:keys "<leader>tk"
+     :help "Close current tab"}
+    
+    {:keys "<leader>tn"
+     :help "Go to next tab"}
+    
+    {:keys "<leader>tp"
+     :help "Go to previous tab"}
+    
+    {:keys "<leader>tf"
+     :help "Find tab"}
+    
+    {:keys "<leader>te"
+     :help "Open file in a new tab"}
+    
+    {:keys "<leader>tt"
+     :help "Open a new tab"}
+<    
+Buffer operations:
+>
+    {:keys "<leader>qw"
+     :help "Save buffers and quit"}
+    
+    {:keys "<leader>bp"
+     :help "Previous buffer"}
+    
+    {:keys "<leader>bn"
+     :help "Next buffer"}
+    
+    {:keys "<leader>br"
+     :help "Revert buffer"}
+    
+    {:keys "<leader>bk"
+     :help "Hide current buffer"}
+    
+    {:keys "<leader>qq"
+     :help "Quit unconditionally"}
+    
+    {:keys "<del>"
+     :help "No highlight"}
+<
+Misc operations:
+>
+    {:keys ";"
+     :help "Open command mode"}
+    
+    {:keys "!"
+     :help "Execute an sh command"}
+<
+    
+Clipboard operations:
+>
+    {:keys "<leader>xp"
+     :help "Paste from clipboard"
+
+     {:keys "<leader>hrr"
+      :help "Reload doom"}
+                     
+Indentation:
+>
+     {:keys "<PageDown>"
+      :help "Decrease indent"}
+
+     {:keys "<PageUp>"
+      :help "Increase indent"}
+
+     {:keys "<S-PageDown>"
+      :modes ["v"]
+      :help "Decrease indent in range"}
+
+     {:keys "<S-PageUp>"
+      :modes ["v"]
+      :help "Increase indent in range"}
+
+Doom runner:
+>
+    {:keys "<leader>mC" 
+     :help "Compile <lang>"}
+
+    {:keys "<leader>mB"
+     :help "Build <lang>"}
+
+    {:keys "<leader>mT"
+     :help "Test <lang>"}
+
+    {:keys "<leader>mc"
+     :help "Compile buffer file"}
+
+    {:keys "<leader>mb"
+     :help "Build buffer file"}
+
+    {:keys "<leader>mt"
+     :help "Compile buffer file"}
+
+nvim-tree.lua:
+>
+    {:keys "<leader>`" 
+     :help "Open nvim-tree" }
+
+vimspector:
+>
+    {:keys "<leader>de"
+     :help "Reset vimspector"}
+    
+    {:keys "<leader>dc"
+     :help "Continue"}
+    
+    {:keys "<leader>dt"
+     :help "Toggle breakpoint"}
+    
+    {:keys "<leader>dT"
+     :help "Clear breakpoints"}
+    
+    {:keys "<leader>dk"
+     :help "Restart vimspector"}
+    
+    {:keys "<leader>dh"
+     :help "Step out/finish"}
+    
+    {:keys "<leader>dl"
+     :help "Step in/step"}
+    
+    {:keys "<leader>dj"
+     :help "Step over/next"}
+
+persistence.nvim:
+>
+    {:keys "<leader>sl"
+     :help "Load session"}
+    
+    {:keys "<leader>ss"
+     :help "Load session"}
+
+trouble.nvim:
+>
+    {:keys "<leader>lt" 
+     :help "Toggle trouble"}
+
+zen-mode.nvim
+>
+    {:keys "<leader>bz" 
+     :help "Activate ZenMode"}
+
+telescope.nvim, 
+telescope-project.nvim,
+telescope-file-browser.nvim:
+>
+    {:keys "<leader>ff"
+     :help "Find file"}
+    
+    {:keys "<localleader>/"
+     :help "Live grep in cwd"}
+    
+    {:keys "<leader>/"
+     :help "Grep string in cwd"}
+    
+    {:keys "<leader>fg"
+     :help "Show git files"}
+    
+    {:keys "<leader>hk"
+     :help "Show keymaps"}
+    
+    {:keys "<leader>ht"
+     :help "Select theme"}
+    
+    {:keys "<leader>bb"
+     :help "Show buffers"}
+    
+    {:keys "<leader>fr"
+     :help "Show old files"}
+    
+    {:keys "<A-x>"
+     :help "Show commands"}
+    
+    {:keys "<leader>hr"
+     :help "Show command history"}
+    
+    {:keys "<leader>sr"
+     :help "Show search history"}
+    
+    {:keys "<leader>hm"
+     :help "Show man page for a program"}
+    
+    {:keys "<leader>hj"
+     :help "Show jumplist"}
+    
+    {:keys "<leader>h\""
+     :help "Show all registers"}
+    
+    {:keys "<M-y>"
+     :help "Show all registers"}
+    
+    {:keys "<leader><leader>s"
+     :help "Resume telescope"}
+    
+    {:keys "<leader>hq"
+     :help "Show quickfix list"}
+    
+    {:keys "<leader>lhr"
+     :help "Show references"}
+    
+    {:keys "<leader>lhs"
+     :help "Document symbols"}
+    
+    {:keys "<leader>lhw"
+     :help "Show workspace symbols"}
+    
+    {:keys "<leader>lhW"
+     :help "Show dynamic ws symbols"}
+    
+    {:keys "<leader>lhc"
+     :help "Show code actions"}
+    
+    {:keys "<leader>lhr"
+     :help "Show range code actions"}
+    
+    {:keys "<leader>lhd"
+     :help "Show diagnostics"}
+    
+    {:keys "<leader>lhi"
+     :help "Show LSP implementations"}
+    
+    {:keys "<leader>lhd"
+     :help "Show LSP definitions"}
+    
+    {:keys "<leader>lht"
+     :help "Show type definitions"}
+    
+    {:keys "<leader>mhs"
+     :help "Show treesitter symbols"}
+    
+    {:keys "<leader>ghc"
+     :help "Show commits"}
+    
+    {:keys "<leader>ghC"
+     :help "Show branch commits"}
+    
+    {:keys "<leader>ghb"
+     :help "Show branches"}
+    
+    {:keys "<leader>ghs"
+     :help "Show status"} 
+    
+    {:keys "<leader>ghS"
+     :help "Show stashes"}
+    
+    {:keys "<leader>fF"
+     :help "Open file browser"}
+    
+    {:keys "<leader>pp"
+     :help "Open project"}
+
+tagbar:
+>
+    {:keys "<C-t>"
+     :exec ":TagbarToggle<CR>"}
+
+vim-fugitive:
+>
+    {:keys "<leader>gg" 
+     :help "Open Fugitive in cwd"}
+    
+    {:keys "<leader>gi" 
+     :help "Initialize git in cwd"}
+    
+    {:keys "<leader>ga" 
+     :help "Track current file"}
+    
+    {:keys "<leader>gs" 
+     :help "Stage current file"}
+    
+    {:keys "<leader>gc" 
+     :help "Commit changes"}
+    
+    {:keys "<leader>gp" 
+     :help "Push commits"}
+    
+    {:keys "<leader>gm" 
+     :help "Merge from remote"}
+
+nvim-luapad:
+>
+    {:keys "<F3>"
+     :help "Start Luapad"}
+
+vim-bbye:
+>
+    {:keys "<leader>bq"
+     :help "Delete current buffer"}
 
 
+==============================================================================
+CAVEATS *doom-caveats*
 
+This section contains some caveats that users should keep in mind:
 
+Regarding user fennel configuration:
+    - Do not use modules in your configuration files. 
+      For some reason, fennel is unable to compile the module string. 
+      Simply make a local var and then return it at the end of the file.
 
+Regarding private configuration:
+    Under any circumstances, ensure that `user-packages.lua`  is present in
+    the file path. Without this file, doom will crash.
 
-modeline:vim:ft=help
+Regarding doom's configuration:
+    - Do not modify global variables unnecessarily if you don't know what they
+      do. If you are a new user, better stick to the ones already defined in
+      your sample user-init.lua
+
+Regarding packages:
+    - Any packages added or removed will be quickly reflected after you start
+      doom. Do not remove the essentials or else doom will fail to start. 
+    - Keep in mind |doom-package-groups| while removing packages
+
+Regarding LSP:
+    - Default LSP can be disabled and other LSP clients can be used. That's
+      OK. However, you won't get any nvim-cmp functionality either. So keep
+      that in mind. 
