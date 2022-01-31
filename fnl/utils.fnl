@@ -53,6 +53,14 @@
 (defn vals [t]
   (icollect [_ v (pairs t)] v))
 
+; Returns multiple: new array && popped element
+(defn pop [ls]
+  (let [l (length ls)
+        arr (core.map #(. ls $1)
+                      (vec (fun.take (- l 1) (fun.range l))))
+        popped (. ls l)]
+    (values arr popped)))
+
 (defn dump [e]
   (print (vim.inspect e)))
 

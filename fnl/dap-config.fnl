@@ -5,25 +5,31 @@
   (each [lang debugger (pairs doom.dap.default)]
     (utils.exec ":VimspectorInstall %s" debugger)))
 
-(defn supports-dap [ft]
-  (let [path (string.format "%s/support/vimspector/%s" 
-                            (vim.fn.stdpath "config")
+(defn- supports-dap [ft]
+  (let [path (string.format "%s/vimspector/%s" 
+                            (vim.fn.stdpath "data")
                             ft)
         exists (utils.path-exists path)]
     (if exists
       path
-      false)))
+      (let [another-path (string.format "%s/vimspector/%s" 
+                                        (vim.fn.stdpath :config)
+                                        ft)]
+        (if (utils.path-exists another-path)
+          another-path
+          false)))))
 
-(defn copy-default-json [ft dest]
+(defn- copy-default-json [ft dest]
   (let [src (supports-dap ft)]
-    (utils.sh (string.format "cp %s/default.json %s/.vimspector.json"
-                             src 
-                             dest))))
+    (when (not (utils.path-exists (.. dest "/.vimspector.json")))
+      (utils.sh (string.format "cp %s/default.json %s/.vimspector.json"
+                               src 
+                               dest)))))
 
-(defn get-workspace-dir [s]
+(defn- get-workspace-dir [s]
   (string.gsub s "/[^/]+$" ""))
 
-(defn start-debugger []
+(defn- start-debugger []
   (when (copy-default-json vim.bo.filetype (get-workspace-dir (vim.fn.expand "%:p")))
     (vim.call "vimspector#Launch")))
 

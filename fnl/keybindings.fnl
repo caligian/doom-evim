@@ -93,6 +93,7 @@
 
 ; Reload entire config
 (utils.define-keys [{:keys "<leader>hrr"
+                     :help "Reload doom"
                      :exec (fn [] 
                              (vim.cmd "tabnew") 
                              (vim.cmd "edit ~/.config/nvim/fnl/init.fnl")
@@ -106,20 +107,21 @@
 
 ; Quickly adjust indentation
 ; Respects v:count and lines in visual range
-(utils.define-keys [{:keys "<C-A-h>"
+(utils.define-keys [{:keys "<PageDown>"
                      :exec (utils.respect-count utils.decrease-indent false true)
                      :help "Decrease indent"}
 
-                    {:keys "<C-A-l>"
+                    {:keys "<PageUp>"
                      :exec (utils.respect-count utils.increase-indent false true)
                      :help "Increase indent"}
 
-                    {:keys "<C-A-h>"
+                    {:keys "<S-PageDown>"
                      :modes ["v"]
                      :exec #(utils.line-range-exec utils.decrease-indent)
                      :help "Decrease indent in range"}
 
-                    {:keys "<C-A-l>"
+                    {:keys "<S-PageUp>"
                      :modes ["v"]
                      :exec #(utils.line-range-exec utils.increase-indent) 
                      :help "Increase indent in range"}])
+

@@ -37,30 +37,13 @@ local function init(vim)
     debug.traceback = require("fennel").traceback
 
     -- Change fennel-compiled results directory
-    vim.cmd [[ let g:aniseed#env = v:true ]]
+    vim.cmd [[ let g:aniseed#env = {'input': stdpath('config') . '/fnl/', 'output': stdpath('config') . '/compiled/'} ]]
 
     local home = os.getenv('HOME')
+    package.path = string.format('%s;%s/compiled', package.path, vim.fn.stdpath('config'))
     package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home)
-
-    -- Change terminal colors
-    vim.g.terminal_color_0 = "#ffffff"
-    vim.g.terminal_color_1 = "#DDB6F2"
-    vim.g.terminal_color_2 = "#ABE9B3"
-    vim.g.terminal_color_3 = "#FAE3B0"
-    vim.g.terminal_color_4 = "#96CDFB"
-    vim.g.terminal_color_5 = "#F5C2E7"
-    vim.g.terminal_color_6 = "#DDB6F2"
-    vim.g.terminal_color_7 = "#D9E0EE"
-    vim.g.terminal_color_8 = "#575268"
-    vim.g.terminal_color_9 = "#E8A2AF"
-    vim.g.terminal_color_10 = "#B5E8E0"
-    vim.g.terminal_color_11 = "#F8BD96"
-    vim.g.terminal_color_12 = "#89DCEB"
-    vim.g.terminal_color_13 = "#C9CBFF"
-    vim.g.terminal_color_14 = "#F5E0DC"
-    vim.g.terminal_color_15 = "#C3BAC6"
 end
 
 init(vim)

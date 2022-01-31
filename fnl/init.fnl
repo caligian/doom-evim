@@ -76,6 +76,10 @@
 (when doom.default_keybindings
   (utils.try-require :keybindings))
 
+; Default vim-help mappings
+(when doom.default_help_keybindings
+  (utils.try-require :vim-help))
+
 ; Register help
 ; Register all help-groups in <leader>
 (let [wk (require :which-key)]

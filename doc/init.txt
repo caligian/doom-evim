@@ -89,7 +89,8 @@ These are the system modules:
 11. `logger`
     This is the global logger that doom uses to track startup errors.
 12. `globals`
-    This module contains the default configuration of doom. It can be overrided
+    This module contains the default configuration of doom. It can be
+    overridden
     anywhere in the private/system configuration.
 
 *doom-user-fs*
@@ -343,7 +344,7 @@ register({f:function}, {keybinding:bool}) *doom.utils.register*
 
     If keybinding is true then return a string that can be used in a
     keybinding. This is made separate because often commands used in
-    keybindings contain '<CR>', etc that don't work in command mod
+    keybindings contain '<CR>', etc that don't work in command mode.
 
     Returns: string
 
@@ -888,7 +889,7 @@ first require 'dap-config' and run `dap-config.install-default`. Otherwise,
 you can simply `:VimspectorInstall <debugger>` yourself.
 
 
-*doom-packages*
+*doom-default-packages*
 These are the packages that are shipped with doom. Only the essentials are
 installed and the rest are installed by :PackerInstall at first startup.
 >
@@ -991,23 +992,16 @@ working. These are the groups used:
 Rest of the packages are not configured in groups.
 
 
-*doom-package-configuration*
-There are only two functions that can be used to configure packages. 
-
-    after! {pkgs:list/str} {f:function}                     *after!*
-        If all the {pkgs} are present, only then {f} is called. 
-        
-        This function is used AFTER all the packages are loaded.
-
-
-    specs! {pkgs:str} {t:table}                             *specs!*
-        Set the packer specs of individual packages.  
-
-        These are read BEFORE the packages are loaded.
-
-
 ==============================================================================
 KEYBINDINGS *doom-keybindings*
+
+Keybindings are quite easy to make. You have to use |doom.utils.define-key| for a
+single keybinding and |doom.utils.define-keys| for binding multiple keys. If you
+want to make you keybinding respect v:count, then wrap the command in
+|doom.utils.respect-count|. If you want you keybinding to work on the lines in
+a visual selection, use |doom.utils.line-range-exec|.
+
+Below are the list of default keybindings that doom comes with.
 
 File operations: 
 >
@@ -1083,8 +1077,8 @@ Clipboard operations:
     {:keys "<leader>xp"
      :help "Paste from clipboard"
 
-     {:keys "<leader>hrr"
-      :help "Reload doom"}
+    {:keys "<leader>hrr"
+     :help "Reload doom"}
                      
 Indentation:
 >
@@ -1336,7 +1330,7 @@ Regarding private configuration:
 Regarding doom's configuration:
     - Do not modify global variables unnecessarily if you don't know what they
       do. If you are a new user, better stick to the ones already defined in
-      your sample user-init.lua
+      |doom-globals|.
 
 Regarding packages:
     - Any packages added or removed will be quickly reflected after you start
