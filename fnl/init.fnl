@@ -70,15 +70,15 @@
 
 ; Load package-configs
 (when doom.default_package_configs
-  (utils.try-require :configs))
+  (utils.try-require :configs :DOOM))
 
 ; Load keybindings
 (when doom.default_keybindings
-  (utils.try-require :keybindings))
+  (utils.try-require :keybindings :DOOM))
 
 ; Default vim-help mappings
 (when doom.default_help_keybindings
-  (utils.try-require :vim-help))
+  (utils.try-require :vim-help :DOOM))
 
 ; Register help
 ; Register all help-groups in <leader>
