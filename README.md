@@ -23,9 +23,8 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 
 ## Installation
 
-### Cloning the repo
-First backup your old directory: `mv ~/.config/{nvim,nvim.bak}`.
-Now run: `git clone -b main https://github.com/caligian/doom-evim ~/.config/nvim`
+### Downloading the release
+Please avoid cloning the repo and use the releases instead.
 
 ### Basic requirements
 1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim). Please use any gui client for a better experience.
