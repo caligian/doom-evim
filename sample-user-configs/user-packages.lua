@@ -9,10 +9,11 @@ return {
     ["which-key.nvim"]              = { "folke/which-key.nvim" ,                       lock = true, commit = "28d2bd129575b5e9ebddd88506601290bb2bb221"},
     ["Repeatable.vim"]              = { "kreskij/Repeatable.vim" ,                     lock = true, commit = "ab536625ef25e423514105dd790cb8a8450ec88b"},
 
+    ["vim-palette"]                 = { "gmist/vim-palette" ,                          lock = true, commit = "662012963694e6bc5268765b809341d68373cf55"},
+
     -- ui
     ["dashboard-nvim"]              = { "glepnir/dashboard-nvim",                      lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
     ["galaxyline.nvim"]             = { "glepnir/galaxyline.nvim" ,                    lock = true, commit = "d544cb9d0b56f6ef271db3b4c3cf19ef665940d5"},
-    ["vim-palette"]                 = { "gmist/vim-palette" ,                          lock = true, commit = "662012963694e6bc5268765b809341d68373cf55"},
     ["vim-devicons"]                = { "ryanoasis/vim-devicons" ,                     lock = true, commit = "a2258658661e42dd4cdba4958805dbad1fe29ef4"},
     ["nvim-web-devicons"]           = { "kyazdani42/nvim-web-devicons" ,               lock = true, commit = "634e26818f2bea9161b7efa76735746838971824"},
     ["telescope.nvim"]              = { "nvim-telescope/telescope.nvim" ,              lock = true, commit = "0011b1148d3975600f5a9f0be8058cdaac4e30d9"},

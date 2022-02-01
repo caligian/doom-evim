@@ -5,11 +5,12 @@ class SetupDoom
   def initialize
     @main_config_dir = "#{ENV['HOME']}/.config/nvim"
     @user_dir = "#{ENV['HOME']}/.vdoom.d"
-    @user_files = ['user-init.lua', 'user-packages.lua']
+    @user_files = ['user-init.lua', 'user-packages.lua', 'user-specs.lua']
     @user_other_dirs = %w[lua fnl]
 
     @package_dest = "#{ENV['HOME']}/.local/share/nvim/site/pack/packer/start"
     @packages = {
+      'gmist/vim-palette' => "662012963694e6bc5268765b809341d68373cf55",
       'Olical/aniseed' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
       'kreskij/Repeatable.vim' => 'ab536625ef25e423514105dd790cb8a8450ec88b',
       'folke/which-key.nvim' => '28d2bd129575b5e9ebddd88506601290bb2bb221',
@@ -48,7 +49,11 @@ class SetupDoom
 
   def make_user_fs
     Dir.mkdir @user_dir unless Dir.exist? @user_dir
+
     @user_other_dirs.map { |i| Dir.mkdir "#{@user_dir}/#{i}" unless Dir.exist? "#{@user_dir}/#{i}" }
+
+    `cp lua/default_packages.lua sample-user-configs/user-packages.lua`
+
     @user_files.map { |i| `cp sample-user-configs/#{i} #{@user_dir}/` unless File.exist? "#{@user_dir}/#{i}" }
   end
 
