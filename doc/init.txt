@@ -1003,6 +1003,14 @@ a visual selection, use |doom.utils.line-range-exec|.
 
 Below are the list of default keybindings that doom comes with.
 
+Font operations:
+>
+    {:keys "<C-ScrollWheelUp>"
+     :help "Increase font size by 2}
+
+    {:keys "<C-ScrollWheelDown>"
+     :help "Decrease font size by 2}
+
 File operations: 
 >
     {:keys "<leader>fs"
@@ -1065,7 +1073,7 @@ Buffer operations:
 <
 Misc operations:
 >
-    {:keys ";"
+    {:keys "<leader>;"
      :help "Open command mode"}
     
     {:keys "!"
