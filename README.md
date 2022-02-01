@@ -25,6 +25,7 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 
 ### Downloading the release
 Please avoid cloning the repo and use the releases instead.
+Unzip the file downloaded and copy it as ~/.config/nvim and follow the steps given below.
 
 ### Basic requirements
 1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim). Please use any gui client for a better experience.
