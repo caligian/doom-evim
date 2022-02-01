@@ -17,18 +17,37 @@
 (defn- uppercase [s]
   (string.gsub s "^." string.upper))
 
+(defn- take-runner-input [binary]
+  (let [_pipe-args (str.trim (vim.call :input "Pipe args > "))
+        _binary-args (str.trim (vim.call :input (string.format "Args for %s > " binary)))
+        _file (str.trim (vim.call :input "Use current file (n/y) > "))
+
+        pipe-args (match _pipe-args
+                    "" ""
+                    _ (.. _pipe-args " | "))
+        binary-args (match _binary-args
+                      "" ""
+                      _ _binary-args)
+        file (match _file
+               "" (vim.fn.expand "%:p")
+               :n ""
+               :y (vim.fn.expand "%:p")
+               _ _file)
+
+        _extra-args (if (~= "" file) 
+                      (str.trim (vim.call :input (string.format "Args for %s > " file)))
+                      "")
+        extra-args (if (~= "" _extra-args) 
+                     (match _extra-args
+                       "" ""
+                       _ _extra-args)
+                     "")
+
+        final-cmd (string.format "%s %s %s %s %s" pipe-args binary binary-args file extra-args)]
+    final-cmd))
+
 (defn- _runner [binary]
-  (let [args (string.format "Args for %s > " binary) 
-        args (vim.call :input args)
-        use-current-file (vim.call :input "Use current file? > ")
-        use-current-file (str.trim use-current-file)
-        file (if (~= use-current-file "y")
-                (if (or (= use-current-file "n")
-                        (= use-current-file ""))
-                  ""
-                  use-current-file) 
-                (vim.fn.expand "%:p"))
-        cmd (string.format "%s %s %s" binary args file)]
+  (let [cmd (take-runner-input binary)]
     (get-output-and-split cmd)))
 
 (defn- make-runner [ft of]
