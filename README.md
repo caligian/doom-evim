@@ -28,11 +28,12 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 3. lua5.1 modules: [rex_pcre2](https://rrthomas.github.io/lrexlib/manual.html), [luafun](https://luafun.github.io/), [lualogging](https://neopallium.github.io/lualogging/index.html), [lpath](https://github.com/starwing/lpath) and [lua-set](https://github.com/EvandroLG/set-lua). With ruby you can run `doom.rb` to install these.
 4. GNU/Linux. Currently doom-evim only supports GNU/Linux.
 
-### Optional requirements
-- [Neovide](https://github.com/neovide/neovide) or any other gui client.
-
-### How to install?
+### How to install other requirements?
 Assuming that you have all of the above tasks done, you can use `doom.rb` to provide a basic utility script to do other tasks that may confuse the user. Please visit here: [doom.rb](./doomrb.md)
+
+### Finally, how to install?
+First backup your old directory: `mv ~/.config/{nvim,nvim.bak}`.
+Now run: `git clone -b main https://github.com/caligian/doom-evim ~/.config/nvim`
 
 ## How to update?
 Just run `git pull` in `~/.config/nvim`.
