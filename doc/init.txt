@@ -92,6 +92,9 @@ These are the system modules:
     This module contains the default configuration of doom. It can be
     overridden
     anywhere in the private/system configuration.
+13. `vim-help`
+    Some keybindings for easier editing in vim help files. Planning to add
+    more features
 
 *doom-user-fs*
 Doom encourages the usage of `fennel` and `lua`  both for configuring the
