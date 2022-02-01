@@ -307,12 +307,14 @@ langs.<lang> {table} *doom.langs*
 lsp.load_default {bool}
     If true, load all the default doom's lsp configurations. 
 
+    Default: false
+
 
 lsp.install_sumneko_lua {bool}
     If true, doom will automatically install and setup sumneko_lua. Requires
     the above to be set true.
 
-    Default: true
+    Default: false
 
 lsp.servers {table}
     Form: {<server-name> <configuration>}
