@@ -1,6 +1,6 @@
 
 
-![doom.png](./screenshots/doom-evim.png)
+![DOOM-eVIM](./screenshots/doom-evim.png)
 
 # Welcome to doom-evim
 This project has been inspired by doom-emacs and doom-nvim. However, I named it doom because it is batteries-included like doom-nvim and doom-emacs. Why the 'e'? To pay a homage to emacs' revered emacs-lisp.
@@ -36,6 +36,9 @@ Assuming that you have all of the above tasks done, you can use `doom.rb` to pro
 
 ## How to update?
 Just run `git pull` in `~/.config/nvim`.
+
+## Screenshots
+[Screenshots](./screenshots/README.md)
 
 ## Further reading
 `:help doom-evim`

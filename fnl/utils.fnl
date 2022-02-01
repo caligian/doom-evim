@@ -179,7 +179,9 @@
 (defn sed [s replacement-a substitute-a]
   (if 
     (not (= (length replacement-a) 0))
-    (let [first-r (fun.head replacement-a)
+    (let [replacement-a (listify replacement-a)
+          substitute-a (listify substitute-a)
+          first-r (fun.head replacement-a)
           first-s (fun.head substitute-a)
           rest-r  (icollect [i (fun.tail replacement-a)] i)
           rest-s  (icollect [i (fun.tail substitute-a)] i)]
@@ -605,3 +607,13 @@
     #(require module-name)
     #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name)) 
     #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1))))
+
+; Increases the size of current font by 1
+(defn adjust-font-size [inc-or-dec]
+  (let [size (rx.match vim.go.guifont ":h([0-9]+)$")
+        font (rx.match vim.go.guifont "^[^:]+")
+        new (if (= inc-or-dec "+") 
+              (+ size 2)
+              (- size 2))
+        new-font (.. font ":h" new)]
+    (set vim.go.guifont new-font)))

@@ -7,6 +7,34 @@ class SetupDoom
     @user_dir = "#{ENV['HOME']}/.vdoom.d"
     @user_files = ['user-init.lua', 'user-packages.lua']
     @user_other_dirs = %w[lua fnl]
+
+    @package_dest = "#{ENV['HOME']}/.local/share/nvim/site/pack/packer/start"
+    @packages = {
+      'Olical/aniseed' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
+      'kreskij/Repeatable.vim' => 'ab536625ef25e423514105dd790cb8a8450ec88b',
+      'folke/which-key.nvim' => '28d2bd129575b5e9ebddd88506601290bb2bb221',
+      'svermeulen/vimpeccable' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
+      'nvim-lua/plenary.nvim' => '563d9f6d083f0514548f2ac4ad1888326d0a1c66',
+      'Olical/conjure' => '2717348d1a0687327f59880914fa260e4ad9c685',
+      'bakpakin/fennel.vim' => '30b9beabad2c4f09b9b284caf5cd5666b6b4dc89',
+    }
+  end
+
+  def get_repo_basename(repo)
+    repo.match(%r{/([^$]+)})[1] 
+  end
+
+  def clone_repo(repo)
+    basename = get_repo_basename(repo)
+    path = "#{@package_dest}/#{basename}"
+    `git clone https://github.com/#{repo} #{path}` 
+  end
+
+  def reset_repo(repo, commit)
+    basename = get_repo_basename(repo)
+    path = "#{@package_dest}/#{basename}"
+    Dir.chdir path
+    `git reset --hard #{commit}`
   end
 
   def setup_lua
@@ -33,6 +61,8 @@ class SetupDoom
     available_fonts = Dir.glob '*zip'
 
     available_fonts.map do |font|
+      puts "Installing all fonts in: #{font}"
+
       fonts = `unzip -l #{font}`.split /\n/
       fonts = fonts.select {|i| i.match /^\s*[0-9]/}
       fonts = fonts.map {|f| _f = f.split /\s+/; %{"#{_f[4..].join ' '}"} }
@@ -46,13 +76,18 @@ class SetupDoom
   end
 
   def bootstrap
-    package_dest = "#{ENV['HOME']}/.local/share/nvim/site/pack/packer/start"
-    `mkdir -p '#{package_dest}' &>/dev/null`
-    `git clone --depth 1 https://github.com/wbthomason/packer.nvim #{package_dest}/packer.nvim`
+    `mkdir -p '#{@package_dest}' &>/dev/null`
 
-    # These are the bootstrap packages!
-    %w[Olical/aniseed Olical/conjure bakpakin/fennel.vim nvim-lua/plenary.nvim svermeulen/vimpeccable folke/which-key.nvim kreskij/Repeatable.vim guns/vim-sexp folke/persistence.nvim].each do |repo|
-      `git clone https://github.com/#{repo} #{package_dest}/#{repo.match(%r{/([^$]+)})[1]}`
+    # setup packer
+    `git clone --depth 1 https://github.com/wbthomason/packer.nvim #{@package_dest}/packer.nvim`
+
+    # Reset packer to required commit 
+    reset_repo('wbthomason/packer.nvim', '7182f0ddbca2dd6f6723633a84d47f4d26518191')
+    
+    @packages.keys.each do |repo|
+      commit = @packages[repo]
+      clone_repo(repo)
+      reset_repo(repo, commit)
     end
   end
 end

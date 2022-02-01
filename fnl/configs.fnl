@@ -310,13 +310,13 @@
  :exec ":lua require('telescope.builtin').git_stash(require('telescope.themes').get_ivy())<CR>"
  :help "Show stashes"}
 
-{:keys "<leader>fF"
- :exec ":lua require('telescope').extensions.project.project(require('telescope.themes').get_ivy())<CR>"
- :help "Open file browser"}
-
 {:keys "<leader>pp"
- :exec ":lua require'telescope'.extensions.project.project{}<CR>"
- :help "Open project"}]))))
+ :exec ":lua require('telescope').extensions.project.project(require('telescope.themes').get_ivy())<CR>"
+ :help "Open project"}
+
+{:keys "<leader>fF"
+ :exec ":lua require'telescope'.extensions.file_browser.file_browser(require('telescope.themes').get_ivy()) <CR>"
+ :help "Open file browser"}]))))
 
 ; vim-palette: Colorscheme provider
 (after! :vim-palette

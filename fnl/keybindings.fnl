@@ -2,7 +2,15 @@
   {autoload {utils utils}})
 
 ; File management
-(utils.define-keys [{:keys "<leader>fs"
+(utils.define-keys [{:keys "<C-ScrollWheelUp>"
+                     :exec #(utils.adjust-font-size "+")
+                     :help "Increase font size"}
+
+                    {:keys "<C-ScrollWheelDown>"
+                     :exec #(utils.adjust-font-size "-")
+                     :help "Decrease font size"}
+                    
+                    {:keys "<leader>fs"
                      :exec ":w<CR>"
                      :help "Save curent file"}
 
@@ -81,7 +89,7 @@
                      :help "No highlight"}
 
                     ; Easy command access
-                    {:keys ";"
+                    {:keys "<leader>;"
                      :exec ": "
                      :help "Open command mode"}
                     
