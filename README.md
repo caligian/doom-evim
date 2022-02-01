@@ -22,6 +22,11 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 7. Comprehensive inbuild documentation accessible via `:help`.
 
 ## Installation
+
+### Cloning the repo
+First backup your old directory: `mv ~/.config/{nvim,nvim.bak}`.
+Now run: `git clone -b main https://github.com/caligian/doom-evim ~/.config/nvim`
+
 ### Basic requirements
 1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim). Please use any gui client for a better experience.
 2. `fdfind`, `lua5.1`, `luarocks`, `rg`, `ruby`, `node` and `npm`. You OS package manager should have these. After you install these, please install `yarn` via `npm`.
@@ -30,10 +35,6 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 
 ### How to install other requirements?
 Assuming that you have all of the above tasks done, you can use `doom.rb` to provide a basic utility script to do other tasks that may confuse the user. Please visit here: [doom.rb](./doomrb.md)
-
-### Finally, how to install?
-First backup your old directory: `mv ~/.config/{nvim,nvim.bak}`.
-Now run: `git clone -b main https://github.com/caligian/doom-evim ~/.config/nvim`
 
 ## How to update?
 Just run `git pull` in `~/.config/nvim`.
