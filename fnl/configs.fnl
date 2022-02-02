@@ -232,7 +232,25 @@
         (fn []
           (let [telescope (require :telescope)
                 actions (require :telescope.actions)]
-            (telescope.setup {:defaults {:preview false
+            ; Some stuff stolen from NvChad
+            (telescope.setup {:defaults {:vimgrep_arguments [:rg 
+                                                             "--color=never"
+                                                             "--no-heading"
+                                                             "--with-filename"
+                                                             "--line-number"
+                                                             "--column"
+                                                             "--smart-case"]
+
+                                         :layout_strategy "horizontal"
+                                         :layout_config {:horizontal {:prompt_position "top"
+                                                                      :preview_width 0.55
+                                                                      :results_width 0.8}
+                                                         :vertical {:mirror false}
+                                                         :width 0.87
+                                                         :height 0.80
+                                                         }
+
+                                         :preview false
                                          :path_display [:smart]
                                          :mappings {:n {:D actions.delete_buffer}
                                                     :i {"<C-d>" actions.delete_buffer}}}})
@@ -387,7 +405,7 @@
 ; vim-palette: Colorscheme provider
 (after! :vim-palette
        (fn []
-          (vim.cmd "colorscheme base16-gruvbox-light-soft")))
+          (vim.cmd "colorscheme Base2Tone_SeaDark")))
 
 ; galaxyline
 (after! :galaxyline.nvim
