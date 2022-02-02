@@ -179,7 +179,7 @@
 (after! :nvim-treesitter
         (fn []
           (let [treesitter-configs (require "nvim-treesitter.configs")]
-            (treesitter-configs.setup {:ensure_installed doom.treesitter-langs
+            (treesitter-configs.setup {:ensure_installed doom.treesitter_langs
                                        :sync_install true
                                        :highlight {:enable true}
                                        :indent {:enable true}}))))
