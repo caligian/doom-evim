@@ -23,7 +23,7 @@ return {
     ["nvim-tree.lua"]               = { "kyazdani42/nvim-tree.lua",                    lock = true, commit = "2dfed89af7724f9e71d2fdbe3cde791a93e9b9e0"},
 
     -- editor
-    ["formatter.nvim"]              = { "mhartington/formatter.nvim" ,                 lock = true, commit = "0cdce2da8762ee01ee7d8df047b6e569d58c1ba3"},
+    ["vim-autoformat"]              = { "vim-autoformat/vim-autoformat",               lock = true, commit = "bb11f30377985e45e2eecef570856d42dbabb8b0"},
     ["vim-misc"]                    = { "xolox/vim-misc" ,                             lock = true, commit = "3e6b8fb6f03f13434543ce1f5d24f6a5d3f34f0b"},
     ["vim-bbye"]                    = { "moll/vim-bbye" ,                              lock = true, commit = "25ef93ac5a87526111f43e5110675032dbcacf56"},
     ["vim-dispatch"]                = { "tpope/vim-dispatch" ,                         lock = true, commit = "00e77d90452e3c710014b26dc61ea919bc895e92"},

@@ -10,6 +10,63 @@
 (after! :gitsigns.nvim
         #((. (require :gitsigns) :setup)))
 
+(after! :vim-vsnip (fn []
+                     (utils.define-keys [{:keys "<C-j>"
+                                          :noremap false
+                                          :modes "s"
+                                          :exec "vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'"
+                                          :key-attribs "expr"
+                                          :help "Expand snippet"}
+
+                                         {:keys "<C-j>"
+                                          :noremap false
+                                          :modes "i"
+                                          :exec "vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'"
+                                          :key-attribs "expr"
+                                          :help "Expand snippet"}
+
+                                         {:keys "<C-l>"
+                                          :modes "s"
+                                          :key-attribs "expr"
+                                          :noremap false
+                                          :help "Expand or jump snippet"
+                                          :exec "vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'"}
+
+                                         {:keys "<C-l>"
+                                          :modes "i"
+                                          :noremap false
+                                          :key-attribs "expr"
+                                          :help "Expand or jump snippet"
+                                          :exec "vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'"}
+
+                                         {:keys "<S-Tab>"
+                                          :noremap false
+                                          :key-attribs "expr"
+                                          :modes "i"
+                                          :help "Snippet jump to next field"
+                                          :exec "vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-prev)'      : '<Tab>'"}
+
+                                         {:keys "<S-Tab>"
+                                          :key-attribs "expr"
+                                          :noremap false
+                                          :modes "i"
+                                          :help "Snippet jump to prev field"
+                                          :exec "vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-prev)'      : '<Tab>'"}
+
+                                         {:keys "<Tab>"
+                                          :noremap false
+                                          :key-attribs "expr"
+                                          :modes "s"
+                                          :help "Snippet jump to next field"
+                                          :exec "vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)'      : '<Tab>'"}
+
+                                         {:keys "<Tab>"
+                                          :key-attribs "expr"
+                                          :noremap false
+                                          :modes "i"
+                                          :help "Snippet jump to next field"
+                                          :exec "vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)'      : '<Tab>'"}])))
+
 ; nvim-tree
 (after! :nvim-tree.lua
         (fn []
@@ -109,43 +166,11 @@
         (fn []
           (set vim.g.undotree_SetFocusWhenToggle 1)))
 
-; formatter
-; Stolen from doom-nvim
-(after! :formatter.nvim
-              (fn []
-                (let [format (require :formatter)]
-                  (vim.cmd "noremap <silent> <leader>mf :Format <CR>")
-                  (format.setup {"*" {:cmd ["sed -i 's/[ \t]*$//'"]}
-
-                                 :vim {:cmd [#(utils.fmt "stylua --config-path %s/.config/stylua/stylua.toml %s" (os.getenv :HOME) $1)]}
-
-                                 :vimwiki {:cmd ["prettier -w --parser babel"]}
-
-                                 :lua {:cmd [#(utils.fmt "stylua --config-path %s/.config/stylua/stylua.toml %s" (os.getenv :HOME) $1)]}
-
-                                 :python {:cmd [#(utils.fmt "yapf -i %s" $1)]}
-
-                                 :go {:cmd ["gofmt -w" "goimports -w"]
-                                      :tempfile_postfix ".tmp"}
-
-                                 :javascript {:cmd ["prettier -w"
-                                                    "./node_modules/.bin/eslient --fix"]}
-
-                                 :typescript {:cmd ["prettier -w --parser typescript"]}
-
-                                 :html {:cmd ["prettier -w --parser html"]}
-
-                                 :markdown {:cmd ["prettier -w --parser markdown"]}
-
-                                 :css {:cmd ["prettier -w --parser css"]}
-
-                                 :scss {:cmd ["prettier -w --parser scss"]}
-
-                                 :json {:cmd ["prettier -w --parser json"]}
-
-                                 :toml {:cmd ["prettier -w --parser toml"]}
-
-                                 :yaml {:cmd ["prettier -w --parser yaml"]}}))))
+(after! :vim-autoformat
+        (fn []
+          (utils.define-key {:keys "<leader>mf"
+                             :help "Autoformat current buffer"
+                             :exec ":Autoformat<CR>"})))
 
 ; zen-mode
 (after! :zen-mode.nvim #(utils.define-key {:keys "<leader>bz" :help "Activate ZenMode" :exec ":ZenMode<CR>"}))

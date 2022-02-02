@@ -1,4 +1,5 @@
 local function init(vim)
+    vim.o.foldenable = false
     vim.o.completeopt = "menu,menuone,noselect"
     vim.o.mouse="a"
     vim.o.history = 1000

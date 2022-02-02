@@ -509,7 +509,9 @@
          (wk.register original-t {:prefix "<leader>"}))))))
 
 (defn define-key [opts]
-  (let [noremap (or opts.noremap true)
+  (let [noremap (match opts.noremap 
+                  false false
+                  _ true)
         key-attribs (or (listify opts.key-attribs) ["silent"])
         keys opts.keys
         modes (or (listify opts.modes) ["n"])

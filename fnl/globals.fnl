@@ -52,8 +52,8 @@
                               :local-lua-debugger-vscode]}
 
               ; LSP defaults
-              :lsp {:install_sumneko_lua false
-                    :load_default false
+              :lsp {:install_sumneko_lua true
+                    :load_default true
                     :servers {:solargraph {}
                               :pyright {}}}
  

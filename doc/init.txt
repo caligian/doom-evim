@@ -1060,6 +1060,9 @@ Buffer operations:
     
     {:keys "<leader>bp"
      :help "Previous buffer"}
+
+    {:keys "<leader>bR"
+     :help "Set file to RO"}
     
     {:keys "<leader>bn"
      :help "Next buffer"}
