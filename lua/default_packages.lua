@@ -51,6 +51,7 @@ return {
     -- treesitter
     ["nvim-lspconfig"]              = { "neovim/nvim-lspconfig" ,                      lock = true, commit = "c51096481dc13193991571b7132740d762902355"},
     ["nvim-treesitter"]             = { "nvim-treesitter/nvim-treesitter" ,            lock = true, commit = "620cc936ad6b26c59bb2d888b3890bb8d06c50c7"},
+    ["nvim-treesitter-textobjects"] = {"nvim-treesitter/nvim-treesitter-textobjects",  lock = true, commit = "f107174097df7ec29dfeb573ebc2ede8a1f0a067"},
     ["nvim-lsp-installer"]          = { "williamboman/nvim-lsp-installer" ,            lock = true, commit = "88e44bbbe2e03523e08f2bd3c9a954675bc438f4"},
     ["vim-sexp"]                    = { "guns/vim-sexp",                               lock = true, commit = "14464d4580af43424ed8f2614d94e62bfa40bb4d"},
     ["persistence.nvim"]            = { "folke/persistence.nvim",                      lock = true, commit = "77cf5a6ee162013b97237ff25450080401849f85"},

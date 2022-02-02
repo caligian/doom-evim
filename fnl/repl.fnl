@@ -158,7 +158,7 @@
 
                     {:keys "<localleader>meb"
                      :exec #(send nil :buffer)
-                     :help "Send current line to ft REPL"}
+                     :help "Send buffer to ft REPL"}
                     
                     {:keys "<localleader>meE"
                      :exec #(send :bash :line)
@@ -170,7 +170,7 @@
 
                     {:keys "<localleader>meB"
                      :exec #(send :bash :buffer)
-                     :help "Send current line to ft REPL"}
+                     :help "Send buffer to bash REPL"}
 
                     {:keys "<localleader>meE"
                      :modes "v"

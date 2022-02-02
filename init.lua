@@ -45,6 +45,9 @@ local function init(vim)
     package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home)
+
+    -- Open log quickly
+    vim.cmd [[ noremap <leader>fl :e ~/.local/share/nvim/doom-evim.log<CR> ]]
 end
 
 init(vim)

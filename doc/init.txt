@@ -953,6 +953,7 @@ Master list:
     -- treesitter
     nvim-lspconfig                  | Default LSP configurations   
     nvim-treesitter                 | Treesitter syntax highlighting   
+    nvim-treesitter-textobjects     | Treesitter with basic textobj manipulation
     nvim-lsp-installer              | Install treesitter parsers   
 
     -- snippets
@@ -1383,6 +1384,56 @@ vim-bbye:
     {:keys "<leader>bq"
      :help "Delete current buffer"}
 
+
+vim-vsnip:
+>
+    {:keys "<C-j>"
+     :noremap false
+     :modes "s"
+     :key-attribs "expr"
+     :help "Expand snippet"}
+
+    {:keys "<C-j>"
+     :noremap false
+     :modes "i"
+     :key-attribs "expr"
+     :help "Expand snippet"}
+
+    {:keys "<C-l>"
+     :modes "s"
+     :key-attribs "expr"
+     :noremap false
+     :help "Expand or jump snippet"}
+
+    {:keys "<C-l>"
+     :modes "i"
+     :noremap false
+     :key-attribs "expr"
+     :help "Expand or jump snippet"}
+
+    {:keys "<S-Tab>"
+     :noremap false
+     :key-attribs "expr"
+     :modes "i"
+     :help "Snippet jump to next field"}
+
+    {:keys "<S-Tab>"
+     :key-attribs "expr"
+     :noremap false
+     :modes "i"
+     :help "Snippet jump to prev field"}
+
+    {:keys "<Tab>"
+     :noremap false
+     :key-attribs "expr"
+     :modes "s"
+     :help "Snippet jump to next field"}
+
+    {:keys "<Tab>"
+     :key-attribs "expr"
+     :noremap false
+     :modes "i"
+     :help "Snippet jump to next field"
 
 ==============================================================================
 CAVEATS *doom-caveats*
