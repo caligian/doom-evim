@@ -1,18 +1,19 @@
 *doom-evim*
 
-==========================================================================
+==============================================================================
 CONTENTS *doom-toc*
 
-1. Introduction  |doom-introduction|
-2. Philosophy |doom-philosophy|
-3. Filesystem |doom-fs|
-4. Modules  |doom-modules|
-5. Keybindings |doom-keybindings|
-6. Snippets |doom-snippets|
-7. Treesitter |doom-treesitter|
-8. Caveats |doom-caveats|
+1. Introduction |doom-introduction|
+2. Philosophy   |doom-philosophy|
+3. Filesystem   |doom-fs|
+4. Modules      |doom-modules|
+5. Keybindings  |doom-keybindings|
+6. Snippets     |doom-snippets|
+7. Treesitter   |doom-treesitter|
+8. Help-editing |doom-help-editing|
+9. Caveats      |doom-caveats|
 
-==========================================================================
+==============================================================================
 INTRODUCTION *doom-introduction*
 
 Doom-evim seeks to not only emulate doom-emacs's features in some manner but
@@ -25,7 +26,7 @@ you.
 Please read through the ENTIRE documentation in order to understand and use
 doom efficiently.
 
-==========================================================================
+==============================================================================
 PHILOSOPHY *doom-philosophy*
 
 The philosophy of doom-evim is similar to that emacs itself: DRY (Don't Repeat
@@ -39,7 +40,7 @@ are available to a user and the distribution sets good reusable defaults.
 If you wish to extend this configuration, feel free to do so via your private
 `~/.vdoom.d`. You can do the same via `lua` or `fennel`.
 
-==========================================================================
+==============================================================================
 FILESYSTEM *doom-fs*
 
 This section will contain a brief description of doom-evim API. 
@@ -62,9 +63,6 @@ These are the system modules:
     This module contains utility functions to store packages. It takes into
     consideration user package declarations also. It also creates the final
     list of packer forms for packer usage. 
-
-    It also contains the default package declarations. This is the exact
-    declaration that will be present in `~/.vdoom.d/user-packages.lua`. 
 4. `packages`
     This module imports stuff from package-utils and initializes packer.
     Currently, there is no way to reload packages on the fly because packer is
@@ -147,7 +145,7 @@ else they won't be compiled before startup. You can also use: >
 
 to compile a list of files present in `~/.vdoom.d/fnl`. 
 
-==========================================================================
+==============================================================================
 MODULES *doom-modules*
 
 This section contains the guide to use the doom api in your private
@@ -1451,7 +1449,6 @@ This section explains snippet creation in doom-evim.
 Doom-evim uses vim-vsnip. As it turns out, it is not easily possible to simply
 copy paste into a JSON and not throw errors. Therefore, in the spirit of
 YASnippet, doom provides some keybindings to make this task easy for you. 
-
 Simply press:
     `<leader>&ns` (for split window)
     `<leader>&nv` (for vsplit window)
@@ -1516,6 +1513,79 @@ Other mappings:
     `[M` Go to the end of previous function
     `[]` Go to the end of previous class
 
+
+==============================================================================
+HELP-EDITING *doom-help-editing*
+
+This section explains the functionality provided by doom to edit vim help
+files. The heart of this functionality depends on `vim-help`.
+
+What this module does is make it easier for the user to navigate around in vim
+help files. The keybindings would do a better job at explaining to you: >
+
+   {:keys "<C-f>"
+    :key-attribs "buffer"
+    :help "Jump to next section"
+    :patterns ["*txt,*text"]
+    :events "BufEnter"}
+
+   {:keys "<C-b>"
+    :key-attribs "buffer"
+    :help "Jump to prev section"
+    :patterns ["*txt,*text"]
+    :events "BufEnter"}
+
+   {:keys "-" 
+    :help "Add separator based on textwidth"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]}
+
+   {:keys "+" 
+    :help "Readjust the width of sep across the buffer"
+    :events ["BufEnter"]
+    :key-attribs ["buffer"]
+    :patterns ["*txt,*text"]}
+
+   {:keys "<A-u>"
+    :key-attribs ["buffer"]
+    :help "Convert current word to url"
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]}
+
+   {:keys "<A-t>"
+    :help "Convert current word to tag"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]}
+
+   {:keys "<C-p>"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]
+    :help "Goto prev url"}
+
+   {:keys "<C-n>"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]
+    :help "Goto prev url"}
+
+   {:keys "<A-f>"
+    :help "Goto prev tag"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]}
+
+   {:keys "<A-b>"
+    :help "Goto next tag"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]}
+
+Tags are words enclosed between 2 '*' and urls are words enclosed between two
+'|'. Hopefully this should encourage you to write your own help docs.
+
 ==============================================================================
 CAVEATS *doom-caveats*
 
@@ -1544,3 +1614,4 @@ Regarding LSP:
     - Default LSP can be disabled and other LSP clients can be used. That's
       OK. However, you won't get any nvim-cmp functionality either. So keep
       that in mind. 
+

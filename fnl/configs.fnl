@@ -10,6 +10,9 @@
 (after! :gitsigns.nvim
         #((. (require :gitsigns) :setup)))
 
+(after! :lualine.nvim
+        #(utils.try-require :modeline :DOOM))
+
 (after! :vim-vsnip (fn []
                      (utils.define-keys [{:keys "<C-j>"
                                           :noremap false
@@ -384,7 +387,7 @@
 ; vim-palette: Colorscheme provider
 (after! :vim-palette
        (fn []
-          (vim.cmd "colorscheme base16-solarized")))
+          (vim.cmd "colorscheme base16-gruvbox-light-soft")))
 
 ; galaxyline
 (after! :galaxyline.nvim

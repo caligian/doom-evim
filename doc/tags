@@ -20,6 +20,7 @@ doom-default-packages	init.txt	/*doom-default-packages*
 doom-evim	init.txt	/*doom-evim*
 doom-fs	init.txt	/*doom-fs*
 doom-globals	init.txt	/*doom-globals*
+doom-help-editing	init.txt	/*doom-help-editing*
 doom-introduction	init.txt	/*doom-introduction*
 doom-keybindings	init.txt	/*doom-keybindings*
 doom-logger	init.txt	/*doom-logger*
@@ -30,8 +31,10 @@ doom-packages	init.txt	/*doom-packages*
 doom-philosophy	init.txt	/*doom-philosophy*
 doom-repl	init.txt	/*doom-repl*
 doom-runner	init.txt	/*doom-runner*
+doom-snippets	init.txt	/*doom-snippets*
 doom-system-fs	init.txt	/*doom-system-fs*
 doom-toc	init.txt	/*doom-toc*
+doom-treesitter	init.txt	/*doom-treesitter*
 doom-user-fs	init.txt	/*doom-user-fs*
 doom-utils	init.txt	/*doom-utils*
 doom.langs	init.txt	/*doom.langs*

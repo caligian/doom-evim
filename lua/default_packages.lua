@@ -12,7 +12,7 @@ return {
 
     -- ui
     ["dashboard-nvim"]              = { "glepnir/dashboard-nvim",                      lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
-    ["galaxyline.nvim"]             = { "glepnir/galaxyline.nvim" ,                    lock = true, commit = "d544cb9d0b56f6ef271db3b4c3cf19ef665940d5"},
+    ["lualine.nvim"]                = {"nvim-lualine/lualine.nvim",                    lock = true, commit = "0d0ea77e1a9a0f17e48b87b5931f292a6cf413dd"},
     ["vim-devicons"]                = { "ryanoasis/vim-devicons" ,                     lock = true, commit = "a2258658661e42dd4cdba4958805dbad1fe29ef4"},
     ["nvim-web-devicons"]           = { "kyazdani42/nvim-web-devicons" ,               lock = true, commit = "634e26818f2bea9161b7efa76735746838971824"},
     ["telescope.nvim"]              = { "nvim-telescope/telescope.nvim" ,              lock = true, commit = "0011b1148d3975600f5a9f0be8058cdaac4e30d9"},
