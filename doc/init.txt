@@ -8,7 +8,9 @@ CONTENTS *doom-toc*
 3. Filesystem |doom-fs|
 4. Modules  |doom-modules|
 5. Keybindings |doom-keybindings|
-6. Caveats |doom-caveats|
+6. Snippets |doom-snippets|
+7. Treesitter |doom-treesitter|
+8. Caveats |doom-caveats|
 
 ==========================================================================
 INTRODUCTION *doom-introduction*
@@ -19,6 +21,9 @@ also try to make the vim experience a little-more emacsy.
 This distribution has been inspired by doom-nvim and doom-emacs both. You
 should check them out in order to get a feel of how this distro would fare for
 you.
+
+Please read through the ENTIRE documentation in order to understand and use
+doom efficiently.
 
 ==========================================================================
 PHILOSOPHY *doom-philosophy*
@@ -95,6 +100,9 @@ These are the system modules:
 13. `vim-help`
     Some keybindings for easier editing in vim help files. Planning to add
     more features
+14. `snippets`
+    Enable easy snippet creation for doom. You can think of the good ol' 
+    YASnippet days now.
 
 *doom-user-fs*
 Doom encourages the usage of `fennel` and `lua`  both for configuring the
@@ -1433,7 +1441,80 @@ vim-vsnip:
      :key-attribs "expr"
      :noremap false
      :modes "i"
-     :help "Snippet jump to next field"
+     :help "Snippet jump to next field"}
+
+
+==============================================================================
+SNIPPETS *doom-snippets*
+This section explains snippet creation in doom-evim. 
+
+Doom-evim uses vim-vsnip. As it turns out, it is not easily possible to simply
+copy paste into a JSON and not throw errors. Therefore, in the spirit of
+YASnippet, doom provides some keybindings to make this task easy for you. 
+
+Simply press:
+    `<leader>&ns` (for split window)
+    `<leader>&nv` (for vsplit window)
+
+This will [v]split your current window. Now enter your snippet in the same
+manner as you would in vscode or emacs and press `gx`. 
+
+Pressing `gx` will prompt you for the name, prefix and description of the
+snippet. Once you are done entering all that, voila! Your snippet has been
+registered.
+
+There are other convenient keybindings too: 
+    `<leader>&es `Edit a filetype snippets list json in a split window 
+    `<leader>&ev `Edit a filetype snippets list json in a vsplit window 
+
+==============================================================================
+TREESITTER *doom-treesitter*
+
+This section only covers some of the additional features that users can use
+and not even be aware of it. Doom ships with
+`nvim-treesitter-textobjects`which make it easy to select nodes and do other
+operations. 
+
+Doom creates some textobjects of its own. If you want to see the potential of
+this, try using the textobjects with an REPL.
+
+Textobjects mappings:
+>
+       {:ib  "@block.inner"
+        :ab  "@block.outer"
+
+        :iC  "@call.inner"
+        :aC  "@call.outer"
+
+        :ic  "@class.inner"
+        :ac  "@class.outer"
+
+        "a;"  "@comment.outer"
+
+        :iF  "@conditional.inner"
+        :aF  "@conditional.outer"
+
+        :if  "@function.inner"
+        :af  "@function.outer"
+
+        :il  "@loop.inner"
+        :al  "@loop.outer"
+
+        :ip  "@parameter.inner"
+        :ap  "@parameter.outer"}
+
+Other mappings:
+    `]m` Go to the start of next function
+    `]]` Go to the start of the next class
+
+    `]M` Go to the end of next function
+    `][` Go to the end of next class
+
+    `[m` Go to the start of previous function
+    `[[` Go to the start of previous class
+
+    `[M` Go to the end of previous function
+    `[]` Go to the end of previous class
 
 ==============================================================================
 CAVEATS *doom-caveats*

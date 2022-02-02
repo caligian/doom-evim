@@ -619,3 +619,15 @@
               (- size 2))
         new-font (.. font ":h" new)]
     (set vim.go.guifont new-font)))
+
+; Get user input
+(defn get-user-input [prompt validate loop]
+  (let [_first-input (vim.call :input prompt)
+        _first-input (str.trim _first-input)]
+    (if (= _first-input "")
+      (get-user-input prompt validate loop)
+      (let [is-valid (validate _first-input)]
+        (if is-valid 
+          _first-input
+          (if loop
+            (get-user-input prompt validate true)))))))

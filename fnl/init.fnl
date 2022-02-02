@@ -80,6 +80,8 @@
 (when doom.default_help_keybindings
   (utils.try-require :vim-help :DOOM))
 
+(utils.try-require :snippets :DOOM)
+
 ; Register help
 ; Register all help-groups in <leader>
 (let [wk (require :which-key)]
