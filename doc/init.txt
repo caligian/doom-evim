@@ -649,7 +649,7 @@ define-key({opts:table}) *doom.utils.define-key*
      
 define-keys({...}) *doom.utils.define-keys*
     Wrapper for |doom.utils.define-key| except that it can accept any number
-    of forms required by |doom.utils.define-key|.
+    of forms in a list required by |doom.utils.define-key|.
 
     Returns: nil
 
@@ -798,7 +798,7 @@ Associated commands:
     :GetDebugger *GetDebugger*
         Get the debugger for the current file.
 
-Functions are analogous to commands accept shutdown and shutdown-all.
+Functions are analogous to commands except shutdown and shutdown-all.
 Here are the mappings:
 
 buffer-new -> |REPLNew|
@@ -848,7 +848,7 @@ There are 3 types of runners supported:
         Used to build stuff. You can specify the base command and later
         provide additional args for the same. 
 
-All the runners will be defined in |doom.langs|. If you want to simple compile
+All the runners will be defined in |doom.langs|. If you want to simply compile
 the current file then just add a {compile} key to |doom.langs|. 
 
 
