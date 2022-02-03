@@ -213,14 +213,17 @@
 ; Debugging addon
 (defn get-debugger [?cmd]
   (if ?cmd
-    ?cmd
-    (?. doom.langs vim.bo.filetype :debug)))
+    (.. ?cmd " " (vim.fn.expand "%:p"))
+
+    (if (?. doom.langs vim.bo.filetype :debug)
+      (utils.fmt "%s %s" 
+                 (?. doom.langs vim.bo.filetype :debug)
+                 (vim.fn.expand "%:p")))))
 
 (defn start-debugger [?cmd]
   (let [debugger (or ?cmd (get-debugger))]
     (when debugger
-      (let [debugger (or ?cmd (.. debugger " " (vim.fn.expand "%:p")))]
-        (buffer-new debugger)))))
+      (buffer-new debugger))))
 
 (defn split-debugger [?cmd]
   (when (start-debugger ?cmd)
@@ -240,35 +243,9 @@
   (shutdown (or ?cmd (get-debugger))))
 
 ; Map to commands
-(vimp.map_command "SplitDebugger" #(split-debugger $1))
-(vimp.map_command "VsplitDebugger" #(vsplit-debugger $1))
-(vimp.map_command "DebuggerSend" #(send-to-debugger $1))
-(vimp.map_command "KillDebugger" #(kill-debugger $1))
-(vimp.map_command "StartDebugger" #(start-debugger $1))
+(vimp.map_command "SplitDebugger" #(split-debugger))
+(vimp.map_command "VsplitDebugger" #(vsplit-debugger))
+(vimp.map_command "DebuggerSend" #(send-to-debugger))
+(vimp.map_command "KillDebugger" #(kill-debugger))
+(vimp.map_command "StartDebugger" #(start-debugger))
 (vimp.map_command "GetDebugger" #(echo (get-debugger)))
-
-(utils.define-keys [{:keys "<F5>"
-                     :exec split-debugger
-                     :help "Split and show current ft debugger"}
-
-                    {:keys "<F6>"
-                     :exec vsplit-debugger
-                     :help "Vsplit and show current ft debugger"}
-
-                    {:keys "<F7>"
-                     :exec kill-debugger}
-
-                    {:keys "<F10>"
-                     :exec #(send-to-debugger :n)}
-
-                    {:keys "<F11>"
-                     :exec #(send-to-debugger :s)}
-
-                    {:keys "<S-F11>"
-                     :exec #(send-to-debugger :c)}
-
-                    {:keys "<F12>"
-                     :exec #(send-to-debugger :r)}
-
-                    {:keys "<F9>"
-                     :exec #(send-to-debugger :b)}])
