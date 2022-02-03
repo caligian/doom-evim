@@ -1,10 +1,6 @@
 (module dap-config
   {autoload {utils utils}})
 
-(defn install-default []
-  (each [lang debugger (pairs doom.dap.default)]
-    (utils.exec ":VimspectorInstall %s" debugger)))
-
 (defn- supports-dap [ft]
   (let [first-path (utils.path-exists (utils.datap "vimspector" ft))
         second-path (utils.path-exists (utils.confp "support" "vimspector" ft))]
@@ -38,6 +34,30 @@
                      :exec start-debugger
                      :help "Start vimspector"}
 
-                    {:keys "<leader>dK" 
-                     :exec #(vim.cmd ":VimspectorReset")
-                     :help "Reset vimspector"}])
+                    {:keys "<leader>dk"
+                     :exec ":call vimspector#Reset()<CR>"
+                     :help "Reset vimspector"}
+
+                    {:keys "<leader>dc"
+                     :exec ":call vimspector#Continue()<CR>"
+                     :help "Continue"}
+
+                    {:keys "<leader>dn"
+                     :exec ":call vimspector#StepOver()<CR>"
+                     :help "Step over/next"}
+
+                    {:keys "<leader>db"
+                     :exec ":call vimspector#ToggleBreakpoint()<CR>"
+                     :help "Toggle breakpoint"}
+
+                    {:keys "<leader>dT"
+                     :exec ":call vimspector#ClearBreakpoints()<CR>"
+                     :help "Clear breakpoints"}
+
+                    {:keys "<leader>df"
+                     :exec ":call vimspector#StepOut()<CR>"
+                     :help "Step out/finish"}
+
+                    {:keys "<leader>ds"
+                     :exec ":call vimspector#StepInto()<CR>"
+                     :help "Step in/step"}])

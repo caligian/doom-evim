@@ -7,13 +7,6 @@
 
 (local valid-commands {})
 
-(defn- get-output-and-split [s]
-  (vim.fn.jobstart s
-                   {:on_stdout (fn [id data event]
-                                 (if data
-                                   (utils.to-temp-buffer data)))
-                    :stdout_buffered true}))
-
 (defn- uppercase [s]
   (string.gsub s "^." string.upper))
 
@@ -48,7 +41,7 @@
 
 (defn- _runner [binary]
   (let [cmd (take-runner-input binary)]
-    (get-output-and-split cmd)))
+    (utils.async-sh cmd :sp)))
 
 (defn- make-runner [ft of]
   (let [binary (?. doom.langs ft of)

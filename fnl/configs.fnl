@@ -10,8 +10,12 @@
 (after! :gitsigns.nvim
         #((. (require :gitsigns) :setup)))
 
-(after! :lualine.nvim
-        #(utils.try-require :modeline :DOOM))
+(after! [:lualine.nvim
+         :papercolor-theme]
+        
+        (fn []
+          (vim.cmd (utils.fmt "colorscheme %s" doom.theme))
+          (require :modeline)))
 
 (after! :vim-vsnip (fn []
                      (utils.define-keys [{:keys "<C-j>"
@@ -263,13 +267,9 @@
                                  :exec ":lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())<CR>"
                                  :help "Find file"}
 
-                                {:keys "<localleader>/"
+                                {:keys "<leader>/"
                                  :exec ":lua require('telescope.builtin').live_grep(require('telescope.themes').get_ivy())<CR>"
                                  :help "Live grep in cwd"}
-
-                                {:keys "<leader>/"
-                                 :exec ":lua require('telescope.builtin').grep_string(require('telescope.themes').get_ivy())<CR>"
-                                 :help "Grep string in cwd"}
 
                                 {:keys "<leader>fg"
                                  :exec ":lua require('telescope.builtin').git_files(require('telescope.themes').get_ivy())<CR>"
@@ -401,16 +401,6 @@
 {:keys "<leader>fF"
  :exec ":lua require'telescope'.extensions.file_browser.file_browser(require('telescope.themes').get_ivy()) <CR>"
  :help "Open file browser"}]))))
-
-; vim-palette: Colorscheme provider
-(after! :vim-palette
-       (fn []
-          (vim.cmd "colorscheme Base2Tone_SeaDark")))
-
-; galaxyline
-(after! :galaxyline.nvim
-              (fn []
-                (require :modeline)))
 
 ; Tagbar
 (after! :tagbar

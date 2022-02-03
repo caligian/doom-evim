@@ -54,6 +54,11 @@ class SetupDoom
 
     `cp lua/default_packages.lua sample-user-configs/user-packages.lua`
 
+    if !Dir.exist? "#{ENV['HOME']}/.local/share/nvim/user-snippets"
+      `mkdir ~/.local/share/nvim/user-snippets`
+      `cp user-snippets/*.json ~/.local/share/nvim/`
+    end
+
     @user_files.map { |i| `cp sample-user-configs/#{i} #{@user_dir}/` unless File.exist? "#{@user_dir}/#{i}" }
   end
 

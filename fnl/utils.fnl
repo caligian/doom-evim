@@ -78,6 +78,8 @@
 
       ?e)))
 
+
+
 (defn exec [cmd ...]
   (vim.cmd (fmt cmd ...)))
 
@@ -349,7 +351,6 @@
       false
       s)))
 
-
 (defn to-temp-buffer [s ?direction]
   (let [direction (or ?direction "sp")
         s (listify s)
@@ -384,6 +385,14 @@
       (show-in-buffer out)
       out)))
 
+; Run an async command in shell and split
+(defn async-sh [s ?d]
+  (core.spit (.. (os.getenv "HOME") "/.config/nvim/tmp/.temp.sh") s)
+  (vim.fn.jobstart "/bin/bash ~/.config/nvim/tmp/.temp.sh"
+                   {:on_stdout (fn [id data event]
+                                 (if data
+                                   (to-temp-buffer data (or ?d "sp"))))
+                    :stdout_buffered true}))
 
 (defn adjust-indent [?towards ?lineno]
   (defn -indent [towards lineno]
@@ -631,3 +640,5 @@
           _first-input
           (if loop
             (get-user-input prompt validate true)))))))
+
+

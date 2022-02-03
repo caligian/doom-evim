@@ -86,16 +86,16 @@
                      :key-attribs ["buffer"]
                      :events ["BufEnter"]
                      :patterns ["*txt,*text"]
-                     :help "Goto prev url"}
+                     :help "Goto next url"}
 
-                    {:keys "<A-f>"
+                    {:keys "<A-b>"
                      :help "Goto prev tag"
                      :key-attribs ["buffer"]
                      :events ["BufEnter"]
                      :patterns ["*txt,*text"]
                      :exec "?\\*[^*]*\\*<CR><esc>:noh<CR>"}
 
-                    {:keys "<A-b>"
+                    {:keys "<A-f>"
                      :help "Goto next tag"
                      :key-attribs ["buffer"]
                      :events ["BufEnter"]

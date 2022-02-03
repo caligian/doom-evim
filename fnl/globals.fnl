@@ -2,6 +2,8 @@
 
 (set _G.doom {:fnl_config true
 
+              :theme "PaperColor"
+
               ; Use doom's basic async runner
               :default_runner true
 
@@ -38,6 +40,7 @@
                                          :f "Files"
                                          :p "Project"
                                          :d "Debug"
+                                         :& "Snippets"
                                          :x "Misc"
                                          :m "Filetype Actions"
                                          :s "Session"
@@ -47,16 +50,12 @@
                                               "t" "REPL"
                                               "e" "REPL"}}
 
-              :dap {:default [:debugpy
-                              :vscode-node-debug2
-                              :local-lua-debugger-vscode]}
-
               ; LSP defaults
               :lsp {:install_sumneko_lua false
                     :load_default false
                     :servers {:solargraph {}
                               :pyright {}}}
- 
+
 
               ; Contains user-package declarations
               :user_packages  (require :user-packages)

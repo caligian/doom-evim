@@ -8,21 +8,31 @@ return {
     ["fennel.vim"]                  = { "bakpakin/fennel.vim" ,                        lock = true, commit = "30b9beabad2c4f09b9b284caf5cd5666b6b4dc89"},
     ["which-key.nvim"]              = { "folke/which-key.nvim" ,                       lock = true, commit = "28d2bd129575b5e9ebddd88506601290bb2bb221"},
     ["Repeatable.vim"]              = { "kreskij/Repeatable.vim" ,                     lock = true, commit = "ab536625ef25e423514105dd790cb8a8450ec88b"},
-    ["vim-palette"]                 = { "gmist/vim-palette" ,                          lock = true, commit = "662012963694e6bc5268765b809341d68373cf55"},
+    ["papercolor-theme"]            = {"NLKNguyen/papercolor-theme",                   lock = true, commit = "d0d32dc5e92564b63ec905a9423984b5d503c24a"},
+
+    -- themes
+    ["nord-vim"]               = { "arcticicestudio/nord-vim",                         lock = true, commit = "b32592eb0842005d1d25de96e3964ccacd537039"},
+    ["oceanic-next"]           = { "mhartington/oceanic-next",                         lock = true, commit = "5ef31a34204f84714885ae9036f66a626036c3dc"},
+    ["palenight.vim"]          = { "drewtempelmeyer/palenight.vim",                    lock = true, commit = "847fcf5b1de2a1f9c28fdcc369d009996c6bf633"},
+    ["onehalf"]                = { "sonph/onehalf",                                    lock = true, commit = '141c775ace6b71992305f144a8ab68e9a8ca4a25'},
+    ["vim-colors-solarized"]   = { "altercation/vim-colors-solarized",                 lock = true, commit = "528a59f26d12278698bb946f8fb82a63711eec21"},
+    ["molokai"]                = { "tomasr/molokai",                                   lock = true, commit = "c67bdfcdb31415aa0ade7f8c003261700a885476"},
+    ["gruvbox"]                = { "morhetz/gruvbox",                                  lock = true, commit = "bf2885a95efdad7bd5e4794dd0213917770d79b7"},
 
     -- ui
-    ["dashboard-nvim"]              = { "glepnir/dashboard-nvim",                      lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
-    ["lualine.nvim"]                = {"nvim-lualine/lualine.nvim",                    lock = true, commit = "0d0ea77e1a9a0f17e48b87b5931f292a6cf413dd"},
-    ["vim-devicons"]                = { "ryanoasis/vim-devicons" ,                     lock = true, commit = "a2258658661e42dd4cdba4958805dbad1fe29ef4"},
-    ["nvim-web-devicons"]           = { "kyazdani42/nvim-web-devicons" ,               lock = true, commit = "634e26818f2bea9161b7efa76735746838971824"},
-    ["telescope.nvim"]              = { "nvim-telescope/telescope.nvim" ,              lock = true, commit = "0011b1148d3975600f5a9f0be8058cdaac4e30d9"},
-    ["telescope-project.nvim"]      = { "nvim-telescope/telescope-project.nvim" ,      lock = true, commit = "d317c3cef6917d650d9a638c627b54d3e1173031"},
+    ["dashboard-nvim"]         = { "glepnir/dashboard-nvim",                           lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
+    ["lualine.nvim"]           = { "nvim-lualine/lualine.nvim",                        lock = true, commit = "0d0ea77e1a9a0f17e48b87b5931f292a6cf413dd"},
+    ["vim-devicons"]           = { "ryanoasis/vim-devicons" ,                          lock = true, commit = "a2258658661e42dd4cdba4958805dbad1fe29ef4"},
+    ["nvim-web-devicons"]      = { "kyazdani42/nvim-web-devicons" ,                    lock = true, commit = "634e26818f2bea9161b7efa76735746838971824"},
+    ["telescope.nvim"]         = { "nvim-telescope/telescope.nvim" ,                   lock = true, commit = "0011b1148d3975600f5a9f0be8058cdaac4e30d9"},
+    ["telescope-project.nvim"] = { "nvim-telescope/telescope-project.nvim" ,           lock = true, commit = "d317c3cef6917d650d9a638c627b54d3e1173031"},
     ["telescope-file-browser.nvim"] = { "nvim-telescope/telescope-file-browser.nvim" , lock = true, commit = "e65a5674986dcaf27c0fd852b73f5fc66fa78181"},
     ["zen-mode.nvim"]               = { "folke/zen-mode.nvim" ,                        lock = true, commit = "f1cc53d32b49cf962fb89a2eb0a31b85bb270f7c"},
     ["twilight.nvim"]               = { "folke/twilight.nvim" ,                        lock = true, commit = "8ab43c0fdc246fdd82382d7ef4ec383f8f755ef9"},
     ["nvim-tree.lua"]               = { "kyazdani42/nvim-tree.lua",                    lock = true, commit = "2dfed89af7724f9e71d2fdbe3cde791a93e9b9e0"},
 
     -- editor
+    ["lightspeed.nvim"]             = { 'ggandor/lightspeed.nvim',                     lock = true, commit = "f394f4e2278a8e4dff975bdb7f4a3d3101a6ab0" },
     ["vim-autoformat"]              = { "vim-autoformat/vim-autoformat",               lock = true, commit = "bb11f30377985e45e2eecef570856d42dbabb8b0"},
     ["vim-misc"]                    = { "xolox/vim-misc" ,                             lock = true, commit = "3e6b8fb6f03f13434543ce1f5d24f6a5d3f34f0b"},
     ["vim-bbye"]                    = { "moll/vim-bbye" ,                              lock = true, commit = "25ef93ac5a87526111f43e5110675032dbcacf56"},

@@ -8,12 +8,12 @@ local function init(vim)
     vim.o.showcmd = true
     vim.o.wildmode="longest,list,full"
     vim.o.wildmenu = true
+    vim.o.termguicolors = true
     vim.o.laststatus = 2
     vim.o.mousefocus = true
     vim.o.shell="/bin/bash"
     vim.o.backspace="indent,eol,start"
     vim.o.number = true
-    vim.o.cursorline = true
     vim.o.numberwidth = 5
     vim.o.tabstop = 4
     vim.o.shiftwidth = 4
@@ -32,6 +32,7 @@ local function init(vim)
 
     -- Important terminal keybinding
     vim.cmd [[ tnoremap <Esc> <C-\><C-n> ]]
+    vim.cmd [[ set inccommand=split ]]
 
     -- Adding fennel searchers
     -- Add all user configurations to package path

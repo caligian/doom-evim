@@ -1,5 +1,6 @@
 (module keybindings
-  {autoload {utils utils}})
+  {autoload {utils utils
+             vimp vimp}})
 
 ; File management
 (utils.define-keys [{:keys "<C-ScrollWheelUp>"
@@ -93,18 +94,24 @@
                      :exec ": "
                      :help "Open command mode"}
                     
-                    {:keys "!"
-                     :exec ":! "
-                     :help "Execute an sh command"}
-                    
+                    {:keys "<localleader>&"
+                     :exec #(utils.async-sh (utils.get-user-input "bash % " 
+                                                                  #(~= $1 "")
+                                                                  true))
+                     :help "Run an async sh command"}
+                  
                     ; Clipboad
                     {:keys "<leader>xp"
                      :help "Paste from clipboard"
                      :exec ":normal! \"+p<CR>"}])
 
-
 ; Reload entire config
-(utils.define-keys [{:keys "<leader>hrr"
+(utils.define-keys [{:keys "<leader>hrt"
+                     :help "Reload doom theme"
+                     :exec (fn []
+                             (vim.cmd  (utils.fmt ":source %s" (utils.confp :lua :modeline.lua))))}
+
+                    {:keys "<leader>hrr"
                      :help "Reload doom"
                      :exec (fn [] 
                              (vim.cmd "tabnew") 
@@ -137,3 +144,10 @@
                      :exec #(utils.line-range-exec utils.increase-indent) 
                      :help "Increase indent in range"}])
 
+
+; Copy default_packages.lua to ~/.vdoom.d/ as user-packages.lua
+; Useful for testing
+(vimp.map_command "CopyDefaultPackages" #(utils.sh "cp ~/.config/nvim/lua/default_packages.lua ~/.vdoom.d/user-packages.lua"))
+(vimp.map_command "CopyUserPackages" #(utils.sh "cp ~/.vdoom.d/user-packages.lua ~/.config/nvim/lua/default_packages.lua"))
+(vimp.map_command "EditDefaultPackages" #(utils.exec ":e ~/.config/nvim/lua/default_packages.lua"))
+(vimp.map_command "EditUserPackages" #(utils.exec ":e ~/.vdoom.d/user-packages.lua"))

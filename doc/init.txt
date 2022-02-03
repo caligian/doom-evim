@@ -30,15 +30,12 @@ doom efficiently.
 PHILOSOPHY *doom-philosophy*
 
 The philosophy of doom-evim is similar to that emacs itself: DRY (Don't Repeat
-Yourself). In implementation, this distribution of nvim provides everything to
-the user and by everything, I mean everything doom itself is using. This means
-that if the user wishes to make something complex in their configuration, the
-framework's composition should aid the user as if the user is extending the
-distribution itself. In simple words, many useful functions used by doom-evim
-are available to a user and the distribution sets good reusable defaults. 
+Yourself). In implementation, this means that a good distro should allow the
+user to use the distro's API themselves so that they can make their
+configuration more manageable.
 
-If you wish to extend this configuration, feel free to do so via your private
-`~/.vdoom.d`. You can do the same via `lua` or `fennel`.
+In order to prevent boilerplate code, doom comes with its own set of functions
+which can allow you to do some complex configurations.
 
 ==============================================================================
 FILESYSTEM *doom-fs*
@@ -59,48 +56,42 @@ These are the system modules:
 2. `utils`
     This module contains utility functions that can be used by doom and user
     both. Functions are accessible via |doom.utils|
-3. `package-utils`
-    This module contains utility functions to store packages. It takes into
-    consideration user package declarations also. It also creates the final
-    list of packer forms for packer usage. 
-4. `packages`
-    This module imports stuff from package-utils and initializes packer.
-    Currently, there is no way to reload packages on the fly because packer is
-    called only once to configure doom. Therefore, the user has to restart
-    nvim everytime they modify `~/.vdoom.d/user-packages.lua`.
-5. `configs`
+3. `packages`
+    This module takes into consideration the user list and only uses those
+    packages along with their post and pre init configurations and creates a
+    master list that is used by packer. 
+4. `configs`
     This module contains all the configurations that are applied to doom AFTER
     packer initializes all the packages. It contains the majority of doom's
     keybindings.
-6. `keybindings`
+5. `keybindings`
     This module contains all the non-package related keybindings. It also
     heavily utilizes `doom.utils`. It contains the majority of doom's
     general keybindings.  
-7. `repl`
+6. `repl`
     This module contains a basic REPL for doom. It keeps tracks of the
     terminals user invokes and also provides some basic utilities such as
     sending strings to the REPL.
-8. `runner`
+7. `runner`
     This module provides keybindings and commands to run operations such as
     compile, test, build, etc.
-9. `specs`
+8. `specs`
     This module contains some packer configurations for packages before they
     are initialized by packer. This file is LOADED BEFORE PACKER loads the
     packages mentioned here. These packages should be present in doom.packages
-10. `dap-config`
+9. `dap-config`
     This module configures vimspector to be used as a Debugger Adapter client
-11. `logger`
+10. `logger`
     This is the global logger that doom uses to track startup errors.
-12. `globals`
+11. `globals`
     This module contains the default configuration of doom. It can be
     overridden
     anywhere in the private/system configuration.
-13. `vim-help`
-    Some keybindings for easier editing in vim help files. Planning to add
-    more features
-14. `snippets`
-    Enable easy snippet creation for doom. You can think of the good ol' 
-    YASnippet days now.
+12. `vim-help`
+    Some keybindings for easier editing in vim help files. 
+13. `snippets`
+    Enable easy snippet creation utilities for doom. This module sets up
+    keybindings for the same.
 
 *doom-user-fs*
 Doom encourages the usage of `fennel` and `lua`  both for configuring the
@@ -116,6 +107,11 @@ These are the necessary lua files required:
     Contains a master-list of packages that will be actually used by doom. This
     allows users to quickly re-enable or disable the default module declarations
     and also allow them to add their own plugins. 
+
+    If you have messed up your package declarations in `user-packages.lua`, you
+    can use the command `:CopyDefaultPackages` to copy default package declarations
+    that arrive with doom.
+
 3. `user-specs`
     Contains all the configuration that will be used in packer.use while
     initializing a package. These are NOT configurations that will be used AFTER
@@ -128,12 +124,14 @@ language to avoid conflicts.
 
 Since `lua/` and `fnl/` are present in package.path, it is up to the user to
 require and use them as they wish. Everything contained in `fnl/` will be
-present in `compiled/`which contains the compiled lua files. 
+present in `compiled/` which contains the compiled lua files. 
 
 Every file in `lua/` should be prefixed with `user-lua` and every file in `fnl/`
 should be prefixed with `user-fnl` and then you can require them in your private
 configuration. Keep in mind that only compiled files of fennel will be used.
-They will usually seem like - `user-fnl-<NAME>.lua`. 
+They will usually seem like - `user-fnl-<NAME>.lua`. Example:
+    You are in `user-init.lua` and want to import some fennel module. You have to
+    type this: `require 'user-fnl-utils'` or `require 'user-lua-utils'`
 
 Lastly, don't forget to add your fennel filenames to `doom.user_compile_fnl` or
 else they won't be compiled before startup. You can also use: >
@@ -173,6 +171,10 @@ default_runner {bool}
 
     Default: true
 
+theme {str}
+    Theme to set when doom starts. Default: PaperColor
+
+    Tip: When you change the theme, press <leader>hrt to sync the statusline bg and fg with the current theme.
 
 default_repl {bool}
     If set, use the REPL module provided with doom-evim. Please visit
@@ -197,51 +199,55 @@ lisp_langs {list}
     These languages will have guns/vim-sexp package's functionality available
     to them. vim-sexp is similar to emacs's smartparens.
 
-    Default: ["fennel" "clojure" "scheme"]
+    Default: `["fennel" "clojure" "scheme"]`
 
 
 treesitter_langs {list}
     Treesitter parser for these languages will be installed automatically.
     Only works if default_package_configs is true.
 
-    Default: ["python" 
-              "ruby"
-              "json"
-              "yaml"
-              "javascript"
-              "c"
-              "lua"
-              "fennel"
-              "perl"]
-
+    Default: 
+    >
+        ["python" 
+         "ruby"
+         "json"
+         "yaml"
+         "javascript"
+         "c"
+         "lua"
+         "fennel"
+         "perl"]
 
 map-help-groups {table}
     Contains the key-prefix descriptions for <leader> and <localleader> keys.
     Please check |doom.utils.register-to-wk| to understand what a key-prefix
     description is. 
 
-    Default: {:leader {:b "Buffers"
-                       :q "Buffers+Close"
-                       :c "Commenting"
-                       :l "LSP"
-                       :h "Help+Telescope"
-                       :f "Files"
-                       :d "Debug"
-                       :x "Misc"
-                       :m "Filetype Actions"
-                       :s "Session"
-                       :g "Git"}
-
-              :localleader {"," "REPL"
-                            "t" "REPL"
-                            "e" "REPL"}} 
+    Default: 
+    >
+    {:leader {:b "Buffers"
+              :q "Buffers+Close"
+              :c "Commenting"
+              :l "LSP"
+              :h "Help+Telescope"
+              :& "Snippets"
+              "<space>" "Misc"
+              :f "Files"
+              :d "Debug"
+              :x "Misc"
+              :m "Filetype Actions"
+              :s "Session"
+              :g "Git"}
+    :localleader {"," "REPL"
+                  "t" "REPL"
+                  "e" "REPL"}} 
 
 
 user_compile_fnl {list}
     Filenames that will be compiled by |doom.utils.convert-to-lua| if no args
     are passed to it. 
 
-    Default: ["init" "utils" "keybindings" "configs" "lsp-configs"]
+    Default: `["init" "utils" "keybindings" "configs" "lsp-configs"]`
 
 
 repl.ft {table} 
@@ -249,15 +255,16 @@ repl.ft {table}
     These repl-commands will be used for the filetypes mentioned as keys in
     repl.ft
 
-    Default: {:sh "bash"
-              :ruby "irb"
-              :perl "perl"
-              :fennel "fennel"
-              :python "python"
-              :lua "lua"
-              :powershell "powershell"
-              :ps1 "powershell"}
-
+    Default:  
+    >
+        {:sh "bash"                  
+         :ruby "irb"                 
+         :perl "perl"                
+         :fennel "fennel"            
+         :python "python"            
+         :lua "lua"                  
+         :powershell "powershell"
+         :ps1 "powershell"}
 
 langs.<lang> {table} *doom.langs*
     Form: {<lang> <opts>}
@@ -290,45 +297,49 @@ langs.<lang> {table} *doom.langs*
         This command is used to run a test suite for the current file or
         anything else 
 
-    Default: {:python {:server "pyright" 
-                       :compile "python3"
-                       :debug "python3 -m pdb"
-                       :test "pytest"
-                       :build false}
+    Default: 
+    >
+        {:python {:server "pyright" 
+                  :compile "python3"
+                  :debug "python3 -m pdb"
+                  :test "pytest"
+                  :build false}
 
-              :ruby {:server "solargraph"
-                     :compile "ruby"
-                     :debug "ruby -r debug"
-                     :test "rspec"
-                     :build "rake"}
+        :ruby {:server "solargraph"
+               :compile "ruby"
+               :debug "ruby -r debug"
+               :test "rspec"
+               :build "rake"}
 
-              :lua {:server "sumneko_lua"
-                    :compile "/usr/bin/lua"
-                    :manual true
-                    :debug "lua"
-                    :test "lua"
-                    :build false}}
+        :lua {:server "sumneko_lua"
+              :compile "/usr/bin/lua"
+              :manual true
+              :debug "lua"
+              :test "lua"
+              :build false}}
 
 
 lsp.load_default {bool}
     If true, load all the default doom's lsp configurations. 
 
-    Default: false
+    Default: `false`
 
 
 lsp.install_sumneko_lua {bool}
     If true, doom will automatically install and setup sumneko_lua. Requires
     the above to be set true.
 
-    Default: false
+    Default: `false`
 
 lsp.servers {table}
     Form: {<server-name> <configuration>}
     If lsp.servers contains any configurations, it will be used to setup. If
     you use {} as config, doom will minimally set it up by itself.
 
-    Default: {"solargraph" {} 
-              "pyright"    {}}
+    Default: 
+    >
+        {"solargraph" {} 
+         "pyright"    {}}
 
 
 *doom-utils*
@@ -337,11 +348,15 @@ These functions are contained in `doom.utils`.
 Lua users will have to use table indexing by string to access many of these functions
 because their names contain '-'.
 
+Lastly, if a param is wrapped in square brackets '[]', it means that the
+param is optional. If the optional param is NOT AT THE END, you have to pass
+nil in place of that param. If it is at the end, you can just skip passing it
+altogether.
+
 path-exists({path:str}) *doom.utils.path-exists*
     Returns true if path exists or false. 
 
     Returns: false or true
-
 
 list-dir({path:str}) *doom.utils.list-dir*
     If path is valid, returns a table of children or false. 
@@ -534,6 +549,18 @@ get-line([{bufnr:int}] [{lineno:int}]) *doom.utils.get-line*
 
     Returns: string
 
+current-line({bufnr}) 
+    Tagged as:
+        *doom.utils.current-line*
+
+    Description:
+        Current string is obtained
+
+    Params:
+        {bufnr} Number
+
+    Return:
+        String
 
 to-temp-buffer({s:str/list} {direction:str}) *doom.utils.to-temp-buffer*
     Open a window that exits as soon user leaves it. This window is split
@@ -551,6 +578,20 @@ sh({s:str} [{buf:bool}])  *doom.utils.sh*
     the output obtained. 
 
     Returns: string 
+
+async-sh({s:str}) 
+    Tagged as:
+        *doom.utils.async-sh*
+
+    Description:
+        Asynchronously execute a bash command in {s}. If {buf} is true then
+        open a temporary buffer and show output. 
+
+    Params:
+        {s} String        
+
+    Return:
+        nil
     
 
 autocmd({group:str} {event:str} {pattern:str} {exec:str/function}) *doom.utils.autocmd*
@@ -682,6 +723,28 @@ try-require({module-name} {type-module}) *doom.utils.try-require*
     uses "DOOM" for its error handling and by user modules use "USER".
 
     Returns: nil
+
+
+get-user-input({prompt} {validate} {loop}) 
+    Tagged as:
+        *doom.utils.get-user-input* 
+
+    Description:
+        {prompt} is the string that is displayed while accepting input. {validate}
+        is the function that shoudld a boolean value after processing the user
+        input. If it returns true, the input is returned and if {loop} is
+        false, get-user-input returns false. 
+
+        If loop is true, {prompt} will be continued to be shown to the user until
+        {validate} returns true with the input received.
+
+    Params:
+        {prompt} String
+        {validate} Function
+        {loop} Boolean
+
+    Return:
+        String or false
 
 
 *doom-lsp-configs*
@@ -826,9 +889,6 @@ You can check the source file yourself. It won't be that difficult. I promise.
 
 
 *doom-runner*
-This module has no functions that can be used by the user. However, it will
-explain the purpose of this module.
-
 Oftentimes you need to compile some stuff and you have to unnecessarily open
 the terminal for that single task. doom-runner provides you with commands to
 simply do that in an async job. 
@@ -876,13 +936,19 @@ Associated functions:
 
 
 *doom-dap*
-This module contains nothing that can be used by the user. It sets up DAP with
-vimspector for doom and sets up keybindings. 
+This module sets up DAP with vimspector and sets up keybindings for the same. 
 
-Associated Globals:
-    doom.dap.default 
-        Contains a list of dap servers to install by default when function 
-        `dap-config.install-default`is called.
+In order to start using DAP, you have to use the command `:VimspectorInstall`.
+Pressing tab will show you which servers are available.
+
+Doom configures these servers by default:
+- local-lua-language (lua)
+    Remember to put `require('lldebugger')` at the top of your lua file before
+    pressing <leader>dd to start vimspector.
+
+- vscode-node-debug2 (node/javascript)
+
+- debugpy            (python)
 
 Your vimspector filetype configurations are to be put in
 `stdpath('data')/vimspector/<filetype>/default.json`
@@ -895,88 +961,37 @@ not one. These are present in
 However, if there is a .vimspector.json in the workspace directory of the
 script then nothing is copied and that file is used.
 
-If you want to install all the langs that have been configured by doom, 
-first require 'dap-config' and run `dap-config.install-default`. Otherwise,
-you can simply `:VimspectorInstall <debugger>` yourself.
+Keybindings:
+>
+    {:keys "<leader>dd" 
+     :help "Start vimspector"}
 
+    {:keys "<leader>dk"
+     :help "Reset vimspector"}
+
+    {:keys "<leader>dc"
+     :help "Continue"}
+
+    {:keys "<leader>db"
+     :help "Toggle breakpoint"}
+
+    {:keys "<leader>dT"
+     :help "Clear breakpoints"}
+
+    {:keys "<leader>dn"
+     :help "Step over/next"}
+
+    {:keys "<leader>df"
+     :help "Step out/finish"}
+
+    {:keys "<leader>ds"
+     :help "Step in/step"}
 
 *doom-default-packages*
 These are the packages that are shipped with doom. Only the essentials are
 installed and the rest are installed by :PackerInstall at first startup.
->
-Master list: 
->
-    -- essentials
-    packer.nvim                     | The default package manager for doom         
-    vimpeccable                     | Required for keymappings   
-    plenary.nvim                    | Very important module used by many packages
-    aniseed                         | Extra goodies for fennel   
-    conjure                         | An REPL for fennel, hy, clojure, etc 
-    fennel.vim                      | Syntax highlighting for fennel   
-    which-key.nvim                  | Show keymappings in a popup window 
-    Repeatable.vim                  | Make keybindings Repeatable   
 
-    -- ui
-    dashboard-nvim                  | A beautiful startup screen for vim
-    galaxyline.nvim                 | A simple modeline for doom   
-    vim-palette                     | Plenty of colorschemes included   
-    vim-devicons                    | Important UI icons   
-    nvim-web-devicons               | Important UI icons   
-    telescope.nvim                  | Ivy-like dropdown menu functionality   
-    telescope-project.nvim          | Project extension for telescope   
-    telescope-file-browser.nvim     | File browser extension for telescope
-    zen-mode.nvim                   | Distraction-free coding/writing   
-    twilight.nvim                   | Extension for zen-mode.nvim   
-    nvim-tree.lua                   | File tree for nvim   
-
-    -- editor
-    formatter.nvim                  | Automatically format your file    
-    vim-misc                        | Necessity for vim-vsnip
-    vim-bbye                        | Intelligently delete buffers without shutting vim   
-    vim-dispatch                    | Async dispatcher for nvim   
-    tagbar                          | Show a tagbar beside the script window   
-    undotree                        | A better undo-redo implementation   
-    nerdcommenter                   | Easy commenting!   
-    vim-markdown                    | Markdown syntax for vim   
-    markdown-preview.nvim           | Preview markdown in your file browser.    
-    vim-surround                    | Quickly surround text with text   
-    delimitMate                     | For autoclosing parenthesis of most kinds   
-    indent-blankline.nvim           | Show indent-guide for blanklines   
-    tabular                         | Quickly align    
-    vim-projectionist               | For better project management   
-    vim-sexp                        | Smartparens for vim   
-    persistence.nvim                | Make your sessions persistent across startups   
-
-    -- git
-    vim-fugitive                    | Magit's counterpart for vim   
-    vim-rhubarb                     | Quickly push commits without reopening the browser   
-    gitsigns.nvim                   | Show git gutter in the signcolumn   
-
-    -- lsp
-    trouble.nvim                    | No more annoying virtual text for LSP. 
-    vimspector                      | For using DAP in vim   
-
-    -- treesitter
-    nvim-lspconfig                  | Default LSP configurations   
-    nvim-treesitter                 | Treesitter syntax highlighting   
-    nvim-treesitter-textobjects     | Treesitter with basic textobj manipulation
-    nvim-lsp-installer              | Install treesitter parsers   
-
-    -- snippets
-    friendly-snippets               |    
-    vim-vsnip                       |    
-    cmp-vsnip                       |    
-    vim-vsnip-integ                 |    
-    cmp-nvim-lsp                    | These are all snippets-related packages.   
-    cmp-buffer                      |    
-    cmp-path                        |    
-    cmp-cmdline                     |    
-    nvim-cmp                        |    
-
-    -- langs
-    vim-rails                       | For ruby-on-rails
-    nvim-luapad                     | Interested in seeing quick evaluations of lua expressions?   
-
+Master list is available in `~/.config/nvim/lua/default_packages.lua`
 
 *doom-package-groups*
 Doom uses groups of these packages to configure a certain functionality. Many
@@ -1008,10 +1023,26 @@ Rest of the packages are not configured in groups.
 KEYBINDINGS *doom-keybindings*
 
 Keybindings are quite easy to make. You have to use |doom.utils.define-key| for a
-single keybinding and |doom.utils.define-keys| for binding multiple keys. If you
-want to make you keybinding respect v:count, then wrap the command in
-|doom.utils.respect-count|. If you want you keybinding to work on the lines in
-a visual selection, use |doom.utils.line-range-exec|.
+single keybinding and |doom.utils.define-keys| for binding multiple keys. 
+
+Additionally, you can make keybindings respect v:count or work on a range of
+lines in a visual selection. 
+
+In order to do the latter you have to use this form in 'exec' 
+>
+    -- lua
+    exec = function() doom.utils["line-range-exec"](<function>) end
+
+    -- fennel
+    :exec #(doom.utils.line-range-exec <function>)
+
+In order to do the former, use this form in 'exec'
+>
+    -- lua
+    exec = doom.utils["respect-count"](<function/string>)
+
+    -- fennel
+    :exec (doom.utils.respect-count <function/string>)
 
 Below are the list of default keybindings that doom comes with.
 
@@ -1022,6 +1053,11 @@ Font operations:
 
     {:keys "<C-ScrollWheelDown>"
      :help "Decrease font size by 2}
+
+Colorscheme:
+>
+    {:keys "<leader>hrt"
+     :help "Reload statusline theme."}
 
 File operations: 
 >
@@ -1091,8 +1127,8 @@ Misc operations:
     {:keys "<leader>;"
      :help "Open command mode"}
     
-    {:keys "!"
-     :help "Execute an sh command"}
+    {:keys "<localleader>&"
+     :help "Execute an async sh command and split window"}
 <
     
 Clipboard operations:
@@ -1342,7 +1378,7 @@ telescope-file-browser.nvim:
     
     {:keys "<leader>ghs"
      :help "Show status"} 
-    
+   
     {:keys "<leader>ghS"
      :help "Show stashes"}
     
@@ -1469,7 +1505,7 @@ TREESITTER *doom-treesitter*
 
 This section only covers some of the additional features that users can use
 and not even be aware of it. Doom ships with
-`nvim-treesitter-textobjects`which make it easy to select nodes and do other
+`nvim-treesitter-textobjects` which make it easy to select nodes and do other
 operations. 
 
 Doom creates some textobjects of its own. If you want to see the potential of
@@ -1569,22 +1605,24 @@ help files. The keybindings would do a better job at explaining to you: >
     :key-attribs ["buffer"]
     :events ["BufEnter"]
     :patterns ["*txt,*text"]
-    :help "Goto prev url"}
+    :help "Goto next url"}
 
    {:keys "<A-f>"
-    :help "Goto prev tag"
-    :key-attribs ["buffer"]
-    :events ["BufEnter"]
-    :patterns ["*txt,*text"]}
-
-   {:keys "<A-b>"
     :help "Goto next tag"
     :key-attribs ["buffer"]
     :events ["BufEnter"]
     :patterns ["*txt,*text"]}
 
+   {:keys "<A-b>"
+    :help "Goto prev tag"
+    :key-attribs ["buffer"]
+    :events ["BufEnter"]
+    :patterns ["*txt,*text"]}
+
 Tags are words enclosed between 2 '*' and urls are words enclosed between two
-'|'. Hopefully this should encourage you to write your own help docs.
+'|'. 
+
+Hopefully this should encourage you to write your own help docs.
 
 ==============================================================================
 CAVEATS *doom-caveats*
