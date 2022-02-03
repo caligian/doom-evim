@@ -12,7 +12,7 @@
 
 ; Require globals. They will be contained in _G.doom
 (when (not (. _G :doom))
-  (utils.try-require :globals))
+  (utils.try-require :globals :DOOM))
 
 ; Append required modules to doom
 (set doom.utils utils)
@@ -34,7 +34,7 @@
                        (tset (. doom.packages pkg) k v))))))
 
 ; Require packages
-(utils.try-require :packages)
+(utils.try-require :packages :DOOM)
 
 ; Require user-overrides
 (utils.try-require :user-init "DOOM") 
