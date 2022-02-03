@@ -1,0 +1,1 @@
+{"FunctionDeclaration": {"body": ["${1:function}(${2:params}) ", "    Tagged as:", "        ${3:tag}", "", "    Description:", "        ${4:description}", "", "    Params:", "        ${5:params_description}", "", "    Return:", "        ${6:return}"], "prefix": ["func_decl"]}, "TOCAppend": {"body": ["${1:index}. ${2:topic} ${3:tag}"], "prefix": ["deftoc"]}}
