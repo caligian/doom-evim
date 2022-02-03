@@ -92,39 +92,7 @@
 
 ; vimspector
 (after! :vimspector (fn []
-                      (vim.cmd "packadd! vimspector")
-
-                      (utils.define-keys [{:keys "<leader>de"
-                                           :exec ":call vimspector#Reset()<CR>"
-                                           :help "Reset vimspector"}
-
-                                          {:keys "<leader>dc"
-                                           :exec ":call vimspector#Continue()<CR>"
-                                           :help "Continue"}
-
-                                          {:keys "<leader>dt"
-                                           :exec ":call vimspector#ToggleBreakpoint()<CR>"
-                                           :help "Toggle breakpoint"}
-
-                                          {:keys "<leader>dT"
-                                           :exec ":call vimspector#ClearBreakpoints()<CR>"
-                                           :help "Clear breakpoints"}
-
-                                          {:keys "<leader>dk"
-                                           :exec "<Plug>VimspectorRestart"
-                                           :help "Restart vimspector"}
-
-                                          {:keys "<leader>dh"
-                                           :exec "<Plug>VimspectorStepOut"
-                                           :help "Step out/finish"}
-
-                                          {:keys "<leader>dl"
-                                           :exec "<Plug>VimspectorStepInto"
-                                           :help "Step in/step"}
-
-                                          {:keys "<leader>dj"
-                                           :exec "<Plug>VimspectorStepOver"
-                                           :help "Step over/next"}])))
+                      (vim.cmd "packadd! vimspector")))
 
 (after! :persistence.nvim (fn []
                             (let [persistence (require :persistence)
