@@ -180,11 +180,6 @@ default_runner {bool}
 
     Default: true
 
-theme {str}
-    Theme to set when doom starts. Default: PaperColor
-
-    Tip: When you change the theme, press <leader>hrt to sync the statusline bg and fg with the current theme.
-
 default_repl {bool}
     If set, use the REPL module provided with doom-evim. Please visit
     |doom-repl| for more information.
@@ -462,6 +457,26 @@ sed({s:str} {replacement-a:list} {substitute-a:list}) *doom.utils.sed*
 
     Returns: string
 
+match-sed({s:str} {replacement-a} {substitute-a}) 
+    Tagged as:
+       *doom.utils.match-sed* 
+
+    Description:
+        Works like sed but returns the string when the first regex in the list
+        matches. Consider it as an OR pattern of sorts.
+
+    Params:
+        {s} String
+            String to replace
+
+        {replacement-a} Array
+            Array containing regex patterns
+
+        {substitute-a} Array
+            Array containing substitute patterns
+
+    Return:
+        String
 
 linenum([{bufnr:int}]) *doom.utils.linenum*
    Returns the 1-indexed line number (this is the line number that you see) of
@@ -1085,7 +1100,7 @@ Font operations:
 Colorscheme:
 >
     {:keys "<leader>hrt"
-     :help "Reload statusline theme."}
+     :help "Reload statusline theme"}
 
 File operations: 
 >
@@ -1157,6 +1172,10 @@ Misc operations:
     
     {:keys "<localleader>&"
      :help "Execute an async sh command and split window"}
+
+    In the above keybinding, you can specify a filename pattern 
+    that works with expand() in curly braces. 
+    For example: echo {%:p} will result in echo <full file path>
 <
     
 Clipboard operations:

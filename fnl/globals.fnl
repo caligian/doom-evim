@@ -2,8 +2,6 @@
 
 (set _G.doom {:fnl_config true
 
-              :theme "PaperColor"
-
               ; Use doom's basic async runner
               :default_runner true
 

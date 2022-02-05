@@ -11,9 +11,9 @@
         #((. (require :gitsigns) :setup)))
 
 (after! [:lualine.nvim
-         :papercolor-theme]
+         :palenight.vim]
         #(do
-           (vim.cmd "color PaperColor")
+           (vim.cmd "palenight")
            (utils.try-require :modeline :DOOM)))
 
 (after! :vim-vsnip (fn []

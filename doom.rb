@@ -18,6 +18,7 @@ class SetupDoom
       'nvim-lua/plenary.nvim' => '563d9f6d083f0514548f2ac4ad1888326d0a1c66',
       'Olical/conjure' => '2717348d1a0687327f59880914fa260e4ad9c685',
       'bakpakin/fennel.vim' => '30b9beabad2c4f09b9b284caf5cd5666b6b4dc89',
+      'drewtempelmeyer/palenight.vim' => '847fcf5b1de2a1f9c28fdcc369d009996c6bf633',
     }
   end
 

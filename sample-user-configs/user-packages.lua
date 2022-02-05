@@ -1,13 +1,4 @@
 return {
-    -- themes
-    ["nord-vim"]               = { "arcticicestudio/nord-vim",                         lock = true, commit = "b32592eb0842005d1d25de96e3964ccacd537039"},
-    ["oceanic-next"]           = { "mhartington/oceanic-next",                         lock = true, commit = "5ef31a34204f84714885ae9036f66a626036c3dc"},
-    ["palenight.vim"]          = { "drewtempelmeyer/palenight.vim",                    lock = true, commit = "847fcf5b1de2a1f9c28fdcc369d009996c6bf633"},
-    ["onehalf"]                = { "sonph/onehalf",                                    lock = true, commit = '141c775ace6b71992305f144a8ab68e9a8ca4a25'},
-    ["vim-colors-solarized"]   = { "altercation/vim-colors-solarized",                 lock = true, commit = "528a59f26d12278698bb946f8fb82a63711eec21"},
-    ["molokai"]                = { "tomasr/molokai",                                   lock = true, commit = "c67bdfcdb31415aa0ade7f8c003261700a885476"},
-    ["gruvbox"]                = { "morhetz/gruvbox",                                  lock = true, commit = "bf2885a95efdad7bd5e4794dd0213917770d79b7"},
-
     -- ui
     ["dashboard-nvim"]         = { "glepnir/dashboard-nvim",                           lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
     ["lualine.nvim"]           = { "nvim-lualine/lualine.nvim",                        lock = true, commit = "0d0ea77e1a9a0f17e48b87b5931f292a6cf413dd"},

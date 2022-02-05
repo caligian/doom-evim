@@ -8,6 +8,5 @@ return {
     ["fennel.vim"]                  = { "bakpakin/fennel.vim" ,                        lock = true, commit = "30b9beabad2c4f09b9b284caf5cd5666b6b4dc89"},
     ["which-key.nvim"]              = { "folke/which-key.nvim" ,                       lock = true, commit = "28d2bd129575b5e9ebddd88506601290bb2bb221"},
     ["Repeatable.vim"]              = { "kreskij/Repeatable.vim" ,                     lock = true, commit = "ab536625ef25e423514105dd790cb8a8450ec88b"},
-    ["papercolor-theme"]            = {"NLKNguyen/papercolor-theme",                   lock = true, commit = "d0d32dc5e92564b63ec905a9423984b5d503c24a"},
+   ["palenight.vim"]          = { "drewtempelmeyer/palenight.vim",                    lock = true, commit = "847fcf5b1de2a1f9c28fdcc369d009996c6bf633"},
 }
-
