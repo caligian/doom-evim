@@ -1,55 +1,80 @@
 ### This is how doom looks
-![doom](./doom-evim.png)
+![doom](./doom.png)
 
 ---
 
 ### Which-key popup
-![doom-which-key](./doom-evim-wk.png)
+![doom-which-key](./which-key.png)
 
 ---
 
 ### LSP: Using trouble instead of virtual text
-![doom-lsp](./doom-evim-lsp.png)
+![doom-lsp](./lsp-server.png)
 
 ---
 
 ### Nvim-tree
-![nvim-tree](./doom-evim-nvim-tree.png)
+![nvim-tree](./nvim-tree.png)
 
 ---
 
+### Ivy-like UI with Telescope.nvim
+![ivy](./ivy.png)
+
 ### Runners: Async runner
 #### Building
-![build-op](./doom-evim-runner-build.png)
-![build-op-result](./doom-evim-runner-build-result.png)
+![build-op](./building.png)
 
 #### Compiling
-![compile-op](./doom-evim-runner-compile.png)
-![compile-op-result](./doom-evim-runner-compile-result.png)
+![compile-op](./compiling.png)
+![compile-op-result](./compiling-result.png)
 
 #### Testing
-![test-op](./doom-evim-runner-test.png)
-![test-op-result](./doom-evim-runner-test-result.png)
+![test-op](./testing.png)
+![test-op-result](./testing-result.png)
 
 ---
 
 ### REPL
 #### Filetype REPL and Terminal REPL
-![repl](./doom-evim-user-repl.png)
+![repl](./repl+shell.png)
 
 ---
 
 ### Configuring packages post-initialization
-![after](./doom-evim-config-packages.png)
+![after](./post-pkg-init.png)
 
 ---
 
 ### Configuring packages pre-initialization
-![specs](./doom-evim-pre-init-config-packages.png)
+![specs](./pre-pkg-init.png)
 
 ---
 
 ### Setup keybindings
-![kbd](./doom-evim-kbd.png)
+![kbd](./kbd.png)
 
 ---
+
+### YASnippet-style snippet creation
+![snippet-createon](./snippet-creation.png)
+
+![snippet-creation-result](./snippet-creation-result.png)
+
+---
+
+### General asynchronous runner
+![async](./async.png)
+
+#### With filename expansion 
+![async-result](./async-with-expansion.png)
+
+---
+
+### Preconfigured DAP
+![dap](./vimspector.png)
+
+---
+
+### Doom's basic debugger
+![doom-debug](./doom-debug.png)

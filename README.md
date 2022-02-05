@@ -1,6 +1,6 @@
 
 
-![DOOM-eVIM](./screenshots/doom-evim.png)
+![DOOM-eVIM](./screenshots/doom.png)
 
 # Welcome to doom-evim
 This project has been inspired by doom-emacs and doom-nvim. However, I named it doom because it is batteries-included like doom-nvim and doom-emacs. Why the 'e'? To pay a homage to emacs' revered emacs-lisp.

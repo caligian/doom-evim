@@ -652,7 +652,7 @@
 
 ; Get user input
 (defn get-user-input [prompt validate loop ?opts]
-  (let [use-validate-r (or (. ?opts :use_function) false)
+  (let [use-validate-r (or (?. ?opts :use_function) false)
         _first-input (vim.call :input prompt)
         _first-input (str.trim _first-input)]
     (if (= _first-input "")
