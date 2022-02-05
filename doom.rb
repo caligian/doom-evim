@@ -22,13 +22,13 @@ class SetupDoom
   end
 
   def get_repo_basename(repo)
-    repo.match(%r{/([^$]+)})[1] 
+    repo.match(%r{/([^$]+)})[1]
   end
 
   def clone_repo(repo)
     basename = get_repo_basename(repo)
     path = "#{@package_dest}/#{basename}"
-    `git clone https://github.com/#{repo} #{path}` 
+    `git clone https://github.com/#{repo} #{path}`
   end
 
   def reset_repo(repo, commit)
@@ -63,7 +63,6 @@ class SetupDoom
   end
 
   def install_fonts
-    font_install_path = "#{ENV['HOME']}/.local/fonts"
     doom_fonts_dir = "#{@main_config_dir}/misc/fonts"
 
     Dir.chdir doom_fonts_dir
@@ -74,14 +73,14 @@ class SetupDoom
       puts "Installing all fonts in: #{font}"
 
       fonts = `unzip -l #{font}`.split /\n/
-      fonts = fonts.select {|i| i.match /^\s*[0-9]/}
-      fonts = fonts.map {|f| _f = f.split /\s+/; %{"#{_f[4..].join ' '}"} }
-      fonts = fonts.select {|f| f.match /(ttf|otf)"$/ }
+      fonts = fonts.select { |i| i.match /^\s*[0-9]/ }
+      fonts = fonts.map { |f| _f = f.split /\s+/; %{"#{_f[4..].join ' '}"} }
+      fonts = fonts.select { |f| f.match /(ttf|otf)"$/ }
       `unzip -o #{font}`
-      fonts.each {|f| `mv #{f} ~/.local/share/fonts/`}
+      fonts.each { |f| `mv #{f} ~/.local/share/fonts/` }
       `fc-cache -fv`
     end
-   
+
     puts 'Please restart your shell to load the fonts.'
   end
 
@@ -91,9 +90,9 @@ class SetupDoom
     # setup packer
     `git clone --depth 1 https://github.com/wbthomason/packer.nvim #{@package_dest}/packer.nvim`
 
-    # Reset packer to required commit 
+    # Reset packer to required commit
     reset_repo('wbthomason/packer.nvim', '7182f0ddbca2dd6f6723633a84d47f4d26518191')
-    
+
     @packages.keys.each do |repo|
       commit = @packages[repo]
       clone_repo(repo)

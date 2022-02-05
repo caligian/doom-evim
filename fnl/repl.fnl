@@ -27,7 +27,7 @@
       (do 
         (vim.cmd "tabnew")
         (vim.call "termopen" cmd-t)
-        (set vim.bo.buflisted true)
+        (set vim.bo.buflisted false)
 
         (let [bufnr (utils.get-bufnr)
               id vim.b.terminal_job_id]

@@ -89,15 +89,25 @@
                      :exec ":noh<CR>"
                      :help "No highlight"}
 
-                    ; Easy command access
+                    ; Easy command access 
                     {:keys "<leader>;"
                      :exec ": "
                      :help "Open command mode"}
                     
                     {:keys "<localleader>&"
                      :exec #(utils.async-sh (utils.get-user-input "bash % " 
-                                                                  #(~= $1 "")
-                                                                  true))
+                                                                  (fn [input]
+                                                                    (let [input (utils.match-sed input
+                                                                                           ["{%}" "{%:p}" "{%:t}" "{%:e}" "{%:h}" "{%:r}"] 
+                                                                                           [(vim.fn.expand "%")
+                                                                                            (vim.fn.expand "%:p")
+                                                                                            (vim.fn.expand "%:t")
+                                                                                            (vim.fn.expand "%:e")
+                                                                                            (vim.fn.expand "%:h")
+                                                                                            (vim.fn.expand "%:r")])]
+                                                                      input))
+                                                                  true
+                                                                  {:use_function true}))
                      :help "Run an async sh command"}
                   
                     ; Clipboad
@@ -151,3 +161,4 @@
 (vimp.map_command "CopyUserPackages" #(utils.sh "cp ~/.vdoom.d/user-packages.lua ~/.config/nvim/lua/default_packages.lua"))
 (vimp.map_command "EditDefaultPackages" #(utils.exec ":e ~/.config/nvim/lua/default_packages.lua"))
 (vimp.map_command "EditUserPackages" #(utils.exec ":e ~/.vdoom.d/user-packages.lua"))
+(vimp.map_command "CopySamplePackages" #(utils.sh "cp ~/.config/nvim/lua/default_packages.lua ~/.config/nvim/sample-user-configs/user-packages.lua"))

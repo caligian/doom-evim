@@ -11,7 +11,7 @@
   (string.gsub s "^." string.upper))
 
 (defn- take-runner-input [binary]
-  (let [_pipe-args (str.trim (vim.call :input "Pipe args > "))
+  (let [_pipe-args (or pipe-args (str.trim (vim.call :input "Pipe args > ")))
         _binary-args (str.trim (vim.call :input (string.format "Args for %s > " binary)))
         _file (str.trim (vim.call :input "Use current file (n/y) > "))
 
@@ -59,12 +59,15 @@
       true)))
 
 (each [_ lang (ipairs (utils.keys doom.langs))]
-  (each [_ op (ipairs [:build :test :compile])]
+  (each [_ op (ipairs [:build :test :compile :format])]
     (make-runner lang op)))
 
 (utils.define-keys [{:keys "<leader>mC" :exec ":RunnerCompile" :help "Compile <lang>"}
+                    {:keys "<leader>mF" :exec ":RunnerFormat" :help "Format <lang>"}
                     {:keys "<leader>mB" :exec ":RunnerBuild" :help "Build <lang>"}
                     {:keys "<leader>mT" :exec ":RunnerTest" :help "Test <lang>"}
-                    {:keys "<leader>mc" :exec #(current-buffer-runner :compile) :help "Compile buffer file"}
+
+                    {:keys "<leader>mf" :exec #(current-buffer-runner :format) :help "Compile buffer file"}
+                    {:keys "<leader>mc" :exec #(current-buffer-runner :compile) :help "Format buffer file"}
                     {:keys "<leader>mb" :exec #(current-buffer-runner :build) :help "Build buffer file"}
                     {:keys "<leader>mt" :exec #(current-buffer-runner :test) :help "Compile buffer file"}])

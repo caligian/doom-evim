@@ -36,7 +36,7 @@
         (tset doom-packages k (. current-packages k))
         (table.insert master-t (. current-packages k))))
 
-    (set doom.packages doom-packages)
+    (set doom.packages (vim.tbl_extend "force" doom-packages doom.essential_packages))
     master-t))
 
 (get-master-list)

@@ -76,16 +76,19 @@
                      :running_repls {}}
 
               :default_packages (require :default_packages)
+              :essential_packages (require :essential_packages)
 
               ; Basic setup for languages
               ; Used by doom's runner
               :langs {:python {:server "pyright" 
                                :compile "python3"
+                               :format "python3 -m yapf"
                                :debug "python3 -m pdb"
                                :test "pytest"
                                :build false}
 
                       :ruby {:server "solargraph"
+                             :format "rubocop --fix-layout" 
                              :compile "ruby"
                              :debug "ruby -r debug"
                              :test "rspec"
@@ -93,6 +96,7 @@
 
                       :lua {:server "sumneko_lua"
                             :compile "/usr/bin/lua"
+                            :format "lua-fmt"
                             :manual true
                             :debug "lua"
                             :test "lua"

@@ -7,6 +7,15 @@ CONTENTS *doom-toc*
 2. Philosophy   |doom-philosophy|
 3. Filesystem   |doom-fs|
 4. Modules      |doom-modules|
+    4.1 |doom-globals|
+    4.2 |doom-utils|
+    4.3 |doom-lsp-configs|
+    4.4 |doom-logger|
+    4.5 |doom-repl|
+    4.6 |doom-runner|
+    4.7 |doom-packages|
+        4.7.1 |doom-default-packages| 
+        4.7.2 |doom-package-groups|
 5. Keybindings  |doom-keybindings|
 6. Snippets     |doom-snippets|
 7. Treesitter   |doom-treesitter|
@@ -189,6 +198,18 @@ default_keybindings {bool}
     Default: true
 
 
+essential_packages {list}
+    Contains all the essential package declarations.
+
+    Default: lua/essential-packages.lua
+
+
+default_packages {list}
+    Contains all the default package declarations that are non-essential.
+
+    Default: Check lua/default-packages.lua
+
+
 default_package_configs {bool}
     Use doom's default package configuration? 
 
@@ -285,6 +306,9 @@ langs.<lang> {table} *doom.langs*
         Manually configure this language's LSP server. This server won't be
         setup using doom's defaults. 
 
+        {format:string}
+        When <leader>mf is pressed, use this command to format the buffer.
+        
         {debug:str}
         Debugger command to use with doom's REPL for ft. This splits the
         window and opens the debugger for the current file. It does not use
@@ -906,6 +930,10 @@ There are 3 types of runners supported:
         Used to build stuff. You can specify the base command and later
         provide additional args for the same. 
 
+    format
+        Use to automatically format the current buffer with the means of an 
+        external command.
+
 All the runners will be defined in |doom.langs|. If you want to simply compile
 the current file then just add a {compile} key to |doom.langs|. 
 
@@ -1215,6 +1243,9 @@ Doom runner:
     {:keys "<leader>mC" 
      :help "Compile <lang>"}
 
+    {:keys "<leader>mF" 
+     :help "Format <lang>"}
+
     {:keys "<leader>mB"
      :help "Build <lang>"}
 
@@ -1223,6 +1254,9 @@ Doom runner:
 
     {:keys "<leader>mc"
      :help "Compile buffer file"}
+
+    {:keys "<leader>mf"
+     :help "Format buffer file"}
 
     {:keys "<leader>mb"
      :help "Build buffer file"}
@@ -1264,7 +1298,10 @@ vimspector:
 persistence.nvim:
 >
     {:keys "<leader>sl"
-     :help "Load session"}
+     :help "Load current session"}
+
+    {:keys "<leader>sL"
+     :help "Load last session"}
     
     {:keys "<leader>ss"
      :help "Load session"}
