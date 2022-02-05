@@ -51,7 +51,7 @@
 
 ---
 
-### Setup keybindings
+### Easy keybinding creation
 ![kbd](./kbd.png)
 
 ---
