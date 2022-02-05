@@ -19,8 +19,10 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 4. Default keybindings which similar to doom-emacs. 
 5. Wide array of utility functions available to the user for complex configuration: `after!`, `specs!`, `add-hook`, `define-keys`, etc 
 6. Which-key and snippets work out of the box. 
-7. Comprehensive inbuild documentation accessible via `:help`.
-
+7. Comprehensive inbuilt documentation accessible via `:help`.
+8. Easy snippet creation.
+9. Nice basic REPL.
+ 
 ## Installation
 
 ### Downloading the release
