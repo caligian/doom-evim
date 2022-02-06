@@ -1304,32 +1304,6 @@ nvim-tree.lua:
     {:keys "<leader>`" 
      :help "Open nvim-tree" }
 
-vimspector:
->
-    {:keys "<leader>de"
-     :help "Reset vimspector"}
-    
-    {:keys "<leader>dc"
-     :help "Continue"}
-    
-    {:keys "<leader>dt"
-     :help "Toggle breakpoint"}
-    
-    {:keys "<leader>dT"
-     :help "Clear breakpoints"}
-    
-    {:keys "<leader>dk"
-     :help "Restart vimspector"}
-    
-    {:keys "<leader>dh"
-     :help "Step out/finish"}
-    
-    {:keys "<leader>dl"
-     :help "Step in/step"}
-    
-    {:keys "<leader>dj"
-     :help "Step over/next"}
-
 persistence.nvim:
 >
     {:keys "<leader>sl"

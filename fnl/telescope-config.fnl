@@ -3,8 +3,17 @@
 (let [telescope (require :telescope)
       actions (require :telescope.actions)
       utils (require :utils)]
-  ; Some stuff stolen from NvChad
-  (telescope.setup {:defaults {:vimgrep_arguments [:rg
+
+  ; Some stuff was stolen from NvChad
+
+  (telescope.load_extension "file_browser")
+  (telescope.load_extension "fzf")
+  (telescope.load_extension "project")
+  (telescope.setup {:extensions {:fzf {:fuzzy true
+                                       :override_generic_sorter true
+                                       :override_file_sorted true
+                                       :case_mode "smart_case"}}
+                    :defaults {:vimgrep_arguments [:rg
                                                    "--color=never"
                                                    "--no-heading"
                                                    "--with-filename"
@@ -25,10 +34,6 @@
                                :path_display [:smart]
                                :mappings {:n {:D actions.delete_buffer}
                                           :i {"<C-d>" actions.delete_buffer}}}})
-
-  (telescope.load_extension "file_browser")
-  (telescope.load_extension "project")
-
   ; Add some more default actions
   (utils.define-keys [{:keys "<leader>ff"
                        :exec ":lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())<CR>"

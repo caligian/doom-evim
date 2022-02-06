@@ -8,7 +8,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; git-signs
 (after! :gitsigns.nvim
-        #((. (require :gitsigns) :setup)))
+        #((. (require :gitsigns) :setup))
+        100)
 
 (after! [:lualine.nvim
          :palenight.vim]
@@ -16,10 +17,11 @@
            (vim.cmd "color everforest")
            (utils.try-require :modeline :DOOM)))
 
-(after! :vim-vsnip #(require :vim-vsnip-config))
+(after! :vim-vsnip #(require :vim-vsnip-config) 100)
 
 (after! :vim-qf (fn []
-                  (set vim.g.qf_mapping_ack_style 1)))
+                  (set vim.g.qf_mapping_ack_style 1))
+        100)
 
 ; nvim-tree
 (after! :nvim-tree.lua
@@ -35,13 +37,13 @@
 ; delimitMate
 (after! :delimitMate
         (fn []
-          (set vim.g.delimitMate_excluded_ft (table.concat doom.lisp_langs ","))))
+          (set vim.g.delimitMate_excluded_ft (table.concat doom.lisp_langs ",")))
+        100)
 
 ; vimspector
-(after! :vimspector (fn []
-                      (vim.cmd "packadd! vimspector")
-
-                      ))
+(after! :vimspector 
+        #(vim.cmd "packadd! vimspector")
+        100)
 
 (after! :persistence.nvim (fn []
                             (let [persistence (require :persistence)
@@ -67,7 +69,8 @@
             (trouble.setup)
             (utils.define-key {:keys "<leader>lt"
                                :exec ":TroubleToggle<CR>"
-                               :help "Toggle trouble"}))))
+                               :help "Toggle trouble"})))
+        300)
 
 (after! :dashboard-nvim (fn []
                           (let [banner (core.slurp (utils.confp "misc" "punisher-logo.txt"))
@@ -96,7 +99,9 @@
           (set vim.g.undotree_SetFocusWhenToggle 1)))
 
 ; zen-mode
-(after! :zen-mode.nvim #(utils.define-key {:keys "<leader>bz" :help "Activate ZenMode" :exec ":ZenMode<CR>"}))
+(after! :zen-mode.nvim
+        #(utils.define-key {:keys "<leader>bz" :help "Activate ZenMode" :exec ":ZenMode<CR>"})
+        100)
 
 ; treesitter
 (after! :nvim-treesitter
@@ -107,18 +112,23 @@
                                        :highlight {:enable true}
                                        :indent {:enable true}}))))
 
-(after! [:telescope.nvim :telescope-project.nvim :telescope-file-browser.nvim]
+(after! [:telescope.nvim 
+         :telescope-project.nvim 
+         :telescope-file-browser.nvim 
+         :telescope-fzf-native.nvim]
         #(require :telescope-config))
 
 (after! :nvim-treesitter-textobjects
-        #(require :nvim-treesitter-textobjects-config))
+        #(require :nvim-treesitter-textobjects-config)
+        100)
 
 ; Tagbar
 (after! :tagbar
         (fn []
           (utils.define-key {:keys "<C-t>"
                              :help "Open Tagbar"
-                             :exec ":TagbarToggle<CR>"})))
+                             :exec ":TagbarToggle<CR>"}))
+        100)
 
 ; nvim-cmp
 (after! :nvim-cmp
@@ -131,7 +141,8 @@
           (vim.cmd "highlight! CmpItemKindText guibg=NONE guifg=#9CDCFE")
           (vim.cmd "highlight! CmpItemKindFunction guibg=NONE guifg=#C586C0")
           (vim.cmd "highlight! CmpItemKindMethod guibg=NONE guifg=#C586C0")
-          (vim.cmd "highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4")))
+          (vim.cmd "highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4"))
+        20)
 
 ;  vim-fugitive
 (after! :vim-fugitive
@@ -142,12 +153,14 @@
                               {:keys "<leader>gs" :exec ":Git stage %<CR>" :help "Stage current file"}
                               {:keys "<leader>gc" :exec ":Git commit %<CR>" :help "Commit changes"}
                               {:keys "<leader>gp" :exec ":Git push<CR>" :help "Push commits"}
-                              {:keys "<leader>gm" :exec ":Git merge<CR>" :help "Merge from remote"}])))
+                              {:keys "<leader>gm" :exec ":Git merge<CR>" :help "Merge from remote"}]))
+        200)
 
 ; Luapad
 (after! :nvim-luapad
         (fn []
-          (utils.define-key {:keys "<F3>" :exec ":Luapad<CR>" :help "Start Luapad"})))
+          (utils.define-key {:keys "<F3>" :exec ":Luapad<CR>" :help "Start Luapad"}))
+        100)
 
 ; vimp
 (after! :vimpeccable
@@ -167,12 +180,3 @@
 ; vim-bbye
 (after! :vim-bbye
         #(utils.define-key {:keys "<leader>bq" :exec ":Bdelete<CR>" :help "Delete current buffer"}))
-
-; vim-dispatch
-(after! :vim-dispatch
-        (fn []
-          (utils.add-hook "GlobalHook" "FileType" "ruby" "let b:dispatch = 'ruby %'")
-          (utils.add-hook "GlobalHook" "FileType" "lua" "let b:dispatch = 'lua %'")
-          (utils.add-hook "GlobalHook" "FileType" "python" "let b:dispatch = 'perl %'")
-          (utils.add-hook "GlobalHook" "FileType" "sh" "let b:dispatch = 'bash %'")
-          (utils.add-hook "GlobalHook" "FileType" "perl" "let b:dispatch = 'perl %'")))

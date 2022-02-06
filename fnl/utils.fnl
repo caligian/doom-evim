@@ -636,11 +636,17 @@
   (let [(status message) (xpcall try-f handle-f)]
     (when ?then-f (?then-f))))
 
-(defn try-require [module-name type-module]
-  (try-then-else
-    #(require module-name)
-    #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name))
-    #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1))))
+(defn try-require [module-name type-module ?defer]
+  (if ?defer
+    (vim.defer_fn #(try-then-else
+                     #(require module-name)
+                     #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name))
+                     #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))
+                  ?defer)
+    (try-then-else
+      #(require module-name)
+      #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name))
+      #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))))
 
 ; Increases the size of current font by 1
 (defn adjust-font-size [inc-or-dec]

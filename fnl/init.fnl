@@ -19,12 +19,14 @@
 (set doom.logger logger)
 
 ; Use this to set post-package-init configuration
-(set _G.after! (lambda after! [pkg config-f]
+(set _G.after! (lambda after! [pkg config-f ?defer]
                  (let [packages (utils.listify pkg)
                        loaded   (core.filter #(. doom.packages $1) packages)
                        equals   (= (length packages) (length loaded))]
                    (if equals 
-                     (do (config-f) true)
+                     (if ?defer
+                       (vim.defer_fn config-f ?defer)
+                       (do (config-f) true))
                      false))))
 
 (set _G.specs! (lambda specs! [pkg specs]
@@ -55,19 +57,21 @@
            :cmp-buffer
            :cmp-path
            :cmp-cmdline]
-          #(lsp-configs.setup)))
+          #(lsp-configs.setup)
+          300))
 
 ; Setup vimspector
 (after! :vimspector 
-        #(utils.try-require :dap-config :DOOM))
+        #(utils.try-require :dap-config :DOOM)
+        500)
 
 ; Setup basic utility functions for running files
 (when doom.default_runner
-  (utils.try-require :runners :DOOM))
+  (utils.try-require :runners :DOOM 100))
 
 ; Load doom's basic repl
 (when doom.default_repl
-  (utils.try-require :repl :DOOM))
+  (utils.try-require :repl :DOOM 100))
 
 ; Load package-configs
 (when doom.default_package_configs
@@ -75,16 +79,16 @@
 
 ; Load keybindings
 (when doom.default_keybindings
-  (utils.try-require :keybindings :DOOM))
+  (utils.try-require :keybindings :DOOM 100))
 
 ; Default vim-help mappings
 (when doom.default_help_keybindings
-  (utils.try-require :vim-help :DOOM))
+  (utils.try-require :vim-help :DOOM 100))
 
 (when doom.default_formatter
-  (utils.try-require :formatter :DOOM))
+  (utils.try-require :formatter :DOOM 100))
 
-(utils.try-require :snippets :DOOM)
+(utils.try-require :snippets :DOOM 100)
 
 ; Register help
 ; Register all help-groups in <leader>
