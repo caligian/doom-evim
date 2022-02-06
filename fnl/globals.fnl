@@ -21,7 +21,7 @@
               :lisp_langs ["fennel" "clojure" "scheme"]
 
               ; Languages to use with treesitter
-              :treesitter_langs [:python :yaml :json :javascript :c :lua :perl :fennel :ruby]
+              :treesitter_langs [:python :yaml :json :javascript :c :lua :perl :ruby]
 
               ; Contains all the anonymous functions used in autocmds and keybindings
               :lambdas {}
@@ -91,6 +91,14 @@
                              :debug "ruby -r debug"
                              :test "rspec"
                              :build "rake"}
+
+                      :fennel {:compile "fennel"}
+
+                      :sh {:compile "bash"}
+
+                      :perl {:compile "perl"}
+
+                      :javascript {:compile "node"}
 
                       :lua {:server "sumneko_lua"
                             :compile "/usr/bin/lua"

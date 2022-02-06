@@ -1,7 +1,8 @@
 (module lsp-configs
   {autoload {utils utils
              core aniseed.core
-             str aniseed.string}})
+             str aniseed.string
+             fnl fennel}})
 
 (defn setup-keybindings []
   (utils.define-keys [{:keys "<leader>lb"
@@ -73,26 +74,26 @@
                        :help "Set loclist"}]))
 
 (defn on-attach-f [arg bufnr]
-      (vim.api.nvim_buf_set_option bufnr "omnifunc" "v:lua.vim.lsp.omnifunc")
-      (vim.cmd "command! Format execute lua vim.lsp.buf.formatting()"))
+  (vim.api.nvim_buf_set_option bufnr "omnifunc" "v:lua.vim.lsp.omnifunc")
+  (vim.cmd "command! Format execute lua vim.lsp.buf.formatting()"))
 
 (defn setup-sumneko-lua []
-      (let [binary-path (utils.datap "lsp_servers" "sumneko_lua" "extension" "server" "bin" "lua-language-server")
-            main-path (utils.datap "lsp_servers" "sumneko_lua" "extension" "server" "bin" "main.lua")
-            runtime-path (vim.split package.path ";")
-            nvim-lsp (require :lspconfig)
-            sumneko-lua (. nvim-lsp :sumneko_lua)]
+  (let [binary-path (utils.datap "lsp_servers" "sumneko_lua" "extension" "server" "bin" "lua-language-server")
+        main-path (utils.datap "lsp_servers" "sumneko_lua" "extension" "server" "bin" "main.lua")
+        runtime-path (vim.split package.path ";")
+        nvim-lsp (require :lspconfig)
+        sumneko-lua (. nvim-lsp :sumneko_lua)]
 
-        (table.insert runtime-path "lua/?.lua")
-        (table.insert runtime-path "lua/?/init.lua")
+    (table.insert runtime-path "lua/?.lua")
+    (table.insert runtime-path "lua/?/init.lua")
 
-        (sumneko-lua.setup {:cmd [binary-path "-E" main-path]
-                            :settings {:lua 
-                                       {:runtime {:version "LuaJIT"
-                                                  :path runtime-path}
-                                        :diagnostics {:globals ["vim"]}
-                                        :workspace {:library (vim.api.nvim_get_runtime_file "" true)}
-                                        :telemetry {:enable false}}}})))
+    (sumneko-lua.setup {:cmd [binary-path "-E" main-path]
+                        :settings {:lua 
+                                   {:runtime {:version "LuaJIT"
+                                              :path runtime-path}
+                                    :diagnostics {:globals ["vim"]}
+                                    :workspace {:library (vim.api.nvim_get_runtime_file "" true)}
+                                    :telemetry {:enable false}}}})))
 
 (defn setup-servers [?servers]
   (let [cmp-nvim-lsp (require :cmp_nvim_lsp)

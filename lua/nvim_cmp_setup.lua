@@ -73,6 +73,7 @@ cmp.setup(
         },
         sources = {
             {name = "nvim_lsp"},
+            {name = 'conjure'},
             {name = "vsnip"},
             {name = "path"},
             {name = "buffer"},

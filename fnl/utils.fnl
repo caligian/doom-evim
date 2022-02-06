@@ -408,11 +408,15 @@
 
 ; Run an async command in shell and split
 (defn async-sh [s ?d]
+  (lambda __process [id data event]
+    (if data
+      (to-temp-buffer data (or ?d "sp"))))
+
   (core.spit (.. (os.getenv "HOME") "/.config/nvim/tmp/.temp.sh") s)
   (vim.fn.jobstart "/bin/bash ~/.config/nvim/tmp/.temp.sh"
-                   {:on_stdout (fn [id data event]
-                                 (if data
-                                   (to-temp-buffer data (or ?d "sp"))))
+                   {:on_stdout __process
+                    :on_stderr __process
+                    :stderr_buffered true
                     :stdout_buffered true}))
 
 (defn adjust-indent [?towards ?lineno]
