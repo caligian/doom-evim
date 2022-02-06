@@ -18,6 +18,9 @@
 
 (after! :vim-vsnip #(require :vim-vsnip-config))
 
+(after! :vim-qf (fn []
+                  (set vim.g.qf_mapping_ack_style 1)))
+
 ; nvim-tree
 (after! :nvim-tree.lua
         (fn []

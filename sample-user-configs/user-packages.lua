@@ -1,17 +1,24 @@
 return {
+    --themes
+    ["papercolor-theme"]            = { "NLKNguyen/papercolor-theme",                  lock = true, commit = "d0d32dc5e92564b63ec905a9423984b5d503c24a"},
+    ["nord-vim"]                    = { "arcticicestudio/nord-vim",                    lock = true, commit = "b32592eb0842005d1d25de96e3964ccacd537039"},
+    ["oceanic-next"]                = { "mhartington/oceanic-next",                    lock = true, commit = "5ef31a34204f84714885ae9036f66a626036c3dc"},
+    ["molokai"]                     = { "tomasr/molokai",                              lock = true, commit = "c67bdfcdb31415aa0ade7f8c003261700a885476"},
+    ["gruvbox"]                     = { "morhetz/gruvbox",                             lock = true, commit = "bf2885a95efdad7bd5e4794dd0213917770d79b7"},
+
     -- ui
-    ["dashboard-nvim"]         = { "glepnir/dashboard-nvim",                           lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
-    ["lualine.nvim"]           = { "nvim-lualine/lualine.nvim",                        lock = true, commit = "0d0ea77e1a9a0f17e48b87b5931f292a6cf413dd"},
-    ["vim-devicons"]           = { "ryanoasis/vim-devicons" ,                          lock = true, commit = "a2258658661e42dd4cdba4958805dbad1fe29ef4"},
-    ["nvim-web-devicons"]      = { "kyazdani42/nvim-web-devicons" ,                    lock = true, commit = "634e26818f2bea9161b7efa76735746838971824"},
-    ["telescope.nvim"]         = { "nvim-telescope/telescope.nvim" ,                   lock = true, commit = "0011b1148d3975600f5a9f0be8058cdaac4e30d9"},
-    ["telescope-project.nvim"] = { "nvim-telescope/telescope-project.nvim" ,           lock = true, commit = "d317c3cef6917d650d9a638c627b54d3e1173031"},
+    ["dashboard-nvim"]              = { "glepnir/dashboard-nvim",                      lock = true, commit = "ba98ab86487b8eda3b0934b5423759944b5f7ebd"},
+    ["vim-devicons"]                = { "ryanoasis/vim-devicons" ,                     lock = true, commit = "a2258658661e42dd4cdba4958805dbad1fe29ef4"},
+    ["nvim-web-devicons"]           = { "kyazdani42/nvim-web-devicons" ,               lock = true, commit = "634e26818f2bea9161b7efa76735746838971824"},
+    ["telescope.nvim"]              = { "nvim-telescope/telescope.nvim" ,              lock = true, commit = "0011b1148d3975600f5a9f0be8058cdaac4e30d9"},
+    ["telescope-project.nvim"]      = { "nvim-telescope/telescope-project.nvim" ,      lock = true, commit = "d317c3cef6917d650d9a638c627b54d3e1173031"},
     ["telescope-file-browser.nvim"] = { "nvim-telescope/telescope-file-browser.nvim" , lock = true, commit = "e65a5674986dcaf27c0fd852b73f5fc66fa78181"},
     ["zen-mode.nvim"]               = { "folke/zen-mode.nvim" ,                        lock = true, commit = "f1cc53d32b49cf962fb89a2eb0a31b85bb270f7c"},
     ["twilight.nvim"]               = { "folke/twilight.nvim" ,                        lock = true, commit = "8ab43c0fdc246fdd82382d7ef4ec383f8f755ef9"},
     ["nvim-tree.lua"]               = { "kyazdani42/nvim-tree.lua",                    lock = true, commit = "2dfed89af7724f9e71d2fdbe3cde791a93e9b9e0"},
 
     -- editor
+    ['vim-qf']                      = {'romainl/vim-qf',                               lock = true, commit = '65f115c350934517382ae45198a74232a9069c2a'},
     ["lightspeed.nvim"]             = { 'ggandor/lightspeed.nvim',                     lock = true, commit = "f394f4e2278a8e4dff975bdb7f4a3d3101a6ab0" },
     ["vim-misc"]                    = { "xolox/vim-misc" ,                             lock = true, commit = "3e6b8fb6f03f13434543ce1f5d24f6a5d3f34f0b"},
     ["vim-bbye"]                    = { "moll/vim-bbye" ,                              lock = true, commit = "25ef93ac5a87526111f43e5110675032dbcacf56"},
@@ -21,6 +28,8 @@ return {
     nerdcommenter                   = { "preservim/nerdcommenter" ,                    lock = true, commit = "f9c5f0fbda3be77dce5bb4b06b49d9f11b3b6c20"},
     ["vim-markdown"]                = { "plasticboy/vim-markdown" ,                    lock = true, commit = "9156bba66350d4c0c32b4ac783550c3e132d6a88"},
     ["markdown-preview.nvim"]       = { "iamcco/markdown-preview.nvim" ,               lock = true, commit = "e5bfe9b89dc9c2fbd24ed0f0596c85fd0568b14"},
+    ["vim-sexp"]                    = { "guns/vim-sexp",                               lock = true, commit = "14464d4580af43424ed8f2614d94e62bfa40bb4d"},
+    ["persistence.nvim"]            = { "folke/persistence.nvim",                      lock = true, commit = "77cf5a6ee162013b97237ff25450080401849f85"},
     ["vim-surround"]                = { "tpope/vim-surround" ,                         lock = true, commit = "aeb933272e72617f7c4d35e1f003be16836b948d"},
     delimitMate                     = { "Raimondi/delimitMate" ,                       lock = true, commit = "537a1da0fa5eeb88640425c37e545af933c56e1b"},
     ["indent-blankline.nvim"]       = { "lukas-reineke/indent-blankline.nvim" ,        lock = true, commit = "2e35f7dcdc72f39b37c21e43cdb538d7a41c7e07"},
@@ -38,14 +47,12 @@ return {
     ["vimspector"]                  = { "puremourning/vimspector",                     lock = true, commit = "f0b135d091a2b78945ea46695fd8c667a92457c0"},
 
     -- treesitter
-    ["nvim-lspconfig"]              = { "neovim/nvim-lspconfig" ,                      lock = true, commit = "c51096481dc13193991571b7132740d762902355"},
     ["nvim-treesitter"]             = { "nvim-treesitter/nvim-treesitter" ,            lock = true, commit = "620cc936ad6b26c59bb2d888b3890bb8d06c50c7"},
-    ["nvim-treesitter-textobjects"] = {"nvim-treesitter/nvim-treesitter-textobjects",  lock = true, commit = "f107174097df7ec29dfeb573ebc2ede8a1f0a067"},
-    ["nvim-lsp-installer"]          = { "williamboman/nvim-lsp-installer" ,            lock = true, commit = "88e44bbbe2e03523e08f2bd3c9a954675bc438f4"},
-    ["vim-sexp"]                    = { "guns/vim-sexp",                               lock = true, commit = "14464d4580af43424ed8f2614d94e62bfa40bb4d"},
-    ["persistence.nvim"]            = { "folke/persistence.nvim",                      lock = true, commit = "77cf5a6ee162013b97237ff25450080401849f85"},
+    ["nvim-treesitter-textobjects"] = { "nvim-treesitter/nvim-treesitter-textobjects", lock = true, commit = "f107174097df7ec29dfeb573ebc2ede8a1f0a067"},
 
-    -- snippets
+    -- nvim-lsp
+    ["nvim-lspconfig"]              = { "neovim/nvim-lspconfig" ,                      lock = true, commit = "c51096481dc13193991571b7132740d762902355"},
+    ["nvim-lsp-installer"]          = { "williamboman/nvim-lsp-installer" ,            lock = true, commit = "88e44bbbe2e03523e08f2bd3c9a954675bc438f4"},
     ['friendly-snippets']           = { "rafamadriz/friendly-snippets" ,               lock = true, commit = "4f6bd8eb5fbe0e45d57e732783ead2c3a01f549c"},
     ['vim-vsnip']                   = { "hrsh7th/vim-vsnip" ,                          lock = true, commit = "7fde9c0b6878a62bcc6d2d29f9a85a6616032f02"},
     ['cmp-vsnip']                   = { "hrsh7th/cmp-vsnip" ,                          lock = true, commit = "0abfa1860f5e095a07c477da940cfcb0d273b700"},
@@ -55,10 +62,9 @@ return {
     ['cmp-path']                    = { "hrsh7th/cmp-path" ,                           lock = true, commit = "c5230cb439df9547294678d0f1c1465ad7989e5f"},
     ['cmp-cmdline']                 = { "hrsh7th/cmp-cmdline" ,                        lock = true, commit = "29ca81a6f0f288e6311b3377d9d9684d22eac2ec"},
     ['nvim-cmp']                    = { "hrsh7th/nvim-cmp" ,                           lock = true, commit = "d93104244c3834fbd8f3dd01da9729920e0b5fe7"},
+    ['cmp-conjure']                 = { 'PaterJason/cmp-conjure',                      lock = true, commit = "ca39e595a0a64150a3fbad340635b0179fe275ec"},
 
     -- langs
-    ["vim-projectionist"]           = { "tpope/vim-projectionist" ,                    lock = true, commit = "ad9e7ed29a27ac03d1f6ceaa099457e2a60ae6a4"},
-    ["vim-rails"]                   = { "tpope/vim-rails" ,                            lock = true, commit = "de73f6d1b0bf1b2af2d576f3420fc861af14769f"},
     ["nvim-luapad"]                 = { "rafcamlet/nvim-luapad" ,                      lock = true, commit = "1f31c692f01edb2629f8c489e99e650633915dc2"},
 }
 

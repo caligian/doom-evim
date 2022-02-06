@@ -1549,6 +1549,41 @@ vim-vsnip:
      :modes "i"
      :help "Snippet jump to next field"}
 
+Quickfixlist Operations:
+>
+    {:keys "<leader>q/" 
+     :help "Run vimgrep on current dir"}
+
+    {:keys "<leader>qf"
+     :noremap false
+     :help "Toggle qflist"}
+
+    {:keys "<localleader>q/" 
+     :help "Run vimgrep on current buffer"}
+
+Filetype: Fennel:
+>
+    ; Quickfixlist-related
+    {:keys "<localleader>qr"
+     :help "Search requires in buffer"}
+     
+    {:keys "<localleader>qf"
+     :help "Search defns in buffer"}
+     
+    {:keys "<localleader>qL"
+     :help "Search locals in buffer"}
+     
+    {:keys "<localleader>qm"
+     :help "Jump to module"}
+
+    {:keys "<localleader>qR"
+     :help "Search requires"}
+
+    {:keys "<localleader>qF"
+     :help "Search defns"}
+
+    {:keys "<localleader>qL"
+     :help "Search locals"}
 
 ==============================================================================
 SNIPPETS *doom-snippets*
