@@ -231,7 +231,6 @@ treesitter_langs {list}
          "javascript"
          "c"
          "lua"
-         "fennel"
          "perl"]
 
 map-help-groups {table}
