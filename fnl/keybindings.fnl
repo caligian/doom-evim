@@ -154,6 +154,79 @@
                      :exec #(utils.line-range-exec utils.increase-indent) 
                      :help "Increase indent in range"}])
 
+; Quickfix List operations
+(utils.define-keys [{:keys "<leader>q/" 
+                     :help "Run vimgrep on current dir"
+                     :exec (fn []
+                             (let [input (utils.get-user-input "Search for: > "
+                                                               #(~= $1 "")
+                                                               true)
+                                   cmd (utils.fmt ":vimgrep /%s/ *" input)]
+                               (vim.cmd cmd)))}
+
+                    {:keys "<leader>qf"
+                     :noremap false
+                     :help "Toggle qflist"
+                     :exec "<Plug>(qf_qf_toggle)"}
+
+                    {:keys "<localleader>q/" 
+                     :help "Run vimgrep on current buffer"
+                     :exec (fn []
+                             (let [current-file (vim.fn.expand "%:p")
+                                   input (utils.get-user-input "Search for: > "
+                                                               #(~= $1 "")
+                                                               true)
+                                   cmd (utils.fmt ":vimgrep /%s/ %s" input current-file)]
+                               (vim.cmd cmd)))}
+
+                    {:keys "<localleader>qr"
+                     :help "Search requires in buffer"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(require/ *fnl %<CR>"}
+
+                    {:keys "<localleader>qf"
+                     :help "Search defns in buffer"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(defn / *fnl %<CR>"}
+
+                    {:keys "<localleader>qL"
+                     :help "Search locals in buffer"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(local / *fnl %<CR>"}
+
+                    {:keys "<localleader>qm"
+                     :help "Jump to module"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(module/ *<CR>"}
+
+                    {:keys "<localleader>qR"
+                     :help "Search requires"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(require/ *fnl<CR>"}
+
+                    {:keys "<localleader>qF"
+                     :help "Search defns"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(defn / *fnl<CR>"}
+
+                    {:keys "<localleader>qL"
+                     :help "Search locals"
+                     :key-attribs "buffer"
+                     :patterns "fennel"
+                     :events "FileType"
+                     :exec ":vimgrep /(local / *fnl<CR>"}])
 
 ; Copy default_packages.lua to ~/.vdoom.d/ as user-packages.lua
 ; Useful for testing
