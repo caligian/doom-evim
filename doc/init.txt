@@ -1284,9 +1284,6 @@ Doom runner:
     {:keys "<leader>mC" 
      :help "Compile <lang>"}
 
-    {:keys "<leader>mF" 
-     :help "Format <lang>"}
-
     {:keys "<leader>mB"
      :help "Build <lang>"}
 
@@ -1295,9 +1292,6 @@ Doom runner:
 
     {:keys "<leader>mc"
      :help "Compile buffer file"}
-
-    {:keys "<leader>mf"
-     :help "Format buffer file"}
 
     {:keys "<leader>mb"
      :help "Build buffer file"}
