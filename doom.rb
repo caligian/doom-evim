@@ -10,15 +10,23 @@ class SetupDoom
 
     @package_dest = "#{ENV['HOME']}/.local/share/nvim/site/pack/packer/start"
     @packages = {
-      'gmist/vim-palette' => "662012963694e6bc5268765b809341d68373cf55",
-      'Olical/aniseed' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
-      'kreskij/Repeatable.vim' => 'ab536625ef25e423514105dd790cb8a8450ec88b',
-      'folke/which-key.nvim' => '28d2bd129575b5e9ebddd88506601290bb2bb221',
-      'svermeulen/vimpeccable' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
+      'wbthomason/packer.nvim' => '7182f0ddbca2dd6f6723633a84d47f4d26518191',
       'nvim-lua/plenary.nvim' => '563d9f6d083f0514548f2ac4ad1888326d0a1c66',
-      'Olical/conjure' => '2717348d1a0687327f59880914fa260e4ad9c685',
-      'bakpakin/fennel.vim' => '30b9beabad2c4f09b9b284caf5cd5666b6b4dc89',
+      'caligian/fennel.vim' => '06c8bf2895fcf93338b4c64690b2043605a4527c',
+      'folke/which-key.nvim' => '28d2bd129575b5e9ebddd88506601290bb2bb221',
+      'kreskij/Repeatable.vim' => 'ab536625ef25e423514105dd790cb8a8450ec88b',
       'drewtempelmeyer/palenight.vim' => '847fcf5b1de2a1f9c28fdcc369d009996c6bf633',
+      'Olical/aniseed' => '7968693e841ea9d2b4809e23e8ec5c561854b6d6',
+      'Olical/conjure' => '2717348d1a0687327f59880914fa260e4ad9c685',
+      'svermeulen/vimpeccable' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
+      'nvim-lualine/lualine.nvim' => 'dc20cbd0a99ff1345a8186ada1fb5fb2ca3e3fdf',
+      'dracula/vim' => '74f63c304a0625c4ff9ce16784fce583b3a60661',
+      'jnurmine/Zenburn' => 'de2fa06a93fe1494638ec7b2fdd565898be25de6',
+      'gosukiwi/vim-atom-dark' => '44feadcbeb2a8b2a21e373261a6293679f79da94',
+      'sainnhe/everforest' => 'cbcb08bc1e0cd0d950d7c0fa663b2f6203b7f8e7',
+      'pineapplegiant/spaceduck' => '0d06e20f8390b58de3e69a1ac5c43d2ca833ce39',
+      'archseer/colibri.vim' => 'ad82132e0cbbdfa194d722f15c2df8f0d04b5b71',
+      'haishanh/night-owl.vim' => '783a41a27f7fe55ed91d1ec0f0351d06ae17fbc7',
     }
   end
 
