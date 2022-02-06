@@ -11,7 +11,7 @@
   (string.gsub s "^." string.upper))
 
 (defn- take-runner-input [binary]
-  (let [_pipe-args (or pipe-args (str.trim (vim.call :input "Pipe args > ")))
+  (let [_pipe-args (str.trim (vim.call :input "Pipe args > "))
         _binary-args (str.trim (vim.call :input (string.format "Args for %s > " binary)))
         _file (str.trim (vim.call :input "Use current file (n/y) > "))
 
@@ -37,18 +37,20 @@
                      "")
 
         final-cmd (string.format "%s %s %s %s %s" pipe-args binary binary-args file extra-args)]
-    final-cmd))
+    (values final-cmd file)))
 
-(defn- _runner [binary]
-  (let [cmd (take-runner-input binary)]
-    (utils.async-sh cmd :sp)))
+(defn- _runner [binary ?hook]
+  (let [(cmd file) (take-runner-input binary)]
+    (if (and ?hook file)
+      (utils.async-sh cmd #(?hook file $1))
+      (utils.async-sh cmd :sp))))
 
 (defn- make-runner [ft of]
   (let [binary (?. doom.langs ft of)
-        cmd-name (.. "Runner" (uppercase of) (uppercase ft))]
-    (when binary 
-      (tset valid-commands cmd-name true)
-      (vimp.map_command cmd-name #(_runner binary)))))
+          cmd-name (.. "Runner" (uppercase of) (uppercase ft))]
+      (when binary 
+        (tset valid-commands cmd-name true)
+        (vimp.map_command cmd-name #(_runner binary)))))
 
 (defn- current-buffer-runner [op]
   (let [ft vim.bo.filetype
@@ -59,15 +61,13 @@
       true)))
 
 (each [_ lang (ipairs (utils.keys doom.langs))]
-  (each [_ op (ipairs [:build :test :compile :format])]
+  (each [_ op (ipairs [:build :test :compile])]
     (make-runner lang op)))
 
 (utils.define-keys [{:keys "<leader>mC" :exec ":RunnerCompile" :help "Compile <lang>"}
-                    {:keys "<leader>mF" :exec ":RunnerFormat" :help "Format <lang>"}
                     {:keys "<leader>mB" :exec ":RunnerBuild" :help "Build <lang>"}
                     {:keys "<leader>mT" :exec ":RunnerTest" :help "Test <lang>"}
 
-                    {:keys "<leader>mf" :exec #(current-buffer-runner :format) :help "Compile buffer file"}
                     {:keys "<leader>mc" :exec #(current-buffer-runner :compile) :help "Format buffer file"}
                     {:keys "<leader>mb" :exec #(current-buffer-runner :build) :help "Build buffer file"}
                     {:keys "<leader>mt" :exec #(current-buffer-runner :test) :help "Compile buffer file"}])

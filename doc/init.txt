@@ -13,9 +13,10 @@ CONTENTS *doom-toc*
     4.4 |doom-logger|
     4.5 |doom-repl|
     4.6 |doom-runner|
-    4.7 |doom-packages|
-        4.7.1 |doom-default-packages| 
-        4.7.2 |doom-package-groups|
+    4.7 |doom-formatter|
+    4.8 |doom-packages|
+        4.8.1 |doom-default-packages| 
+        4.8.2 |doom-package-groups|
 5. Keybindings  |doom-keybindings|
 6. Snippets     |doom-snippets|
 7. Treesitter   |doom-treesitter|
@@ -101,6 +102,10 @@ These are the system modules:
 13. `snippets`
     Enable easy snippet creation utilities for doom. This module sets up
     keybindings for the same.
+14. `formatter` provides a keybinding to autoformat the current buffer.
+
+There are some files that are prefixed with '-config'. 
+These files are used by `configs` to load specific configurations. 
 
 *doom-user-fs*
 Doom encourages the usage of `fennel` and `lua`  both for configuring the
@@ -264,7 +269,6 @@ user_compile_fnl {list}
 
     Default: `["init" "utils" "keybindings" "configs" "lsp-configs"]`
 
-
 repl.ft {table} 
     Form: {<filetype> <repl-command>}
     These repl-commands will be used for the filetypes mentioned as keys in
@@ -299,14 +303,20 @@ langs.<lang> {table} *doom.langs*
         {manual:bool}
         Manually configure this language's LSP server. This server won't be
         setup using doom's defaults. 
-
-        {format:string}
-        When <leader>mf is pressed, use this command to format the buffer.
-        
+       
         {debug:str}
         Debugger command to use with doom's REPL for ft. This splits the
         window and opens the debugger for the current file. It does not use
         DAP-protocol.
+
+        {format:str}
+        Press <leader>mf to autoformat the current buffer using {format} as
+        the command
+
+        {format-write:bool}
+        If format-write is false, assume that the binary automatically
+        overwrites the file. If it is true then doom will write the output to
+        the current buffer.
 
         {build:str}
         Filetype async cmd to build the current file or anything else. 
@@ -320,17 +330,22 @@ langs.<lang> {table} *doom.langs*
         {:python {:server "pyright" 
                   :compile "python3"
                   :debug "python3 -m pdb"
+                  :format "python3 -m yapf"
+                  :format-write true
                   :test "pytest"
                   :build false}
 
         :ruby {:server "solargraph"
                :compile "ruby"
+               :format "rubocop"
                :debug "ruby -r debug"
                :test "rspec"
                :build "rake"}
 
         :lua {:server "sumneko_lua"
               :compile "/usr/bin/lua"
+              :format "luafmt"
+              :format-write true
               :manual true
               :debug "lua"
               :test "lua"
@@ -944,13 +959,21 @@ There are 3 types of runners supported:
         Used to build stuff. You can specify the base command and later
         provide additional args for the same. 
 
-    format
-        Use to automatically format the current buffer with the means of an 
-        external command.
-
 All the runners will be defined in |doom.langs|. If you want to simply compile
 the current file then just add a {compile} key to |doom.langs|. 
 
+
+*doom-formatter* 
+Doom comes with its own formatter in lieu of vim-autoformat/formatter.nvim. 
+
+You have to modify `doom.langs.<filetype>.format` to add the formatter binary. 
+
+If you want to also want doom to manually write the stdout if the binary does
+not support it, set `doom.langs.<filetype>.format-write = true` 
+
+format-write has been set true for luafmt and yapf. 
+
+Keybinding: <leader>mf
 
 *doom-packages*
 This module has nothing the user can use. This module defines some keybindings

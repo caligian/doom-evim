@@ -36,7 +36,6 @@ cmp.setup(
                 vim.fn["vsnip#anonymous"](args.body)
             end
         },
-
         mapping = {
             ["<C-p>"] = cmp.mapping.select_prev_item(),
             ["<C-n>"] = cmp.mapping.select_next_item(),
@@ -47,39 +46,38 @@ cmp.setup(
             ["<CR>"] = cmp.mapping.confirm {
                 behavior = cmp.ConfirmBehavior.Replace,
                 select = true
-            },
+            }
         },
-
         formatting = {
             format = function(entry, item)
                 item.kind = lsp_symbols[item.kind] .. " " .. item.kind
                 -- set a name for each source
                 item.menu =
-                ({
-                        spell = "[Spell]",
-                        buffer = "[Buffer]",
-                        calc = "[Calc]",
-                        emoji = "[Emoji]",
-                        nvim_lsp = "[LSP]",
-                        path = "[Path]",
-                        look = "[Look]",
-                        treesitter = "[treesitter]",
-                        nvim_lua = "[Lua]",
-                        latex_symbols = "[Latex]",
-                        cmp_tabnine = "[Tab9]"
-                    })[entry.source.name]
+                    ({
+                    spell = "[Spell]",
+                    buffer = "[Buffer]",
+                    calc = "[Calc]",
+                    emoji = "[Emoji]",
+                    nvim_lsp = "[LSP]",
+                    path = "[Path]",
+                    look = "[Look]",
+                    treesitter = "[treesitter]",
+                    nvim_lua = "[Lua]",
+                    latex_symbols = "[Latex]",
+                    cmp_tabnine = "[Tab9]"
+                })[entry.source.name]
                 return item
             end
         },
         sources = {
             {name = "nvim_lsp"},
-            {name = 'conjure'},
+            {name = "conjure"},
             {name = "vsnip"},
             {name = "path"},
             {name = "buffer"},
             {name = "nvim_lua"},
             {name = "treesitter"},
-            {name = "spell"},
+            {name = "spell"}
         }
     }
 )

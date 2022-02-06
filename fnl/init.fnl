@@ -33,6 +33,7 @@
                      (each [k v (pairs specs)]
                        (tset (. doom.packages pkg) k v))))))
 
+
 ; Require packages
 (utils.try-require :packages :DOOM)
 
@@ -79,6 +80,9 @@
 ; Default vim-help mappings
 (when doom.default_help_keybindings
   (utils.try-require :vim-help :DOOM))
+
+(when doom.default_formatter
+  (utils.try-require :formatter :DOOM))
 
 (utils.try-require :snippets :DOOM)
 

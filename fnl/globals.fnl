@@ -1,4 +1,5 @@
-(module globals)
+(module globals
+  {autoload {utils utils}})
 
 (set _G.doom {:fnl_config true
 
@@ -16,6 +17,9 @@
 
               ; Use doom's default configuration
               :default_package_configs true
+
+              ; Use doom's autoformatter
+              :default_formatter true
 
               ; Lisp langs to which delimitMate will not start
               :lisp_langs ["fennel" "clojure" "scheme"]
@@ -81,6 +85,7 @@
               :langs {:python {:server "pyright" 
                                :compile "python3"
                                :format "python3 -m yapf"
+                               :format-write true
                                :debug "python3 -m pdb"
                                :test "pytest"
                                :build false}
@@ -102,7 +107,8 @@
 
                       :lua {:server "sumneko_lua"
                             :compile "/usr/bin/lua"
-                            :format "lua-fmt"
+                            :format "luafmt"
+                            :format-write true
                             :manual true
                             :debug "lua"
                             :test "lua"
