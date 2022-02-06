@@ -18,6 +18,7 @@ doom-caveats	init.txt	/*doom-caveats*
 doom-dap	init.txt	/*doom-dap*
 doom-default-packages	init.txt	/*doom-default-packages*
 doom-evim	init.txt	/*doom-evim*
+doom-formatter	init.txt	/*doom-formatter*
 doom-fs	init.txt	/*doom-fs*
 doom-globals	init.txt	/*doom-globals*
 doom-help-editing	init.txt	/*doom-help-editing*
