@@ -1523,6 +1523,45 @@ vim-vsnip:
      :modes "i"
      :help "Snippet jump to next field"}
 
+Neorg:
+>
+   
+    ; Go to next heading
+    {:keys "<C-f>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+    
+    ; Go to previous heading
+    {:keys "<C-b>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+
+
+    ; The following keybindings only work when user is at a heading/bullet
+
+    ; Insert heading/bullet
+    ; Only inserts bullet if the first bullet is present
+    {:keys "<C-j>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+ 
+    ; Promote bullet or point
+    {:keys "<A-l>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+    
+    ; Demote bullet or point
+    {:keys "<A-h>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+
+    ; Rest of the keybindings can be accessed with <leader>o
+
 Quickfixlist Operations:
 >
     {:keys "<leader>q/" 
