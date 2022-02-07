@@ -8,8 +8,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; git-signs
 (after! :gitsigns.nvim
-        #((. (require :gitsigns) :setup))
-        100)
+        #((. (require :gitsigns) :setup)))
 
 (after! [:lualine.nvim
          :palenight.vim]
@@ -17,11 +16,14 @@
            (vim.cmd "color everforest")
            (utils.try-require :modeline :DOOM)))
 
-(after! :vim-vsnip #(require :vim-vsnip-config) 100)
+(after! :vim-vsnip #(require :vim-vsnip-config))
 
 (after! :vim-qf (fn []
-                  (set vim.g.qf_mapping_ack_style 1))
-        100)
+                  (utils.define-key {:keys "<leader>qf"
+                                     :noremap false
+                                     :help "Toggle qflist"
+                                     :exec "<Plug>(qf_qf_toggle)"})
+                  (set vim.g.qf_mapping_ack_style 1)))
 
 ; nvim-tree
 (after! :nvim-tree.lua
@@ -75,6 +77,7 @@
 (after! :dashboard-nvim (fn []
                           (let [banner (core.slurp (utils.confp "misc" "punisher-logo.txt"))
                                 banner (utils.split banner "\n")]
+                            (set vim.g.dashboard_custom_footer [ (.. " " (length (utils.keys doom.packages)) " packages loaded.")])
                             (set vim.g.dashboard_custom_header banner)
                             (set vim.g.indentLine_fileTypeExclude [:dashboard])
                             (set vim.g.dashboard_default_executive "telescope")

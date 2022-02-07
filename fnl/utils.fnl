@@ -576,33 +576,16 @@
 
     (if (and events
              patterns)
-      (fun.each
-        (fn [e]
-          (let [wk-form (register-to-wk keys help help-group true)
-                wk-form-s (if wk-form (vim.inspect wk-form) false)
-                wk-form-no-nl (if wk-form-s (string.gsub wk-form-s "[\n\r]+" "") false)
-                wk-cmd (if
-                         (and has-ll wk-form-no-nl)
-                         (string.format ":lua require('which-key').register(%s, {prefix='<localleader>'})" wk-form-no-nl)
+      (fun.each #(add-hook groups events patterns $1) key-command-strings)
+      (fun.each vim.cmd key-command-strings)
+      
+      (if
+        has-ll
+        (register-to-wk keys help help-group)
 
-                         (and has-l wk-form-no-nl)
-                         (string.format ":lua require('which-key').register(%s, {prefix='<leader>'})" wk-form-no-nl)
+        has-l
+        (register-to-wk keys help help-group)))))
 
-                         false)]
-            (when wk-cmd
-              (add-hook groups events patterns wk-cmd))
-            (add-hook groups events patterns e)))
-        key-command-strings)
-
-      (do
-        (fun.each vim.cmd key-command-strings)
-
-        (if
-          has-ll
-          (register-to-wk keys help help-group)
-
-          has-l
-          (register-to-wk keys help help-group))))))
 
 (defn define-keys [opts-a]
   (each [_ a (ipairs opts-a)]
