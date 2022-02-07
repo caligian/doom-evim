@@ -10,6 +10,8 @@
 (after! :gitsigns.nvim
         #((. (require :gitsigns) :setup)))
 
+(after! :neorg #(require :neorg-config))
+
 (after! [:lualine.nvim
          :palenight.vim]
         #(do

@@ -19,6 +19,7 @@ return {
     ["nvim-tree.lua"]               = { "kyazdani42/nvim-tree.lua",                    lock = true, commit = "2dfed89af7724f9e71d2fdbe3cde791a93e9b9e0"},
 
     -- editor
+    ['neorg']                       = {'nvim-neorg/neorg',                             lock = true, commit = '27578af8581ca109ac51f0f5d215d12bf6933be1'},
     ['vim-qf']                      = {'romainl/vim-qf',                               lock = true, commit = '65f115c350934517382ae45198a74232a9069c2a'},
     ["lightspeed.nvim"]             = { 'ggandor/lightspeed.nvim',                     lock = true, commit = "f394f4e2278a8e4dff975bdb7f4a3d3101a6ab0" },
     ["vim-misc"]                    = { "xolox/vim-misc" ,                             lock = true, commit = "3e6b8fb6f03f13434543ce1f5d24f6a5d3f34f0b"},

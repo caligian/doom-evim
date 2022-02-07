@@ -25,7 +25,7 @@
               :lisp_langs ["fennel" "clojure" "scheme"]
 
               ; Languages to use with treesitter
-              :treesitter_langs [:python :yaml :json :javascript :c :lua :perl :ruby]
+              :treesitter_langs [:python :norg :fennel :yaml :json :javascript :c :lua :perl :ruby]
 
               ; Contains all the anonymous functions used in autocmds and keybindings
               :lambdas {}
@@ -38,6 +38,7 @@
                                          "<space>" "Misc"
                                          :l "LSP"
                                          :t "Tabs"
+                                         :o "Neorg"
                                          :h "Help+Telescope"
                                          :f "Files"
                                          :p "Project"
@@ -57,7 +58,6 @@
                     :load_default false
                     :servers {:solargraph {}
                               :pyright {}}}
-
 
               ; Contains user-package declarations
               :user_packages  (require :user-packages)
