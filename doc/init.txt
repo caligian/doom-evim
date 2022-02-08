@@ -20,6 +20,7 @@ CONTENTS *doom-toc*
 5. Keybindings  |doom-keybindings|
 6. Snippets     |doom-snippets|
 7. Treesitter   |doom-treesitter|
+8. Neorg        |doom-neorg|
 8. Help-editing |doom-help-editing|
 9. Caveats      |doom-caveats|
 
@@ -39,13 +40,42 @@ doom efficiently.
 ==============================================================================
 PHILOSOPHY *doom-philosophy*
 
-The philosophy of doom-evim is similar to that emacs itself: DRY (Don't Repeat
-Yourself). In implementation, this means that a good distro should allow the
-user to use the distro's API themselves so that they can make their
-configuration more manageable.
+Evim tries to be as emacsy as possible regarding certain things: 
+    - Lay things out clearly 
+      Create functions rather than rely on hacky vimscript that cannot be
+      reused.
 
-In order to prevent boilerplate code, doom comes with its own set of functions
-which can allow you to do some complex configurations.
+    - Convenience ranks higher than ridiculous performance
+        This does not mean that doom ignores the performance side of the
+        configuration but it also does not focuses too much on it to avoid
+        code being convoluted.  
+
+    - Try not to distinguish very hard between commands and their underlying
+      implementations
+        Unlike many vimscript plugins, doom does not indulge in one-shot
+        configurations laid across several files. It relies on the simple
+        model of requiring modules and additionally setting them up anything if
+        required.
+
+Evim does not try to be pretentious and focus too much on vain factors such as
+'ultra-fast startup times'. On the flip side, Evim tries to be as convenient
+as possible regarding its functionality. Any fennel user can figure out much
+of doom's implementation without any difficulty if they bother to require/open
+doom's modules and check it for themselves. That being said, anything and
+everything from doom can be required and used although I do not encourage such
+an action to a user who is a beginner/not-familiar-with-lua as it may boggle
+their mind.
+
+As compared to other vim distributions, this distribution tries to be more
+transparent and open to tinkering. However, if you are not smitten by the
+prospect of configuring your editor, Evim still does the job without getting
+in your way.
+
+That being said, Evim does not provide every small thing for the user. It is
+expected that the user will read this documentation and get started with this
+distribution. Configuration options may seem very less for this distribution
+as compared to doom-nvim or spacevim but don't mistake this distribution for
+being any less competent than the others.
 
 ==============================================================================
 FILESYSTEM *doom-fs*
@@ -178,6 +208,8 @@ fnl_config {bool}
 
     Default: true
 
+theme {str}
+    Default: everforest
 
 default_runner {bool}
     If set, use utilities in |doom-runner|. Please visit the link to
@@ -194,6 +226,12 @@ default_repl {bool}
 
 default_keybindings {bool}
     Set doom's defualt keybindings? 
+
+    Default: true
+
+
+neorg_keybindings {bool}
+    Set doom's neorg keybindings? 
 
     Default: true
 
@@ -1668,6 +1706,61 @@ Other mappings:
 
     `[M` Go to the end of previous function
     `[]` Go to the end of previous class
+
+
+==============================================================================
+NEORG *doom-neorg*
+
+While neorg is a great plugin for vim that competes with orgmode of emacs, it
+does not come with too many handy keybindings in contrast to orgmode. Don't
+get me wrong, they are not too difficult to setup with neorg but doom provides
+its own keybindings for common tasks that the users would like to use: 
+
+>
+    {:keys "<leader>ol"
+     :help "Display buffer headings in qflist"}
+
+    {:keys "<leader>oL"
+     :help "Display cwd headings in qflist"}
+
+    ; Set the task-type for bullet
+    {:keys "<C-c><C-c>"
+     :noremap false
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+
+    ; Insert heading if cursor is at a heading
+    ; Insert bullet if cursor is at a bullet
+    {:keys "<C-j>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+
+    ; Goto next heading
+    {:keys "<C-f>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"
+     :exec next-heading}
+
+    ; Goto prev heading
+    {:keys "<C-b>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+
+    ; Promote heading/bullet
+    {:keys "<A-l>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
+
+    ; Demote heading/bullet
+    {:keys "<A-h>"
+     :key-attribs ["buffer" "silent"]
+     :events "BufEnter"
+     :patterns "*norg"}
 
 
 ==============================================================================
