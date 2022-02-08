@@ -15,7 +15,10 @@
 (after! [:lualine.nvim
          :palenight.vim]
         #(do
-           (vim.cmd "color everforest")
+           (if doom.theme
+             (vim.cmd (.. "color " doom.theme))
+             (vim.cmd "color everforest"))
+           
            (utils.try-require :modeline :DOOM)))
 
 (after! :vim-vsnip #(require :vim-vsnip-config))

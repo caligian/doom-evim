@@ -153,62 +153,65 @@
   (vim.cmd "?^\\*")
   (vim.cmd "noh"))
 
-(utils.define-keys [{:keys "<leader>ol"
-                     :help "Display buffer headings in qflist"
-                     :exec (.. ":vimgrep \"^\\*\" " (vim.fn.expand "%:p") "<CR>")}
+(when doom.neorg_keybindings 
+  (utils.define-keys [{:keys "<leader>ol"
+                       :help "Display buffer headings in qflist"
+                       :exec (.. ":vimgrep \"^\\*\" " (vim.fn.expand "%:p") "<CR>")}
 
-                    {:keys "<leader>oL"
-                     :help "Display cwd headings in qflist"
-                     :exec ":vimgrep \"^\\*\" *norg <CR>"}
+                      {:keys "<leader>oL"
+                       :help "Display cwd headings in qflist"
+                       :exec ":vimgrep \"^\\*\" *norg <CR>"}
 
-                    {:keys "<C-c><C-c>"
-                     :noremap false
-                     :key-attribs ["buffer" "silent"]
-                     :events "BufEnter"
-                     :patterns "*norg"
-                     :exec #(let [sym (get-bullet-or-heading-under-point) ]
-                              (when (= sym.is :bullet)
-                                (let [input (utils.get-user-input "Task type (p/d/h/c/u/r/u) > " 
-                                                                  #(match $1
-                                                                     :p :pending
-                                                                     :d :done
-                                                                     :h :hold
-                                                                     :c :cancelled
-                                                                     :u :urgent
-                                                                     :r :recurring
-                                                                     :u :uncertain
-                                                                     _ nil)
-                                                                  true
-                                                                  {:use_function true})]
-                                  (edit-bullet nil nil input))))}
+                      {:keys "<C-c><C-c>"
+                       :noremap false
+                       :key-attribs ["buffer" "silent"]
+                       :events "BufEnter"
+                       :patterns "*norg"
+                       :exec #(let [sym (get-bullet-or-heading-under-point) ]
+                                (when (= sym.is :bullet)
+                                  (let [input (utils.get-user-input "Task type (p/d/h/c/u/r/u) > " 
+                                                                    #(match $1
+                                                                       :p :pending
+                                                                       :d :done
+                                                                       :h :hold
+                                                                       :c :cancelled
+                                                                       :u :urgent
+                                                                       :r :recurring
+                                                                       :u :uncertain
+                                                                       _ nil)
+                                                                    true
+                                                                    {:use_function true})]
+                                    (edit-bullet nil nil input))))}
 
-                    {:keys "<C-j>"
-                     :key-attribs ["buffer" "silent"]
-                     :events "BufEnter"
-                     :patterns "*norg"
-                     :exec insert-bullet-or-heading}
+                      {:keys "<C-j>"
+                       :key-attribs ["buffer" "silent"]
+                       :events "BufEnter"
+                       :patterns "*norg"
+                       :exec insert-bullet-or-heading}
 
-                    {:keys "<C-f>"
-                     :key-attribs ["buffer" "silent"]
-                     :events "BufEnter"
-                     :patterns "*norg"
-                     :exec next-heading}
+                      {:keys "<C-f>"
+                       :key-attribs ["buffer" "silent"]
+                       :events "BufEnter"
+                       :patterns "*norg"
+                       :exec next-heading}
 
-                    {:keys "<C-b>"
-                     :key-attribs ["buffer" "silent"]
-                     :events "BufEnter"
-                     :patterns "*norg"
-                     :exec prev-heading}
+                      {:keys "<C-b>"
+                       :key-attribs ["buffer" "silent"]
+                       :events "BufEnter"
+                       :patterns "*norg"
+                       :exec prev-heading}
 
-                    {:keys "<A-l>"
-                     :key-attribs ["buffer" "silent"]
-                     :events "BufEnter"
-                     :patterns "*norg"
-                     :exec promote-bullet-or-heading}
+                      {:keys "<A-l>"
+                       :key-attribs ["buffer" "silent"]
+                       :events "BufEnter"
+                       :patterns "*norg"
+                       :exec promote-bullet-or-heading}
 
-                    ; Demote bullet or point
-                    {:keys "<A-h>"
-                     :key-attribs ["buffer" "silent"]
-                     :events "BufEnter"
-                     :patterns "*norg"
-                     :exec demote-bullet-or-heading}])
+                      ; Demote bullet or point
+                      {:keys "<A-h>"
+                       :key-attribs ["buffer" "silent"]
+                       :events "BufEnter"
+                       :patterns "*norg"
+                       :exec demote-bullet-or-heading}]))
+
+

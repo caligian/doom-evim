@@ -124,15 +124,10 @@
                     {:keys "<leader>hrr"
                      :help "Reload doom"
                      :exec (fn [] 
-                             (vim.cmd "tabnew") 
-                             (vim.cmd "edit ~/.config/nvim/fnl/init.fnl")
-                             (vim.cmd "ConjureEvalBuf")
-
-                             (if (> (vim.call "tabpagenr") 1)
-                               (vim.cmd "tabclose")
-                               (vim.cmd (.. ":Bdelete " "init.fnl")))
-
-                             (vim.cmd "echom \"Successfully reloaded Doom!\""))}])
+                             (require :init)
+                             (require :modeline)
+                             (set doom.user_packages (require :user-packages))
+                             (set doom.default_packages (require :default_packages)))}])
 
 ; Quickly adjust indentation
 ; Respects v:count and lines in visual range

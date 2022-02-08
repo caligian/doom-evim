@@ -21,8 +21,8 @@ CONTENTS *doom-toc*
 6. Snippets     |doom-snippets|
 7. Treesitter   |doom-treesitter|
 8. Neorg        |doom-neorg|
-8. Help-editing |doom-help-editing|
-9. Caveats      |doom-caveats|
+9. Help-editing |doom-help-editing|
+10. Caveats     |doom-caveats|
 
 ==============================================================================
 INTRODUCTION *doom-introduction*
