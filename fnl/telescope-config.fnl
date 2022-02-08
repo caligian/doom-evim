@@ -56,7 +56,7 @@
                        :help "Show keymaps"}
 
                       {:keys "<leader>ht"
-                       :exec ":lua require('telescope.builtin').colorscheme(require('telescope.themes').get_ivy())<CR>"
+                       :exec #(vim.cmd ":lua require('telescope.builtin').colorscheme(require('telescope.themes').get_ivy())")
                        :help "Select theme"}
 
                       {:keys "<leader>bb"

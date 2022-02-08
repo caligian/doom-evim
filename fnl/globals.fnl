@@ -6,6 +6,11 @@
               ; Use doom's basic async runner
               :default_runner true
 
+              ; theme
+              :theme "everforest" 
+
+              :neorg_keybindings true
+
               ; Use doom's basic repl
               :default_repl true
 

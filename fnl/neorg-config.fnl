@@ -213,5 +213,3 @@
                        :events "BufEnter"
                        :patterns "*norg"
                        :exec demote-bullet-or-heading}]))
-
-

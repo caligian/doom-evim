@@ -116,7 +116,15 @@
                      :exec ":normal! \"+p<CR>"}])
 
 ; Reload entire config
-(utils.define-keys [{:keys "<leader>hrt"
+(utils.define-keys [{:keys "<leader>hrl"
+                     :help "Toggle colorscheme background"
+                     :exec #(let [current vim.o.background]
+                              (match current
+                                :dark (set vim.o.background :light)
+                                :light (set vim.o.background :dark))
+                              (vim.cmd  (utils.fmt ":source %s" (utils.confp :lua :modeline.lua))))}
+
+                    {:keys "<leader>hrt"
                      :help "Reload doom theme"
                      :exec (fn []
                              (vim.cmd  (utils.fmt ":source %s" (utils.confp :lua :modeline.lua))))}
