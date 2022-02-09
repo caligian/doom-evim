@@ -148,36 +148,36 @@
                      :exec tabnew-shell
                      :help "Open a new bash REPL in a new tab"}
 
-                    {:keys "<localleader>mee"
+                    {:keys "<localleader>,e"
                      :exec #(send nil :line)
                      :help "Send current line to ft REPL"}
 
-                    {:keys "<localleader>me."
+                    {:keys "<localleader>,."
                      :exec #(send nil :till-point)
                      :help "Send strings till-point to ft REPL"}
 
-                    {:keys "<localleader>meb"
+                    {:keys "<localleader>,b"
                      :exec #(send nil :buffer)
                      :help "Send buffer to ft REPL"}
                     
-                    {:keys "<localleader>meE"
+                    {:keys "<localleader>,E"
                      :exec #(send :bash :line)
                      :help "Send current line to bash REPL"}
 
-                    {:keys "<localleader>me>"
+                    {:keys "<localleader>,>"
                      :exec #(send :bash :till-point)
                      :help "Send strings till-point to bash REPL"}
 
-                    {:keys "<localleader>meB"
+                    {:keys "<localleader>,B"
                      :exec #(send :bash :buffer)
                      :help "Send buffer to bash REPL"}
 
-                    {:keys "<localleader>meE"
+                    {:keys "<localleader>,E"
                      :modes "v"
                      :exec #(send :bash :visual)
                      :help "Send visual range to bash REPL"}
 
-                    {:keys "<localleader>mee"
+                    {:keys "<localleader>,e"
                      :modes "v"
                      :exec #(send nil :visual)
                      :help "Send visual range to ft REPL"}

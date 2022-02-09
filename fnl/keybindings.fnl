@@ -124,6 +124,15 @@
                                 :light (set vim.o.background :dark))
                               (vim.cmd  (utils.fmt ":source %s" (utils.confp :lua :modeline.lua))))}
 
+                    {:keys "<leader>hrf"
+                     :help "Switch between Gohu and BitstreamVeraSans"
+                     :exec #(let [font (string.gsub vim.o.guifont ":h[0-9]+$" "")
+                                  font-size (utils.grep vim.o.guifont "[0-9]+$")
+                                  new-font (if (utils.grep font "GohuFont")
+                                             (.. "UbuntuMono NF:h" 14)
+                                             (.. "GohuFont NF:h11"))]
+                              (set vim.o.guifont new-font))}
+
                     {:keys "<leader>hrt"
                      :help "Reload doom theme"
                      :exec (fn []

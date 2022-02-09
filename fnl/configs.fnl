@@ -10,7 +10,7 @@
 (after! :gitsigns.nvim
         #((. (require :gitsigns) :setup)))
 
-(after! :neorg #(require :neorg-config))
+(after! :neorg #(require :configs.neorg-config))
 
 (after! [:lualine.nvim
          :palenight.vim]
@@ -21,7 +21,7 @@
            
            (utils.try-require :modeline :DOOM)))
 
-(after! :vim-vsnip #(require :vim-vsnip-config))
+(after! :vim-vsnip #(require :configs.vim-vsnip-config))
 
 (after! :vim-qf (fn []
                   (utils.define-key {:keys "<leader>qf"
@@ -124,10 +124,10 @@
          :telescope-project.nvim 
          :telescope-file-browser.nvim 
          :telescope-fzf-native.nvim]
-        #(require :telescope-config))
+        #(require :configs.telescope-config))
 
 (after! :nvim-treesitter-textobjects
-        #(require :nvim-treesitter-textobjects-config)
+        #(require :configs.nvim-treesitter-textobjects-config)
         100)
 
 ; Tagbar

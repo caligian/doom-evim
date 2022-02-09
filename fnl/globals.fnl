@@ -74,7 +74,7 @@
                           :ruby "irb"
                           :perl "perl"
                           :fennel "fennel"
-                          :python "python"
+                          :python "python3.9"
                           :lua "lua"
                           :powershell "powershell"
                           :ps1 "powershell"}

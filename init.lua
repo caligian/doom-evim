@@ -19,7 +19,7 @@ local function init(vim)
     vim.o.shiftwidth = 4
     vim.o.expandtab = true
     vim.o.foldmethod = "syntax"
-    vim.o.guifont="BitstreamVeraSansMono NF:h12"
+    vim.o.guifont="UbuntuMono NF:h13"
     vim.o.backupdir = string.format("%s/%s", vim.fn.stdpath("config"), "backup")
     vim.o.directory = string.format("%s/%s", vim.fn.stdpath("config"), "tmp")
     vim.o.undodir = string.format("%s/%s", vim.fn.stdpath("config"), "undo")
@@ -36,7 +36,9 @@ local function init(vim)
 
     -- Adding fennel searchers
     -- Add all user configurations to package path
-    debug.traceback = require("fennel").traceback
+    local fennel = require 'fennel'
+    debug.traceback = fennel.traceback
+    table.insert(package.loaders or package.searchers, fennel.searcher)
 
     -- Change fennel-compiled results directory
     vim.cmd [[ let g:aniseed#env = {'input': stdpath('config') . '/fnl/', 'output': stdpath('config') . '/compiled/'} ]]
