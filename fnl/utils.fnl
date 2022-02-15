@@ -78,8 +78,6 @@
 
       ?e)))
 
-
-
 (defn exec [cmd ...]
   (vim.cmd (fmt cmd ...)))
 
@@ -136,7 +134,6 @@
 
 (defn rest [v]
   (icollect [_ i (fun.tail v)] i))
-
 
 (defn first [v]
   (. v 1))
@@ -577,15 +574,9 @@
     (if (and events
              patterns)
       (fun.each #(add-hook groups events patterns $1) key-command-strings)
-      (fun.each vim.cmd key-command-strings)
-      
-      (if
-        has-ll
-        (register-to-wk keys help help-group)
+      (fun.each vim.cmd key-command-strings))
 
-        has-l
-        (register-to-wk keys help help-group)))))
-
+    (register-to-wk keys help help-group)))
 
 (defn define-keys [opts-a]
   (each [_ a (ipairs opts-a)]
