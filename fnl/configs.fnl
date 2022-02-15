@@ -5,6 +5,9 @@
 ; Very doom-emacs-esque after!
 (local after! _G.after!)
 
+; Load impatient
+(require :impatient)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; git-signs
 (after! :gitsigns.nvim

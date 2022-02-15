@@ -17,6 +17,7 @@ return {
     ['spaceduck']      = { 'pineapplegiant/spaceduck',      lock = true, commit = '0d06e20f8390b58de3e69a1ac5c43d2ca833ce39'},
     ['colibri.vim']    = { 'archseer/colibri.vim',          lock = true, commit = 'ad82132e0cbbdfa194d722f15c2df8f0d04b5b71'},
     ['night-owl.vim']  = { 'haishanh/night-owl.vim',        lock = true, commit = '783a41a27f7fe55ed91d1ec0f0351d06ae17fbc7'},
+    ['impatient.nvim'] = { 'lewis6991/impatient.nvim',      lock = true, commit = 'c602af04b487643b4b3f7f9aa9b4aea38a596b94' },
 }
 
 
