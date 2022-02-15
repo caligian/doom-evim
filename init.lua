@@ -34,6 +34,9 @@ local function init(vim)
     vim.cmd [[ tnoremap <Esc> <C-\><C-n> ]]
     vim.cmd [[ set inccommand=split ]]
 
+    -- Load impatient
+    require 'impatient'
+
     -- Adding fennel searchers
     -- Add all user configurations to package path
     local fennel = require 'fennel'

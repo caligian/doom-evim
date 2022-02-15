@@ -16,6 +16,7 @@ class SetupDoom
       'folke/which-key.nvim' => '28d2bd129575b5e9ebddd88506601290bb2bb221',
       'kreskij/Repeatable.vim' => 'ab536625ef25e423514105dd790cb8a8450ec88b',
       'drewtempelmeyer/palenight.vim' => '847fcf5b1de2a1f9c28fdcc369d009996c6bf633',
+      'lewis6991/impatient.nvim' => 'c602af04b487643b4b3f7f9aa9b4aea38a596b94',
       'Olical/aniseed' => '7968693e841ea9d2b4809e23e8ec5c561854b6d6',
       'Olical/conjure' => '2717348d1a0687327f59880914fa260e4ad9c685',
       'svermeulen/vimpeccable' => 'bd19b2a86a3d4a0ee184412aa3edb7ed57025d56',
