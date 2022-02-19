@@ -23,7 +23,7 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 8. Easy snippet creation.
 9. Nice basic REPL.
  
-## Installation
+## Installation & other stuff
 
 ### Downloading the release
 Please avoid cloning the repo and use the releases instead.
@@ -39,7 +39,11 @@ Unzip the file downloaded and copy it as ~/.config/nvim and follow the steps giv
 Assuming that you have all of the above tasks done, you can use `doom.rb` to provide a basic utility script to do other tasks that may confuse the user. Please visit here: [doom.rb](./doomrb.md)
 
 ## How to update?
-Just run `git pull` in `~/.config/nvim`.
+Do not run git pull because this can lead to pulling of unfinished features which can lead to unexpected bugs. 
+Please download the latest (main version) release instead.
+
+## Downgrading? 
+Downgrading between main doom-evim versions is recommended, for eg. v1.x.x, v2.x.x are main versions. 
 
 ## Screenshots
 [Screenshots](./screenshots/README.md)
