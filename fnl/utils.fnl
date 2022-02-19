@@ -610,10 +610,13 @@
   (let [(status message) (xpcall try-f handle-f)]
     (when ?then-f (?then-f))))
 
-(defn try-require [module-name type-module ?defer]
+(defn try-require [module-name type-module ?exec ?defer]
   (if ?defer
     (vim.defer_fn #(try-then-else
-                     #(require module-name)
+                     (fn [] 
+                       (let [m (require module-name)]
+                         (when ?exec
+                           (?exec m))))
                      #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name))
                      #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))
                   ?defer)
@@ -646,3 +649,11 @@
             _first-input)
           (if loop
             (get-user-input prompt validate true)))))))
+
+(defn set-theme [?theme-name]
+  (if doom.theme
+    (vim.cmd (.. "color " doom.theme))
+    (vim.cmd (fmt "color %s" (or ?theme-name :night-owl))))
+
+  (let [modeline (require :modeline)]
+    (modeline.setup_colors)))

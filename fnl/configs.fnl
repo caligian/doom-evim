@@ -12,14 +12,7 @@
 
 (after! :neorg #(require :configs.neorg-config))
 
-(after! [:lualine.nvim
-         :palenight.vim]
-        #(do
-           (if doom.theme
-             (vim.cmd (.. "color " doom.theme))
-             (vim.cmd "color everforest"))
-           
-           (utils.try-require :modeline :DOOM)))
+
 
 (after! :vim-vsnip #(require :configs.vim-vsnip-config))
 
@@ -150,7 +143,7 @@
           (vim.cmd "highlight! CmpItemKindFunction guibg=NONE guifg=#C586C0")
           (vim.cmd "highlight! CmpItemKindMethod guibg=NONE guifg=#C586C0")
           (vim.cmd "highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4"))
-        20)
+        100)
 
 ;  vim-fugitive
 (after! :vim-fugitive

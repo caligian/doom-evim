@@ -7,7 +7,7 @@
               :default_runner true
 
               ; theme
-              :theme "everforest" 
+              :theme "night-owl" 
 
               :neorg_keybindings true
 

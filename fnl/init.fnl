@@ -106,4 +106,10 @@
                        #(logger.ilog (utils.fmt "[USER]: User fennel modules compiled successfuly to lua: %s" (vim.inspect doom.user_compile_fnl)))
                        #(logger.flog (utils.fmt "[USER]: Could not compile user fennel files. DEBUG REQUIRED\n $1"))))
 
+; Load the theme and also change the modeline colors accordingly
+(utils.set-theme)
+
+; Set an autocmd for theme changes
+; This is to ensure that modeline colors follow suit
+(utils.autocmd "GlobalHook" "ColorScheme" "*" #((. (require :modeline) :setup_colors)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
