@@ -39,11 +39,12 @@ Unzip the file downloaded and copy it as ~/.config/nvim and follow the steps giv
 Assuming that you have all of the above tasks done, you can use `doom.rb` to provide a basic utility script to do other tasks that may confuse the user. Please visit here: [doom.rb](./doomrb.md)
 
 ## How to update?
-Do not run git pull because this can lead to pulling of unfinished features which can lead to unexpected bugs. 
-Please download the latest (main version) release instead.
+~~Do not run git pull because this can lead to pulling of unfinished features which can lead to unexpected bugs. Please download the latest (main version) release instead~~.
+Please use `ruby doom.rb set-version` instead. 
 
 ## Downgrading? 
-Downgrading between main doom-evim versions is recommended, for eg. v1.x.x, v2.x.x are main versions. 
+Downgrading between main doom-evim versions is recommended, for eg. v1.x.x, v2.x.x are main versions.
+You can use `ruby doom.rb set-version` to do this.
 
 ## Screenshots
 [Screenshots](./screenshots/README.md)

@@ -5,6 +5,8 @@ This script's purpose is to provide an easy way to bootstrap doom-evim for the f
 Before you use this script, ensure that you have installed `ruby, fdfind, rg, node, lua5.1, luarocks`.
 After you install node, please installed `yarn`. This is required to build the Markdown Preview mode in one of the doom packages.
 
+Also remember that if you are switching between main doom versions, it can break your private configuration.
+
 ## Help
 <table>
 
@@ -36,6 +38,11 @@ After you install node, please installed `yarn`. This is required to build the M
 <tr>
 <td>setup-all</td>
 <td>Do all of the above</td>
+</tr>
+
+<tr>
+<td>set-version</td>
+<td>Displays an interactive menu to select a particular doom version.</td>
 </tr>
 
 </table>

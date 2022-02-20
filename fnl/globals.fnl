@@ -1,7 +1,9 @@
 (module globals
   {autoload {utils utils}})
 
-(set _G.doom {:fnl_config true
+(set _G.doom {:version "v1.0.0"
+
+              :fnl_config true
 
               ; Use doom's basic async runner
               :default_runner true

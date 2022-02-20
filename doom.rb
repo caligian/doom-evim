@@ -31,6 +31,50 @@ class SetupDoom
     }
   end
 
+  def set_doom_version
+    # Fetch all tags first
+    # And other updates
+    `bash -c "git pull origin main &>/dev/null"`
+
+    # Get tags
+    tags = `git tag --list`
+    tags = tags.split /\n/
+
+    show_tags = ->() {
+      tags.each_with_index { |t, idx|
+        printf("%-3s %s\n", "#{idx}." , t)
+      }
+    }
+
+    get_input = ->(current_input) {
+      if !current_input
+        show_tags.call()
+
+        printf "Enter index %% "
+
+        current_input = gets().strip()
+
+        if ! current_input
+          get_input.call(false)
+        elsif !(current_input =~ /^[0-9]+$/)
+          puts "Invalid input supplied."
+          get_input.call(false)
+        elsif current_input.to_i < 0 or current_input.to_i > (tags.length - 1)
+          puts "Invalid index provided."
+          get_input.call(false)
+        else
+          get_input.call(current_input)
+        end
+      else
+        tags[current_input.to_i]
+      end
+    }
+
+    version = get_input.call(false)
+    `bash -c "git checkout #{version} &>/dev/null"`
+    puts "Doom version has been set to #{version}"
+  end
+
   def get_repo_basename(repo)
     repo.match(%r{/([^$]+)})[1]
   end
@@ -127,6 +171,8 @@ elsif args =~ /install-fonts/
   SetupDoom.new.install_fonts
 elsif args =~ /make-user-fs/
   SetupDoom.new.make_user_fs
+elsif args =~ /set-version/
+  SetupDoom.new.set_doom_version
 elsif args =~ /help/
   puts <<"ENDSTRING"
   bootstrap         Installs essentials packages required by doom
@@ -134,6 +180,7 @@ elsif args =~ /help/
   make-user-fs      Make ~/.vdoom.d/ and insert sample files in it
   install-fonts     Install several fonts to ~/.local/share/fonts
   setup-all         Do all of the above
+  set-version       Display an interactive menu to set the doom version
 ENDSTRING
 elsif args == ''
   puts "No command passed. Pass `help` to see the commands."
