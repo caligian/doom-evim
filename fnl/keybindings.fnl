@@ -133,18 +133,13 @@
                                              (.. "GohuFont NF:h11"))]
                               (set vim.o.guifont new-font))}
 
-                    {:keys "<leader>hrt"
-                     :help "Reload doom theme"
-                     :exec (fn []
-                             (vim.cmd  (utils.fmt ":source %s" (utils.confp :lua :modeline.lua))))}
-
                     {:keys "<leader>hrr"
                      :help "Reload doom"
                      :exec (fn [] 
-                             (require :init)
-                             (require :modeline)
                              (set doom.user_packages (require :user-packages))
-                             (set doom.default_packages (require :default_packages)))}])
+                             (set doom.essential_packages (require :essential_packages))
+                             (set doom.default_packages (require :default_packages))
+                             (require :init))}])
 
 ; Quickly adjust indentation
 ; Respects v:count and lines in visual range
