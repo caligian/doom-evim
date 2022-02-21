@@ -23,11 +23,10 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 8. Easy snippet creation.
 9. Nice basic REPL.
  
-## Installation & other stuff
+## Installation
 
-### Downloading the release
-Please avoid cloning the repo and use the releases instead.
-Unzip the file downloaded and copy it as ~/.config/nvim and follow the steps given below.
+### Getting the configuration
+You can either clone the repo and use `ruby doom.rb set-version` to select a version of doom. If you don't do that, you will be using the latest commits which may or may not be stable. Alternatively, you can download a release and extract it as `~/.config/nvim`.
 
 ### Basic requirements
 1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim). Please use any gui client for a better experience.
@@ -46,15 +45,22 @@ Please use `ruby doom.rb set-version` instead.
 Downgrading between main doom-evim versions is recommended, for eg. v1.x.x, v2.x.x are main versions.
 You can use `ruby doom.rb set-version` to do this.
 
+## Keybindings
+[Here.](./keybindings.md)
+
 ## Screenshots
-[Screenshots](./screenshots/README.md)
+[Here.](./screenshots/README.md)
 
 ## Further reading
+I highly recommend you to go through doom's in-built documentation
 `:help doom-evim`
 
 ## Future plans
 1. Add support to a variety of languages
 2. ~~Get nvim-dap up and working.~~ Vimspector works for the languages it provides adapters for.
+
+## Bugs
+Currently, doom does not contain any breaking bugs. However, if you happen to find one or have any other questions, please feel free to open an issue or start a discussion.
 
 ## Maintaining
 I plan to make this a nice stable distribution. However, I need help maintaining this. Any volunteers are welcome here anytime!
