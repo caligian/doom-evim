@@ -29,7 +29,7 @@ It is certainly not entirely complete but since doom is a distro, it comes with 
 You can either clone the repo and use `ruby doom.rb set-version` to select a version of doom. If you don't do that, you will be using the latest commits which may or may not be stable. Alternatively, you can download a release and extract it as `~/.config/nvim`.
 
 ### Basic requirements
-1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim). Please use any gui client for a better experience.
+1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim).
 2. `fdfind`, `lua5.1`, `luarocks`, `rg`, `ruby`, `node` and `npm`. You OS package manager should have these. After you install these, please install `yarn` via `npm`.
 3. lua5.1 modules: [rex_pcre2](https://rrthomas.github.io/lrexlib/manual.html), [luafun](https://luafun.github.io/), [lualogging](https://neopallium.github.io/lualogging/index.html), [lpath](https://github.com/starwing/lpath) and [lua-set](https://github.com/EvandroLG/set-lua). With ruby you can run `doom.rb` to install these.
 4. GNU/Linux. Currently doom-evim only supports GNU/Linux.
