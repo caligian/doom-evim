@@ -178,7 +178,7 @@ They will usually seem like - `user-fnl-<NAME>.lua`. Example:
     type this: `require 'user-fnl-utils'` or `require 'user-lua-utils'`
 
 Lastly, don't forget to add your fennel filenames to `doom.user_compile_fnl` or
-else they won't be compiled before startup. You can also use: >
+else they won't be compiled before startup. You can also use:  
 
    doom.utils['convert-to-lua']([...]) -- Name of files present in fnl/
 
@@ -266,7 +266,7 @@ treesitter_langs {list}
     Only works if default_package_configs is true.
 
     Default: 
-    >
+     
         ["python" 
          "ruby"
          "json"
@@ -282,7 +282,7 @@ map-help-groups {table}
     description is. 
 
     Default: 
-    >
+     
     {:leader {:b "Buffers"
               :q "Buffers+Close"
               :c "Commenting"
@@ -313,7 +313,7 @@ repl.ft {table}
     repl.ft
 
     Default:  
-    >
+     
         {:sh "bash"                  
          :ruby "irb"                 
          :perl "perl"                
@@ -364,7 +364,7 @@ langs.<lang> {table} *doom.langs*
         anything else 
 
     Default: 
-    >
+     
         {:python {:server "pyright" 
                   :compile "python3"
                   :debug "python3 -m pdb"
@@ -408,7 +408,7 @@ lsp.servers {table}
     you use {} as config, doom will minimally set it up by itself.
 
     Default: 
-    >
+     
         {"solargraph" {} 
          "pyright"    {}}
 
@@ -1073,7 +1073,7 @@ However, if there is a .vimspector.json in the workspace directory of the
 script then nothing is copied and that file is used.
 
 Keybindings:
->
+ 
     {:keys "<leader>dd" 
      :help "Start vimspector"}
 
@@ -1109,7 +1109,7 @@ Doom uses groups of these packages to configure a certain functionality. Many
 times if you remove even one package, an entire functionality won't be
 working. These are the groups used: 
 
-    Doom's LSP configuration: >
+    Doom's LSP configuration:  
         nvim-lspconfig 
         nvim-treesitter
         nvim-lsp-installer
@@ -1121,12 +1121,12 @@ working. These are the groups used:
         cmp-buffer
         cmp-path
         cmp-cmdline
-<
-    Doom's telescope configuration: >
+ 
+    Doom's telescope configuration:  
         telescope.nvim
         telescope-project.nvim
         telescope-file-browser.nvim
-<
+ 
 Rest of the packages are not configured in groups.
 
 
@@ -1140,7 +1140,7 @@ Additionally, you can make keybindings respect v:count or work on a range of
 lines in a visual selection. 
 
 In order to do the latter you have to use this form in 'exec' 
->
+ 
     -- lua
     exec = function() doom.utils["line-range-exec"](<function>) end
 
@@ -1148,501 +1148,14 @@ In order to do the latter you have to use this form in 'exec'
     :exec #(doom.utils.line-range-exec <function>)
 
 In order to do the former, use this form in 'exec'
->
+ 
     -- lua
     exec = doom.utils["respect-count"](<function/string>)
 
     -- fennel
     :exec (doom.utils.respect-count <function/string>)
 
-Below are the list of default keybindings that doom comes with.
-
-Font operations:
->
-    {:keys "<C-ScrollWheelUp>"
-     :help "Increase font size by 2}
-
-    {:keys "<C-ScrollWheelDown>"
-     :help "Decrease font size by 2}
-
-Colorscheme:
->
-    {:keys "<leader>hrt"
-     :help "Reload statusline theme"}
-
-File operations: 
->
-    {:keys "<leader>fs"
-     :help "Save curent file"}
-    
-    {:keys "<leader>fv"
-     :help "Source current file"}
-    
-    {:keys "<leader>fp"
-     :help "Open doom config dir"}
-    
-    {:keys "<leader>fP"
-     :help "Open private config dir"}
-    
-    {:keys "<leader>fV"
-     :help "Source doom's init.lua"}
-<
-Tab operations:
->
-    {:keys "<leader>tk"
-     :help "Close current tab"}
-    
-    {:keys "<leader>tn"
-     :help "Go to next tab"}
-    
-    {:keys "<leader>tp"
-     :help "Go to previous tab"}
-    
-    {:keys "<leader>tf"
-     :help "Find tab"}
-    
-    {:keys "<leader>te"
-     :help "Open file in a new tab"}
-    
-    {:keys "<leader>tt"
-     :help "Open a new tab"}
-<    
-Buffer operations:
->
-    {:keys "<leader>qw"
-     :help "Save buffers and quit"}
-    
-    {:keys "<leader>bp"
-     :help "Previous buffer"}
-
-    {:keys "<leader>bR"
-     :help "Set file to RO"}
-    
-    {:keys "<leader>bn"
-     :help "Next buffer"}
-    
-    {:keys "<leader>br"
-     :help "Revert buffer"}
-    
-    {:keys "<leader>bk"
-     :help "Hide current buffer"}
-    
-    {:keys "<leader>qq"
-     :help "Quit unconditionally"}
-    
-    {:keys "<del>"
-     :help "No highlight"}
-<
-Misc operations:
->
-    {:keys "<leader>;"
-     :help "Open command mode"}
-    
-    {:keys "<localleader>&"
-     :help "Execute an async sh command and split window"}
-
-    In the above keybinding, you can specify a filename pattern 
-    that works with expand() in curly braces. 
-    For example: echo {%:p} will result in echo <full file path>
-<
-    
-Clipboard operations:
->
-    {:keys "<leader>xp"
-     :help "Paste from clipboard"
-
-    {:keys "<leader>hrr"
-     :help "Reload doom"}
-                     
-Indentation:
->
-     {:keys "<PageDown>"
-      :help "Decrease indent"}
-
-     {:keys "<PageUp>"
-      :help "Increase indent"}
-
-     {:keys "<S-PageDown>"
-      :modes ["v"]
-      :help "Decrease indent in range"}
-
-     {:keys "<S-PageUp>"
-      :modes ["v"]
-      :help "Increase indent in range"}
-
-Doom REPL:
->
-    {:keys "<localleader>,t"
-     :help "Open a ft REPL in a new tab"}
-    
-    {:keys "<localleader>,T"
-     :help "Open a new bash REPL in a new tab"}
-    
-    {:keys "<localleader>mee"
-     :help "Send current line to ft REPL"}
-    
-    {:keys "<localleader>me."
-     :help "Send strings till-point to ft REPL"}
-    
-    {:keys "<localleader>meb"
-     :help "Send current line to ft REPL"}
-    
-    {:keys "<localleader>meE"
-     :help "Send current line to bash REPL"}
-    
-    {:keys "<localleader>me>"
-     :help "Send strings till-point to bash REPL"}
-    
-    {:keys "<localleader>meB"
-     :help "Send current line to ft REPL"}
-    
-    {:keys "<localleader>meE"
-     :modes "v"
-     :help "Send visual range to bash REPL"}
-    
-    {:keys "<localleader>mee"
-     :modes "v"
-     :help "Send visual range to ft REPL"}
-    
-    {:keys "<localleader>ts" 
-     :help "Split buffer and open shell"}
-    
-    {:keys "<localleader>tv" 
-     :help "Split buffer and open shell"}
-    
-    {:keys "<localleader>,s" 
-     :help "Split buffer and open ft REPL"}
-    
-    {:keys "<localleader>,v" 
-     :help "Vsplit buffer and open ft REPL"}
-    
-    {:keys "<localleader>,k"
-     :help "Shutdown current ft REPL"}
-    
-    {:keys "<localleader>,K"
-     :help "Shutdown all REPLs"}
-    
-    {:keys "<localleader>tk"
-     :help "Shutdown bash shell"}
-
-Doom runner:
->
-    {:keys "<leader>mC" 
-     :help "Compile <lang>"}
-
-    {:keys "<leader>mB"
-     :help "Build <lang>"}
-
-    {:keys "<leader>mT"
-     :help "Test <lang>"}
-
-    {:keys "<leader>mc"
-     :help "Compile buffer file"}
-
-    {:keys "<leader>mb"
-     :help "Build buffer file"}
-
-    {:keys "<leader>mt"
-     :help "Compile buffer file"}
-
-nvim-tree.lua:
->
-    {:keys "<leader>`" 
-     :help "Open nvim-tree" }
-
-persistence.nvim:
->
-    {:keys "<leader>sl"
-     :help "Load current session"}
-
-    {:keys "<leader>sL"
-     :help "Load last session"}
-    
-    {:keys "<leader>ss"
-     :help "Load session"}
-
-trouble.nvim:
->
-    {:keys "<leader>lt" 
-     :help "Toggle trouble"}
-
-zen-mode.nvim
->
-    {:keys "<leader>bz" 
-     :help "Activate ZenMode"}
-
-telescope.nvim, 
-telescope-project.nvim,
-telescope-file-browser.nvim:
->
-    {:keys "<leader>ff"
-     :help "Find file"}
-    
-    {:keys "<localleader>/"
-     :help "Live grep in cwd"}
-    
-    {:keys "<leader>/"
-     :help "Grep string in cwd"}
-    
-    {:keys "<leader>fg"
-     :help "Show git files"}
-    
-    {:keys "<leader>hk"
-     :help "Show keymaps"}
-    
-    {:keys "<leader>ht"
-     :help "Select theme"}
-    
-    {:keys "<leader>bb"
-     :help "Show buffers"}
-    
-    {:keys "<leader>fr"
-     :help "Show old files"}
-    
-    {:keys "<A-x>"
-     :help "Show commands"}
-    
-    {:keys "<leader>hr"
-     :help "Show command history"}
-    
-    {:keys "<leader>sr"
-     :help "Show search history"}
-    
-    {:keys "<leader>hm"
-     :help "Show man page for a program"}
-    
-    {:keys "<leader>hj"
-     :help "Show jumplist"}
-    
-    {:keys "<leader>h\""
-     :help "Show all registers"}
-    
-    {:keys "<M-y>"
-     :help "Show all registers"}
-    
-    {:keys "<leader><leader>s"
-     :help "Resume telescope"}
-    
-    {:keys "<leader>hq"
-     :help "Show quickfix list"}
-    
-    {:keys "<leader>lhr"
-     :help "Show references"}
-    
-    {:keys "<leader>lhs"
-     :help "Document symbols"}
-    
-    {:keys "<leader>lhw"
-     :help "Show workspace symbols"}
-    
-    {:keys "<leader>lhW"
-     :help "Show dynamic ws symbols"}
-    
-    {:keys "<leader>lhc"
-     :help "Show code actions"}
-    
-    {:keys "<leader>lhr"
-     :help "Show range code actions"}
-    
-    {:keys "<leader>lhd"
-     :help "Show diagnostics"}
-    
-    {:keys "<leader>lhi"
-     :help "Show LSP implementations"}
-    
-    {:keys "<leader>lhd"
-     :help "Show LSP definitions"}
-    
-    {:keys "<leader>lht"
-     :help "Show type definitions"}
-    
-    {:keys "<leader>mhs"
-     :help "Show treesitter symbols"}
-    
-    {:keys "<leader>ghc"
-     :help "Show commits"}
-    
-    {:keys "<leader>ghC"
-     :help "Show branch commits"}
-    
-    {:keys "<leader>ghb"
-     :help "Show branches"}
-    
-    {:keys "<leader>ghs"
-     :help "Show status"} 
-   
-    {:keys "<leader>ghS"
-     :help "Show stashes"}
-    
-    {:keys "<leader>fF"
-     :help "Open file browser"}
-    
-    {:keys "<leader>pp"
-     :help "Open project"}
-
-tagbar:
->
-    {:keys "<C-t>"
-     :exec ":TagbarToggle<CR>"}
-
-vim-fugitive:
->
-    {:keys "<leader>gg" 
-     :help "Open Fugitive in cwd"}
-    
-    {:keys "<leader>gi" 
-     :help "Initialize git in cwd"}
-    
-    {:keys "<leader>ga" 
-     :help "Track current file"}
-    
-    {:keys "<leader>gs" 
-     :help "Stage current file"}
-    
-    {:keys "<leader>gc" 
-     :help "Commit changes"}
-    
-    {:keys "<leader>gp" 
-     :help "Push commits"}
-    
-    {:keys "<leader>gm" 
-     :help "Merge from remote"}
-
-nvim-luapad:
->
-    {:keys "<F3>"
-     :help "Start Luapad"}
-
-vim-bbye:
->
-    {:keys "<leader>bq"
-     :help "Delete current buffer"}
-
-
-vim-vsnip:
->
-    {:keys "<C-j>"
-     :noremap false
-     :modes "s"
-     :key-attribs "expr"
-     :help "Expand snippet"}
-
-    {:keys "<C-j>"
-     :noremap false
-     :modes "i"
-     :key-attribs "expr"
-     :help "Expand snippet"}
-
-    {:keys "<C-l>"
-     :modes "s"
-     :key-attribs "expr"
-     :noremap false
-     :help "Expand or jump snippet"}
-
-    {:keys "<C-l>"
-     :modes "i"
-     :noremap false
-     :key-attribs "expr"
-     :help "Expand or jump snippet"}
-
-    {:keys "<S-Tab>"
-     :noremap false
-     :key-attribs "expr"
-     :modes "i"
-     :help "Snippet jump to next field"}
-
-    {:keys "<S-Tab>"
-     :key-attribs "expr"
-     :noremap false
-     :modes "i"
-     :help "Snippet jump to prev field"}
-
-    {:keys "<Tab>"
-     :noremap false
-     :key-attribs "expr"
-     :modes "s"
-     :help "Snippet jump to next field"}
-
-    {:keys "<Tab>"
-     :key-attribs "expr"
-     :noremap false
-     :modes "i"
-     :help "Snippet jump to next field"}
-
-Neorg:
->
-   
-    ; Go to next heading
-    {:keys "<C-f>"
-     :key-attribs ["buffer" "silent"]
-     :events "BufEnter"
-     :patterns "*norg"}
-    
-    ; Go to previous heading
-    {:keys "<C-b>"
-     :key-attribs ["buffer" "silent"]
-     :events "BufEnter"
-     :patterns "*norg"}
-
-
-    ; The following keybindings only work when user is at a heading/bullet
-
-    ; Insert heading/bullet
-    ; Only inserts bullet if the first bullet is present
-    {:keys "<C-j>"
-     :key-attribs ["buffer" "silent"]
-     :events "BufEnter"
-     :patterns "*norg"}
- 
-    ; Promote bullet or point
-    {:keys "<A-l>"
-     :key-attribs ["buffer" "silent"]
-     :events "BufEnter"
-     :patterns "*norg"}
-    
-    ; Demote bullet or point
-    {:keys "<A-h>"
-     :key-attribs ["buffer" "silent"]
-     :events "BufEnter"
-     :patterns "*norg"}
-
-    ; Rest of the keybindings can be accessed with <leader>o
-
-Quickfixlist Operations:
->
-    {:keys "<leader>q/" 
-     :help "Run vimgrep on current dir"}
-
-    {:keys "<leader>qf"
-     :noremap false
-     :help "Toggle qflist"}
-
-    {:keys "<localleader>q/" 
-     :help "Run vimgrep on current buffer"}
-
-Filetype: Fennel:
->
-    ; Quickfixlist-related
-    {:keys "<localleader>qr"
-     :help "Search requires in buffer"}
-     
-    {:keys "<localleader>qf"
-     :help "Search defns in buffer"}
-     
-    {:keys "<localleader>qL"
-     :help "Search locals in buffer"}
-     
-    {:keys "<localleader>qm"
-     :help "Jump to module"}
-
-    {:keys "<localleader>qR"
-     :help "Search requires"}
-
-    {:keys "<localleader>qF"
-     :help "Search defns"}
-
-    {:keys "<localleader>qL"
-     :help "Search locals"}
+Please check ~/.config/nvim/keybindings.md for default keybindings of doom.
 
 ==============================================================================
 SNIPPETS *doom-snippets*
@@ -1678,7 +1191,7 @@ Doom creates some textobjects of its own. If you want to see the potential of
 this, try using the textobjects with an REPL.
 
 Textobjects mappings:
->
+ 
        {:ib  "@block.inner"
         :ab  "@block.outer"
 
@@ -1724,7 +1237,7 @@ does not come with too many handy keybindings in contrast to orgmode. Don't
 get me wrong, they are not too difficult to setup with neorg but doom provides
 its own keybindings for common tasks that the users would like to use: 
 
->
+ 
     {:keys "<leader>ol"
      :help "Display buffer headings in qflist"}
 
@@ -1778,7 +1291,7 @@ This section explains the functionality provided by doom to edit vim help
 files. The heart of this functionality depends on `vim-help`.
 
 What this module does is make it easier for the user to navigate around in vim
-help files. The keybindings would do a better job at explaining to you: >
+help files. The keybindings would do a better job at explaining to you:  
 
    {:keys "<C-f>"
     :key-attribs "buffer"
