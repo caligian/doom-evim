@@ -93,12 +93,13 @@ class SetupDoom
   end
 
   def setup_lua
-    puts 'Installing: set-lua, lualogging, lpath, luafun'
-    `luarocks --lua-version 5.1 --local install set-lua`
+    puts 'Installing: lualogging, lpath, luafun'
     `luarocks --lua-version 5.1 --local install lualogging`
     `luarocks --lua-version 5.1 --local install lpath`
     `luarocks --lua-version 5.1 --local install fun`
-    puts 'Please reopen your shell in order to use the lua packages.'
+
+    puts 'Run this command: "luarocks --lua-version 5.1 path >> ~/<.bashrc or .zshrc or .xxxrc> to use the rocks with doom."'
+    puts 'Reopen your shell in order to use the lua packages.'
   end
 
   def make_user_fs

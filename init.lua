@@ -52,6 +52,10 @@ local function init(vim)
     package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home)
     package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home)
 
+    -- Add luarock support
+    package.path = string.format('%s;%s/.luarocks/share/lua/5.1/?.lua;%s/.luarocks/share/lua/5.1/?/init.lua', package.path, home, home)
+    package.cpath = string.format('%s;%s/.luarocks/lib/lua/5.1/?.so', package.cpath, home)
+
     -- Open log quickly
     vim.cmd [[ noremap <leader>fl :e ~/.local/share/nvim/doom-evim.log<CR> ]]
 end

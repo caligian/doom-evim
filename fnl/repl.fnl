@@ -167,9 +167,9 @@
   (vimp.map_command :REPLTab #(Repl.tabnew $1))
 
   ; Shell stuff
-  (vimp.map_command :REPLTabShell tabnew-shell)
-  (vimp.map_command :REPLVsplitShell split-shell)
-  (vimp.map_command :REPLSplitShell vsplit-shell)
+  (vimp.map_command :REPLTabShell Repl.tabnew-shell)
+  (vimp.map_command :REPLVsplitShell Repl.split-shell)
+  (vimp.map_command :REPLSplitShell Repl.vsplit-shell)
   (vimp.map_command :REPLShellSend #(Repl.send "bash" $1))
 
   ; keys

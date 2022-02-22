@@ -1,3 +1,5 @@
+(local org (require :neorg))
+
 (org.setup {:load {:core.keybinds {:config {:default_keybinds true
                                             :neorg_leader "<Leader>o"}}
 
