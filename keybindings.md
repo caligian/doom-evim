@@ -1,3 +1,7 @@
+
+# Default keybindings
+Please download this file if you want a keybindings cheatsheet to refer to. 
+
 ### Adjust font size
 <table>
     <tr>
@@ -295,6 +299,24 @@
         <td>all</td>
         <td>all</td>
     </tr>
+    <tr>
+        <td>SPC hrf</td>
+        <td>Toggle back and forth between Gohu and BitstreamVeraSans</td>
+        <td>n</td>
+        <td>true</td>
+        <td>silent</td>
+        <td>all</td>
+        <td>all</td>
+    </tr>
+    <tr>
+        <td>SPC hrl</td>
+        <td>Toggle light/dark background</td>
+        <td>n</td>
+        <td>true</td>
+        <td>silent</td>
+        <td>all</td>
+        <td>all</td>
+    </tr>
 </table>
 
 ---
@@ -329,7 +351,7 @@
     </tr>
     <tr>
         <td>&lt;S-PageDown&gt;</td>
-        <td>Decrease indent in range</td>
+        <td>Decrease indent in visual range</td>
         <td>v</td>
         <td>true</td>
         <td>silent</td>
@@ -338,7 +360,7 @@
     </tr>
     <tr>
         <td>&lt;S-PageUp&gt;</td>
-        <td>Increase indent in range</td>
+        <td>Increase indent in visual range</td>
         <td>v</td>
         <td>true</td>
         <td>silent</td>
@@ -378,7 +400,7 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM mee</td>
+        <td>COM ,e</td>
         <td>Send current line to ft REPL</td>
         <td>n</td>
         <td>true</td>
@@ -387,7 +409,7 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM me.</td>
+        <td>COM ,.</td>
         <td>Send strings till-point to ft REPL</td>
         <td>n</td>
         <td>true</td>
@@ -396,8 +418,8 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM meb</td>
-        <td>Send current line to ft REPL</td>
+        <td>COM ,b</td>
+        <td>Send buffer to ft REPL</td>
         <td>n</td>
         <td>true</td>
         <td>silent</td>
@@ -405,7 +427,7 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM meE</td>
+        <td>COM ,E</td>
         <td>Send current line to bash REPL</td>
         <td>n</td>
         <td>true</td>
@@ -414,7 +436,7 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM me&gt;</td>
+        <td>COM ,&gt;</td>
         <td>Send strings till-point to bash REPL</td>
         <td>n</td>
         <td>true</td>
@@ -423,8 +445,8 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM meB</td>
-        <td>Send current line to ft REPL</td>
+        <td>COM ,B</td>
+        <td>Send buffer to bash REPL</td>
         <td>n</td>
         <td>true</td>
         <td>silent</td>
@@ -432,7 +454,7 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM meE</td>
+        <td>COM ,E</td>
         <td>Send visual range to bash REPL</td>
         <td>v</td>
         <td>true</td>
@@ -441,7 +463,7 @@
         <td>all</td>
     </tr>
     <tr>
-        <td>COM mee</td>
+        <td>COM ,e</td>
         <td>Send visual range to ft REPL</td>
         <td>v</td>
         <td>true</td>
@@ -620,6 +642,15 @@
     <tr>
         <td>SPC sl</td>
         <td>Load current session</td>
+        <td>n</td>
+        <td>true</td>
+        <td>silent</td>
+        <td>all</td>
+        <td>all</td>
+    </tr>
+    <tr>
+        <td>SPC ss</td>
+        <td>Save session</td>
         <td>n</td>
         <td>true</td>
         <td>silent</td>

@@ -55,11 +55,11 @@
 
                                                   {:keys "<leader>sL"
                                                    :exec ":lua require('persistence').load({last=true})<CR>"
-                                                   :help "Load session"}
+                                                   :help "Load last session"}
 
                                                   {:keys "<leader>ss"
                                                    :exec ":lua require('persistence').save()<CR>"
-                                                   :help "Load session"}])
+                                                   :help "Save current session"}])
 
                               (persistence.setup {:dir save-dir}))))
 
