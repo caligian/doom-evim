@@ -1,6 +1,4 @@
-(module formatter
-  {autoload {str aniseed.string
-             utils utils}})
+(local utils (require :utils))
 
 (utils.define-key {:keys "<leader>mf"
                    :help "Format the current buffer"

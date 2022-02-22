@@ -1,7 +1,3 @@
-(module neorg-config
-  {autoload {utils utils
-             org neorg}})
-
 (org.setup {:load {:core.keybinds {:config {:default_keybinds true
                                             :neorg_leader "<Leader>o"}}
 
@@ -20,7 +16,7 @@
                                                             :personal "~/Personal"
                                                             :diary "~/Personal/Diary"}}}}})
 
-(defn- get-bullet-or-heading-under-point [?bufnr ?lineno]
+(lambda get-bullet-or-heading-under-point [?bufnr ?lineno]
   (let [lineno (or ?lineno (utils.linenum))
         lineno (if (~= lineno 0)
                  (- lineno 1)
@@ -55,7 +51,7 @@
 
           false)))))
 
-(defn- _replace-heading-or-bullet-under-point [?bufnr ?lineno direction by ?opts]
+(lambda _replace-heading-or-bullet-under-point [?bufnr ?lineno direction by ?opts]
   (let [is-task (?. ?opts :task)
         sym (get-bullet-or-heading-under-point ?bufnr ?lineno)]
     (when sym 
@@ -93,7 +89,7 @@
 
           (.. sym.whitespace sym.base (or sym.type "") " " sym.contains))))))
 
-(defn- replace-heading-or-bullet-under-point [?bufnr ?lineno direction by ?opts]
+(lambda replace-heading-or-bullet-under-point [?bufnr ?lineno direction by ?opts]
   (let [is-task (?. ?opts :task)
         lineno (or ?lineno (utils.linenum))
         bufnr (or ?bufnr 0)
@@ -101,7 +97,7 @@
     (if replacement
       (utils.set-lines bufnr [(- lineno 1)  lineno] [replacement]))))
 
-(defn- insert-bullet-or-heading [?bufnr ?lineno ?opts]
+(lambda insert-bullet-or-heading [?bufnr ?lineno ?opts]
   (let [is-task (?. ?opts :task)
         linenum (or ?lineno (utils.linenum))
         linenum (- linenum 1)
@@ -121,19 +117,19 @@
             (put (utils.fmt "%s" (.. sym.base " "))))
           (put "* ")))))
 
-(defn- promote-bullet-or-heading [?bufnr ?lineno ?by]
+(lambda promote-bullet-or-heading [?bufnr ?lineno ?by]
   (replace-heading-or-bullet-under-point ?bufnr 
                                          ?lineno
                                          1 
                                          (or ?by 1)))
 
-(defn- demote-bullet-or-heading [?bufnr ?lineno ?by]
+(lambda demote-bullet-or-heading [?bufnr ?lineno ?by]
   (replace-heading-or-bullet-under-point ?bufnr 
                                          ?lineno
                                          -1 
                                          (or ?by 1)))
 
-(defn- edit-bullet [?bufnr ?lineno ?task-type]
+(lambda edit-bullet [?bufnr ?lineno ?task-type]
   (let [task-type (match ?task-type
                     :pending "[-]"
                     :done "[x]"
@@ -145,11 +141,11 @@
                     _ "[]")]
     (replace-heading-or-bullet-under-point ?bufnr ?lineno 1 0 {:task task-type})))
 
-(defn- next-heading []
+(lambda next-heading []
   (vim.cmd "/^\\*")
   (vim.cmd "noh"))
 
-(defn- prev-heading []
+(lambda prev-heading []
   (vim.cmd "?^\\*")
   (vim.cmd "noh"))
 

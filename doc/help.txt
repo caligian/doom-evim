@@ -208,32 +208,9 @@ fnl_config {bool}
 
     Default: true
 
+
 theme {str}
     Default: everforest
-
-default_runner {bool}
-    If set, use utilities in |doom-runner|. Please visit the link to
-    understand more about doom's runner. 
-
-    Default: true
-
-default_repl {bool}
-    If set, use the REPL module provided with doom-evim. Please visit
-    |doom-repl| for more information.
-
-    Default: true
-
-
-default_keybindings {bool}
-    Set doom's defualt keybindings? 
-
-    Default: true
-
-
-neorg_keybindings {bool}
-    Set doom's neorg keybindings? 
-
-    Default: true
 
 
 essential_packages {list}
@@ -246,12 +223,6 @@ default_packages {list}
     Contains all the default package declarations that are non-essential.
 
     Default: Check lua/default-packages.lua
-
-
-default_package_configs {bool}
-    Use doom's default package configuration? 
-
-    Default: true
 
 
 lisp_langs {list}
@@ -392,6 +363,13 @@ langs.<lang> {table} *doom.langs*
 
 lsp.load_default {bool}
     If true, load all the default doom's lsp configurations. 
+    By default this is set to false because when doom is run for the first
+    time, many LSP packages are not installed. This can lead doom to crash.
+    You have to manually set this to true after you have installed all the
+    packages when you first start using doom.
+
+    The rationale behind setting this to false is to allow the user to use
+    other LSP functionality other than nvim-lsp such coc.nvim, syntastic, etc
 
     Default: `false`
 
@@ -405,7 +383,8 @@ lsp.install_sumneko_lua {bool}
 lsp.servers {table}
     Form: {<server-name> <configuration>}
     If lsp.servers contains any configurations, it will be used to setup. If
-    you use {} as config, doom will minimally set it up by itself.
+    you use {} as config, doom will minimally set it up by itself. However
+    this only works if you have set `doom.lsp.load_default` to true
 
     Default: 
      
@@ -1366,16 +1345,19 @@ This section contains some caveats that users should keep in mind:
 Regarding user fennel configuration:
     - Do not use modules in your configuration files. 
       For some reason, fennel is unable to compile the module string. 
+      This can lead to weird problems during debugging.
       Simply make a local var and then return it at the end of the file.
-
-Regarding private configuration:
-    Under any circumstances, ensure that `user-packages.lua`  is present in
-    the file path. Without this file, doom will crash.
 
 Regarding doom's configuration:
     - Do not modify global variables unnecessarily if you don't know what they
       do. If you are a new user, better stick to the ones already defined in
       |doom-globals|.
+    - You cannot reload doom packages or other configurations on the fly. 
+      This can break a lot of functionality especially if the packages have
+      stateful configurations that you are directly/indirectly using. 
+    - Moreover, it can cause unpredictable behaviour in doom. Just restart
+      doom when you have changed something that cannot be updated. For
+      instance, your private package declarations in `user-packages.lua`. 
 
 Regarding packages:
     - Any packages added or removed will be quickly reflected after you start

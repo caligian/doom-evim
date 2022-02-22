@@ -1,12 +1,12 @@
-(module utils
-  {require {core aniseed.core
-            logger logger
-            str aniseed.string
-            fnl  fennel
-            fun  fun
-            rx   rex_pcre2
-            Set  Set
-            wk   which-key}})
+(local Utils {})
+(local core (require :aniseed.core))
+(local logger (require :logger))
+(local path (require :path))
+(local str (require :aniseed.string))
+(local fnl (require :fennel))
+(local fun (require :fun))
+(local rx (require :rex_pcre2))
+(local wk (require :which-key))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; locals
@@ -20,51 +20,51 @@
   (set _G.doom.map-help-groups {:leader {} :localleader {}}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn fmt [...]
+(fn Utils.fmt [...]
   (string.format ...))
 
-(defn path-exists [path]
+(fn Utils.path-exists [path]
   (let [exists (vim.fn.glob path)]
     (if (= (length exists) 0)
       false
       exists)))
 
-(defn list-dir [path]
-  (let [path (path-exists path)]
+(fn Utils.list-dir [path]
+  (let [path (Utils.path-exists path)]
     (if path
-      (let [path-arr (split path "\n")]
+      (let [path-arr (Utils.split path "\n")]
         (if (= (length path-arr) 0)
           path
           path-arr))
       false)))
 
-(defn register [f ?keybinding]
+(fn Utils.register [f ?keybinding]
   (table.insert doom.lambdas f)
   (if (not ?keybinding)
-    (fmt "lua f = doom.lambdas[%d]; f()" (length doom.lambdas))
-    (fmt ":lua f = doom.lambdas[%d]; f()<CR>" (length doom.lambdas))))
+    (Utils.fmt "lua f = doom.lambdas[%d]; f()" (length doom.lambdas))
+    (Utils.fmt ":lua f = doom.lambdas[%d]; f()<CR>" (length doom.lambdas))))
 
-(defn set-items [s]
+(fn Utils.set-items [s]
   (icollect [k _ (pairs s.items)] k))
 
-(defn keys [t]
+(fn Utils.keys [t]
   (icollect [k _ (pairs t)] k))
 
-(defn vals [t]
+(fn Utils.vals [t]
   (icollect [_ v (pairs t)] v))
 
 ; Returns multiple: new array && popped element
-(defn pop [ls]
+(fn Utils.pop [ls]
   (let [l (length ls)
         arr (core.map #(. ls $1)
-                      (vec (fun.take (- l 1) (fun.range l))))
+                      (Utils.vec (fun.take (- l 1) (fun.range l))))
         popped (. ls l)]
     (values arr popped)))
 
-(defn dump [e]
+(fn Utils.dump [e]
   (print (vim.inspect e)))
 
-(defn listify [?e ?force]
+(fn Utils.listify [?e ?force]
   (let [?force (or ?force false)]
     (if
       (not ?e)
@@ -78,39 +78,39 @@
 
       ?e)))
 
-(defn exec [cmd ...]
-  (vim.cmd (fmt cmd ...)))
+(fn Utils.exec [cmd ...]
+  (vim.cmd (Utils.fmt cmd ...)))
 
 ; Form: {:os func ...}
 ; First matching os will eval the function
-(defn consider-os [os-funcs]
-  (let [current-os (vec (fun.take 1 (fun.filter #(~= 0 (vim.fn.has $1)) (keys os-funcs))))]
+(fn Utils.consider-os [os-funcs]
+  (let [current-os (Utils.vec (fun.take 1 (fun.filter #(~= 0 (vim.fn.has $1)) (Utils.keys os-funcs))))]
     (. os-funcs (. current-os 1))))
 
-(defn split-and [cmd direction string-only]
-  (let [cmd (fmt ":%s | :%s" (or direction "sp") cmd)]
+(fn Utils.split-and [cmd direction string-only]
+  (let [cmd (Utils.fmt ":%s | :%s" (or direction "sp") cmd)]
     (if string-only
       cmd
       (vim.cmd cmd))))
 
-(defn split-term-and [cmd direction string-only]
-  (let [cmd (fmt ":%s term://%s" (or direction "sp") cmd)]
+(fn Utils.split-term-and [cmd direction string-only]
+  (let [cmd (Utils.fmt ":%s term://%s" (or direction "sp") cmd)]
     (if string-only
       cmd
       (vim.cmd cmd))))
 
-(defn split-termdebug [debugger ?args debugee ?direction ?string]
+(fn Utils.split-termdebug [debugger ?args debugee ?direction ?string]
   (let [args (or ?args "")
         direction (or ?direction "sp")
-        cmd (fmt ":%s term://%s %s %s" direction debugger args debugee)]
+        cmd (Utils.fmt ":%s term://%s %s %s" direction debugger args debugee)]
     (if ?string
       cmd
       (vim.cmd cmd))))
 
-(defn split-termdebug-buffer [debugger ?args ?direction ?string ?keybinding]
+(fn Utils.split-termdebug-buffer [debugger ?args ?direction ?string ?keybinding]
   (let [args (or ?args "")
         direction (match ?direction :sp "sp" :vsp "vsp" :tab "tabnew" nil "sp")
-        cmd (fmt ":execute(\":%s term://%s %s \" . bufname(\"%%\"))" direction debugger args)
+        cmd (Utils.fmt ":execute(\":%s term://%s %s \" . bufname(\"%%\"))" direction debugger args)
         final-cmd (if ?keybinding
                     (.. cmd "<CR>")
                     cmd)]
@@ -122,7 +122,7 @@
         cmd
         (vim.cmd cmd)))))
 
-(defn vec [gen]
+(fn Utils.vec [gen]
   (let [t {}]
     (fun.each (fn [...]
                 (let [args [...]]
@@ -132,60 +132,60 @@
               gen)
     t))
 
-(defn rest [v]
+(fn Utils.rest [v]
   (icollect [_ i (fun.tail v)] i))
 
-(defn first [v]
+(fn Utils.first [v]
   (. v 1))
 
-(defn ifirst [gen]
+(fn Utils.ifirst [gen]
   (fun.head gen))
 
-(defn irest [gen]
+(fn Utils.irest [gen]
   (fun.tail gen))
 
-(defn find [t key]
-  (let [k (keys t)
-        r (vec (fun.range 1 (length t)))
+(fn Utils.find [t key]
+  (let [k (Utils.keys t)
+        r (Utils.vec (fun.range 1 (length t)))
         found (core.filter #(rx.match (. k $1) key) r)]
     found))
 
 ; Only returns true or false
-(defn grep [s pattern]
+(fn Utils.grep [s pattern]
   (rx.match s pattern))
 
-(defn split [s sep]
+(fn Utils.split [s sep]
   (let [sep (or sep "[^\n\r]+")]
     (icollect [m (rx.split s sep)] m)))
 
-(defn vec [iter]
+(fn Utils.vec [iter]
   (let [t []]
     (fun.each (fn [e] (table.insert t e)) iter)
     t))
 
-(defn join_path [...]
+(fn Utils.join_path [...]
   (table.concat [...] "/"))
 
-(defn datap [...]
+(fn Utils.datap [...]
   (let [data-path (vim.fn.stdpath "data")]
-    (join_path data-path ...)))
+    (Utils.join_path data-path ...)))
 
-(defn confp [...]
+(fn Utils.confp [...]
   (let [conf-path (vim.fn.stdpath "config")]
-    (join_path conf-path ...)))
+    (Utils.join_path conf-path ...)))
 
 ;; sed
 ;; Works like GNU sed and supports pcre2 regex
-(defn sed [s replacement-a substitute-a]
+(fn Utils.sed [s replacement-a substitute-a]
   (if
     (not (= (length replacement-a) 0))
-    (let [replacement-a (listify replacement-a)
-          substitute-a (listify substitute-a)
+    (let [replacement-a (Utils.listify replacement-a)
+          substitute-a (Utils.listify substitute-a)
           first-r (fun.head replacement-a)
           first-s (fun.head substitute-a)
           rest-r  (icollect [i (fun.tail replacement-a)] i)
           rest-s  (icollect [i (fun.tail substitute-a)] i)]
-      (sed
+      (Utils.sed
         (rx.gsub s first-r first-s)
         rest-r
         rest-s))
@@ -193,72 +193,72 @@
 
 ; Traverses through r-a and tries to match regex to s 
 ; If match is true then return the sed string
-(defn match-sed [s r-a s-a]
+(fn Utils.match-sed [s r-a s-a]
   (if (= (length r-a) 0) 
     s
-    (let [current-regex (first r-a)
-          rest-regex (rest r-a)
+    (let [current-regex (Utils.first r-a)
+          rest-regex (Utils.rest r-a)
 
-          current-sub (first s-a)
-          rest-sub (rest s-a)
+          current-sub (Utils.first s-a)
+          rest-sub (Utils.rest s-a)
 
           does-match (rx.match s current-regex)]
       (if does-match 
-        (match-sed (rx.gsub s current-regex current-sub)
+        (Utils.match-sed (rx.gsub s current-regex current-sub)
                    []
                    [])
-        (match-sed s 
+        (Utils.match-sed s 
                    rest-regex
                    rest-sub)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer and window related functions
-(defn linenum [?bufnr]
+(fn Utils.linenum [?bufnr]
   (. (vim.api.nvim_win_get_cursor (or ?bufnr 0)) 1))
 
 ; Tuple is (row col)
 ; Row is 1 indexed and columns are 0 indexed
-(defn pos [?bufnr]
+(fn Utils.pos [?bufnr]
   (vim.api.nvim_win_get_cursor (or ?bufnr 0)))
 
 
-(defn current-line [?bufnr]
+(fn Utils.current-line [?bufnr]
   (table.concat (vim.api.nvim_buf_get_lines (or ?bufnr 0)
-                                            (- (linenum) 1)
-                                            (linenum)
+                                            (- (Utils.linenum) 1)
+                                            (Utils.linenum)
                                             false) ""))
 
-(defn set-pos [?bufnr [row ?column]]
+(fn Utils.set-pos [?bufnr [row ?column]]
   (vim.api.nvim_win_set_cursor (or ?bufnr 0)
                                [row (or ?column 1)]))
 
-(defn vpos [?bufnr]
+(fn Utils.vpos [?bufnr]
   [(vim.fn.line "'<")
    (vim.fn.line "'>")])
 
-(defn eval-at-line [?bufnr ?lineno cmd]
+(fn Utils.eval-at-line [?bufnr ?lineno cmd]
   (let [bufnr  (or ?bufnr  0)
         cmd (if (= (type cmd) "string")
               cmd
-              (register cmd))
-        lineno (or ?lineno (linenum))]
-    (set-pos bufnr [lineno])
+              (Utils.register cmd))
+        lineno (or ?lineno (Utils.linenum))]
+    (Utils.set-pos bufnr [lineno])
     (vim.cmd cmd)))
 
-(defn eval-times [cmd ?lineno]
-  (let [start (or ?lineno (+ 1 (linenum)))
+(fn Utils.eval-times [cmd ?lineno]
+  (let [start (or ?lineno (+ 1 (Utils.linenum)))
         count vim.v.count
         end   (+ count start)]
     (if ?lineno
       (for [i start end 1]
-        (eval-at-line 0 i cmd))
+        (Utils.eval-at-line 0 i cmd))
       (for [i start end 1]
         (vim.cmd cmd)))))
 
 ; s can be a string or a list of strings
-(defn set-text [?bufnr [start-row start-column] [end-row end-column] s]
+(fn Utils.set-text [?bufnr [start-row start-column] [end-row end-column] s]
   (let [bufnr (or ?bufnr 0)
-        s     (listify s)]
+        s     (Utils.listify s)]
     (vim.api.nvim_buf_set_text bufnr
                                start-row
                                start-column
@@ -266,32 +266,32 @@
                                end-column
                                s)))
 
-(defn set-lines [?bufnr [start-row ?end-row] s]
+(fn Utils.set-lines [?bufnr [start-row ?end-row] s]
   (let [end-row (or ?end-row (+ 1 start-row))
-        s (listify s)
+        s (Utils.listify s)
         bufnr (or ?bufnr 0)]
     (vim.api.nvim_buf_set_lines bufnr start-row end-row false s)))
 
-(defn get-line-count [?bufnr]
+(fn Utils.get-line-count [?bufnr]
   (vim.api.nvim_buf_line_count (or ?bufnr 0)))
 
-(defn buf-loaded? [?bufnr]
+(fn Utils.buf-loaded? [?bufnr]
   (vim.api.nvim_buf_is_loaded (or ?bufnr 0)))
 
-(defn get-buf-var [?bufnr varname]
+(fn Utils.get-buf-var [?bufnr varname]
   (vim.api.nvim_buf_get_var (or ?bufnr 0) varname))
 
-(defn get-buf-opt [?bufnr opt]
+(fn Utils.get-buf-opt [?bufnr opt]
   (vim.api.nvim_buf_get_option (or ?bufnr 0) opt))
 
-(defn get-buf-name [?bufnr]
+(fn Utils.get-buf-name [?bufnr]
   (vim.api.nvim_buf_get_name (or ?bufnr 0)))
 
-(defn get-bufnr [?bufname]
+(fn Utils.get-bufnr [?bufname]
   (let [bufnr (vim.call "bufnr" (or ?bufname "%"))]
     (if (= bufnr -1) false bufnr)))
 
-(defn buffer-string [?bufnr [start-row ?end-row] ?concat]
+(fn Utils.buffer-string [?bufnr [start-row ?end-row] ?concat]
   (let [end-row (or ?end-row (+ 1 start-row))
         bufnr   (or ?bufnr 0)
         concat  (fn [s] (if ?concat (table.concat s "\n") s))
@@ -300,18 +300,18 @@
 
 ; Just like emacs' save-excursion except that this is not a macro
 ; Executes a function and then returns the cursor to its original position
-(defn save-excursion [?bufnr f]
-  (let [original-pos (pos)
+(fn Utils.save-excursion [?bufnr f]
+  (let [original-pos (Utils.pos)
         output       (f)]
-    (set-pos ?bufnr original-pos)
+    (Utils.set-pos ?bufnr original-pos)
     output))
 
 ; Get text in visual range
-(defn vtext [?concat]
+(fn Utils.vtext [?concat]
   (let [concat (fn [s] (if ?concat (table.concat s "\n") s))
         (bufnr start-line start-column) (unpack (vim.call "getpos" "'<"))
         (_ end-line end-column) (unpack (vim.call "getpos" "'>"))
-        lines (buffer-string 0 [(- start-line 1) end-line] false)
+        lines (Utils.buffer-string 0 [(- start-line 1) end-line] false)
         first-line (. lines 1)
         last-line  (. lines (length lines))]
     (if (= (length lines) 1)
@@ -322,102 +322,102 @@
         (concat lines)))))
 
 ; Work on a range of lines. However, ignore the text that lies within that range
-(defn line-range-exec [cmd]
-  (let [[start end] (vpos)
+(fn Utils.line-range-exec [cmd]
+  (let [[start end] (Utils.vpos)
         cmd (if
               (= "string" (type cmd))
               cmd
 
               (= "function" (type cmd))
-              (register cmd))]
+              (Utils.register cmd))]
 
     (when (and (> start 0)
                (> end 0))
       (for [i start end]
-        (exec "normal! %dG$" i)
+        (Utils.exec "normal! %dG$" i)
         (vim.cmd cmd)))))
 
 ; if newline is true then count will be assumed to be on each new line
-(defn respect-count [cmd ?newline ?keybinding]
-  (defn -respect-count []
+(fn Utils.respect-count [cmd ?newline ?keybinding]
+  (lambda -respect-count []
     (let [count (if (= vim.v.count 0)
                   1
                   vim.v.count)
-          current-line (linenum)
+          current-line (Utils.linenum)
           cmd (if
                 (= (type cmd) "string")
                 cmd
 
                 (= (type cmd) "function")
-                (register cmd))
+                (Utils.register cmd))
           last-line (+ current-line vim.v.count)
           newline (or ?newline false)]
       (if newline
         (for [i current-line last-line 1]
-              (exec "normal! %dG" i)
+              (Utils.exec "normal! %dG" i)
               (vim.cmd cmd))
 
         (for [i 1 count]
           (vim.cmd cmd)))))
-  (register -respect-count (or ?keybinding false)))
+  (Utils.register -respect-count (or ?keybinding false)))
 
-(defn get-line [?bufnr ?lineno]
+(fn Utils.get-line [?bufnr ?lineno]
   (let [bufnr (or ?bufnr 0)
-        lineno (or ?lineno (linenum))
-        s (buffer-string bufnr [lineno (+ 1 lineno)] true)]
+        lineno (or ?lineno (Utils.linenum))
+        s (Utils.buffer-string bufnr [lineno (+ 1 lineno)] true)]
     (if (= (length s) 0)
       false
       s)))
 
-(defn to-temp-buffer [s ?direction]
+(fn Utils.to-temp-buffer [s ?direction]
   (let [direction (or ?direction "sp")
-        s (listify s)
+        s (Utils.listify s)
         s-len (length s)
         buffer-name "_temp_output_buffer"
         buf-exists (vim.fn.bufnr buffer-name)
         bufnr (if (= buf-exists -1)
                 (do
                   (vim.fn.bufadd buffer-name)
-                  (vim.cmd (fmt "call setbufvar('%s', '%s', '%s')" buffer-name "&buftype" "nofile"))
+                  (vim.cmd (Utils.fmt "call setbufvar('%s', '%s', '%s')" buffer-name "&buftype" "nofile"))
                   (vim.fn.bufnr buffer-name))
 
                 (vim.fn.bufnr buffer-name))
-        number-of-lines (get-line-count bufnr)]
-    (set-lines bufnr [0 number-of-lines] "")
-    (set-lines bufnr [0 (- s-len 1)] s)
-    (vim.cmd (fmt ":%s | b %s" direction buffer-name))))
+        number-of-lines (Utils.get-line-count bufnr)]
+    (Utils.set-lines bufnr [0 number-of-lines] "")
+    (Utils.set-lines bufnr [0 (- s-len 1)] s)
+    (vim.cmd (Utils.fmt ":%s | b %s" direction buffer-name))))
 
 
-(defn sh [s ?buf]
+(fn Utils.sh [s ?buf]
   (lambda get-output [s]
     (core.spit ".temp.sh" s)
     (str.trim (vim.call "system" "bash .temp.sh")))
 
   (lambda show-in-buffer [s]
-    (to-temp-buffer s :sp))
+    (Utils.to-temp-buffer s :sp))
 
   (let [out (get-output s)]
     (vim.call :system "rm .temp.sh")
 
     (if ?buf
-      (show-in-buffer out)
+      (Utils.show-in-buffer out)
       out)))
 
 ; Run an async command in shell and split
-(defn async-sh [s ?d]
+(fn Utils.async-sh [s ?d]
   (let [f (lambda __process [id data event]
             (if (= (type ?d) "function")
               (?d data)
-              (to-temp-buffer data (or ?d "sp"))))]
+              (Utils.to-temp-buffer data (or ?d "sp"))))]
     (core.spit (.. (os.getenv "HOME") "/.config/nvim/tmp/temp.sh") s)
     (vim.fn.jobstart "/bin/bash ~/.config/nvim/tmp/temp.sh"
                      {:on_stdout f
                       :stdout_buffered true})))
 
-(defn adjust-indent [?towards ?lineno]
-  (defn -indent [towards lineno]
+(fn Utils.adjust-indent [?towards ?lineno]
+  (lambda -indent [towards lineno]
     (let [lineno (- lineno 1)
-          line (get-line 0 lineno)]
+          line (Utils.get-line 0 lineno)]
       (when line
         (let [current-line-num lineno
               current-line-s line
@@ -439,59 +439,56 @@
                               (if (= towards 1)
                                 (string.gsub current-line-s "^" (string.rep " " vim.bo.shiftwidth))
                                 (string.gsub current-line-s (.. "^" (string.rep " " num-whitespace)) "")))]
-          (set-lines 0 [current-line-num (+ current-line-num 1)] modified-line)))))
-    (-indent (or ?towards 1) (or ?lineno (linenum))))
+          (Utils.set-lines 0 [current-line-num (+ current-line-num 1)] modified-line)))))
+    (-indent (or ?towards 1) (or ?lineno (Utils.linenum))))
 
-(defn increase-indent [?lineno]
-  (adjust-indent 1 ?lineno))
+(fn Utils.increase-indent [?lineno]
+  (Utils.adjust-indent 1 ?lineno))
 
-(defn decrease-indent [?lineno]
-  (adjust-indent -1 ?lineno))
+(fn Utils.decrease-indent [?lineno]
+  (Utils.adjust-indent -1 ?lineno))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; autocmd and augroup functions
 
 ;; autocmd-str
 ;; Get an autocmd string that can be executed with vim.cmd
-(defn autocmd-str [group event pattern exec]
+(fn Utils.autocmd-str [group event pattern exec]
   (let [exec (if (= (type exec) "string")
                exec
-               (register exec))]
+               (Utils.register exec))]
     (string.format "autocmd %s %s %s %s" group event pattern exec)))
 
-(defn autocmd [...]
-  (vim.cmd (autocmd-str ...)))
+(fn Utils.autocmd [...]
+  (vim.cmd (Utils.autocmd-str ...)))
 
-(defn augroup [name ?autocmd-forms]
+(fn Utils.augroup [name ?autocmd-forms]
   "Make an augroup using autocmd forms"
-  (vim.cmd (fmt "augroup %s\n    autocmd!\n augroup END" name))
+  (vim.cmd (Utils.fmt "augroup %s\n    autocmd!\n augroup END" name))
   (when ?autocmd-forms
     (each [_ form (ipairs ?autocmd-forms)]
-          (autocmd name (unpack ?autocmd-forms)))))
+          (Utils.autocmd name (unpack ?autocmd-forms)))))
 
-(defn add-hook [ ?groups ?events ?patterns exec ]
-  (let [_events (or (listify ?events) ["BufEnter"])
-       _patterns (or (listify ?patterns) ["*"])
-       _groups (or (listify ?groups) ["GlobalHook"])
+(fn Utils.add-hook [ ?groups ?events ?patterns exec ]
+  (let [_events (or (Utils.listify ?events) ["BufEnter"])
+       _patterns (or (Utils.listify ?patterns) ["*"])
+       _groups (or (Utils.listify ?groups) ["GlobalHook"])
        exec (if (= (type exec) "function")
-              (register exec)
+              (Utils.register exec)
               exec)]
 
     (assert (= (length _events) (length _patterns)))
 
     (each [_ g (ipairs _groups)]
       (for [i 1 (length _events)]
-        (vim.cmd (autocmd-str g
+        (vim.cmd (Utils.autocmd-str g
                               (. _events i)
                               (. _patterns i)
                               exec))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybinding-related functions
-(defn- get-help-desc [{:ll-prefix ll
-                        :l-prefix l
-                        :first-key first-key
-                        :help-desc help-desc}]
+(fn Utils.get-help-desc [ll l first-key help-desc]
   (when help-desc
     (if ll
       (do
@@ -504,66 +501,61 @@
     (. doom.map-help-groups.localleader first-key)
     (. doom.map-help-groups.leader first-key)))
 
-(defn register-to-wk [keys help ?help-desc ?not-register]
-  "Non-leader keys will be registered directly"
+(fn Utils.register-to-wk [keys help ?help-desc ?not-register]
+  (when (Utils.grep keys "leader")
+    (let [ll-prefix (Utils.grep keys "<localleader")
+          l-prefix  (Utils.grep keys "<leader")
+          keys (Utils.sed keys ["([<>]|localleader|leader)"] [""])
+          first-key (rx.match keys "^.")
+          help-desc (Utils.get-help-desc ll-prefix first-key (or ?help-desc false))
+          original-t (if help-desc
+                       {first-key {:name help-desc}}
+                       {first-key {}})
+          help-t (fun.reduce
+                   (fn [t k] (tset t k {}) (. t k))
+                   original-t
+                   (fun.iter keys))]
 
-  (when (grep keys "leader")
-   (let [ll-prefix (grep keys "<localleader")
-         l-prefix  (grep keys "<leader")
-         keys (sed keys ["([<>]|localleader|leader)"] [""])
-         first-key (rx.match keys "^.")
-         help-desc (get-help-desc {:ll-prefix ll-prefix
-                                    :l-prefix l-prefix
-                                    :first-key first-key
-                                    :help-desc (or ?help-desc false)})
-         original-t (if help-desc
-                      {first-key {:name help-desc}}
-                      {first-key {}})
-         help-t (fun.reduce
-                  (fn [t k] (tset t k {}) (. t k))
-                  original-t
-                  (fun.iter keys))]
+      (table.insert help-t help)
 
-     (table.insert help-t help)
+      (if
+        ll-prefix
+        (if ?not-register
+          original-t
+          (wk.register original-t {:prefix "<localleader>"}))
 
-     (if
-       ll-prefix
-       (if ?not-register
-         original-t
-         (wk.register original-t {:prefix "<localleader>"}))
+        l-prefix
+        (if ?not-register
+          original-t
+          (wk.register original-t {:prefix "<leader>"}))))))
 
-       l-prefix
-       (if ?not-register
-         original-t
-         (wk.register original-t {:prefix "<leader>"}))))))
-
-(defn define-key [opts]
+(fn Utils.define-key [opts]
   (let [noremap (match opts.noremap
                   false false
                   _ true)
-        key-attribs (or (listify opts.key-attribs) ["silent"])
+        key-attribs (or (Utils.listify opts.key-attribs) ["silent"])
         keys opts.keys
-        modes (or (listify opts.modes) ["n"])
-        events (or (listify opts.events)
+        modes (or (Utils.listify opts.modes) ["n"])
+        events (or (Utils.listify opts.events)
                    (if opts.patterns "BufEnter" false))
-        patterns (or (listify opts.patterns) false)
+        patterns (or (Utils.listify opts.patterns) false)
         exec (if (= (type opts.exec) "function")
-               (register opts.exec true)
+               (Utils.register opts.exec true)
                opts.exec)
         help (or opts.help exec)
         help-group (or opts.help-group "")
         repeatable (or opts.repeatable false)
-        groups (or (listify opts.groups) false)
+        groups (or (Utils.listify opts.groups) false)
 
         ; Not a part of opts
-        has-ll (if (grep keys "localleader")
+        has-ll (if (Utils.grep keys "localleader")
                  {:prefix "<localleader>"}
                  false)
-        has-l (if (grep keys "<leader>")
+        has-l (if (Utils.grep keys "<leader>")
                 {:prefix "<leader>"}
                 false)
 
-        key-attribs-str (table.concat (vec (fun.map (fn [s] (string.format "<%s>" s)) key-attribs)) " ")
+        key-attribs-str (table.concat (Utils.vec (fun.map (fn [s] (string.format "<%s>" s)) key-attribs)) " ")
         key-command-str (string.format "%s %s %s %s" (if noremap "noremap" "map") key-attribs-str keys exec)
         key-command-strings (core.map (fn [s]
                                         (if opts.repeatable
@@ -573,60 +565,60 @@
 
     (if (and events
              patterns)
-      (fun.each #(add-hook groups events patterns $1) key-command-strings)
+      (fun.each #(Utils.add-hook groups events patterns $1) key-command-strings)
       (fun.each vim.cmd key-command-strings))
 
-    (register-to-wk keys help help-group)))
+    (Utils.register-to-wk keys help help-group)))
 
-(defn define-keys [opts-a]
+(fn Utils.define-keys [opts-a]
   (each [_ a (ipairs opts-a)]
-    (define-key a)))
+    (Utils.define-key a)))
 
 ; Convert fnl to lua
-(defn convert-to-lua [?filenames]
+(fn Utils.convert-to-lua [?filenames]
   (let [filenames (or ?filenames doom.user_compile_fnl)
-        compiled-user-lua-path (join_path (os.getenv "HOME") ".vdoom.d" "compiled")
-        fnl-user-configs-path (join_path (os.getenv "HOME") ".vdoom.d" "fnl")
-        filenames (listify filenames)
-        src-filenames (core.map #(join_path fnl-user-configs-path (.. $1 ".fnl")) filenames)
-        dest-filenames (core.map #(join_path compiled-user-lua-path (.. "user-fnl-" $1 ".lua")) filenames)
+        compiled-user-lua-path (Utils.join_path (os.getenv "HOME") ".vdoom.d" "compiled")
+        fnl-user-configs-path (Utils.join_path (os.getenv "HOME") ".vdoom.d" "fnl")
+        filenames (Utils.listify filenames)
+        src-filenames (core.map #(Utils.join_path fnl-user-configs-path (.. $1 ".fnl")) filenames)
+        dest-filenames (core.map #(Utils.join_path compiled-user-lua-path (.. "user-fnl-" $1 ".lua")) filenames)
         zipped-paths (fun.zip src-filenames dest-filenames)]
     (fun.each
       (fn [src dest]
-        (when (path-exists src)
+        (when (Utils.path-exists src)
           (let [s (core.slurp src)
                 compiled (fnl.compileString s)]
             (core.spit dest compiled))))
       zipped-paths)))
 
 ; For error handling
-(defn try-then-else [try-f success-f failure-f]
+(fn Utils.try-then-else [try-f success-f failure-f]
   (let [(status message) (pcall try-f)]
     (if status
       (success-f)
       (failure-f message))))
 
-(defn try-catch-then [try-f handle-f ?then-f]
+(fn Utils.try-catch-then [try-f handle-f ?then-f]
   (let [(status message) (xpcall try-f handle-f)]
     (when ?then-f (?then-f))))
 
-(defn try-require [module-name type-module ?exec ?defer]
+(fn Utils.try-require [module-name type-module ?exec ?defer]
   (if ?defer
-    (vim.defer_fn #(try-then-else
+    (vim.defer_fn #(Utils.try-then-else
                      (fn [] 
                        (let [m (require module-name)]
                          (when ?exec
                            (?exec m))))
-                     #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name))
-                     #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))
+                     #(logger.ilog (Utils.fmt "[%s] Module: %s OK" type-module module-name))
+                     #(logger.flog (Utils.fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))
                   ?defer)
-    (try-then-else
+    (Utils.try-then-else
       #(require module-name)
-      #(logger.ilog (fmt "[%s] Module: %s OK" type-module module-name))
-      #(logger.flog (fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))))
+      #(logger.ilog (Utils.fmt "[%s] Module: %s OK" type-module module-name))
+      #(logger.flog (Utils.fmt "[%s] Module: %s DEBUG-REQUIRED\n%s" type-module module-name $1)))))
 
 ; Increases the size of current font by 1
-(defn adjust-font-size [inc-or-dec]
+(fn Utils.adjust-font-size [inc-or-dec]
   (let [size (rx.match vim.go.guifont ":h([0-9]+)$")
         font (rx.match vim.go.guifont "^[^:]+")
         new (if (= inc-or-dec "+")
@@ -636,24 +628,46 @@
     (set vim.go.guifont new-font)))
 
 ; Get user input
-(defn get-user-input [prompt validate loop ?opts]
+(fn Utils.get-user-input [prompt validate loop ?opts]
   (let [use-validate-r (or (?. ?opts :use_function) false)
         _first-input (vim.call :input prompt)
         _first-input (str.trim _first-input)]
     (if (= _first-input "")
-      (get-user-input prompt validate loop)
+      (Utils.get-user-input prompt validate loop)
       (let [is-valid (validate _first-input)]
         (if is-valid
           (if use-validate-r
             is-valid
             _first-input)
           (if loop
-            (get-user-input prompt validate true)))))))
+            (Utils.get-user-input prompt validate true)))))))
 
-(defn set-theme [?theme-name]
+(fn Utils.set-theme [?theme-name]
   (if doom.theme
     (vim.cmd (.. "color " doom.theme))
-    (vim.cmd (fmt "color %s" (or ?theme-name :night-owl))))
+    (vim.cmd (Utils.fmt "color %s" (or ?theme-name :night-owl))))
 
   (let [modeline (require :modeline)]
     (modeline.setup_colors)))
+
+; Has no real use as of now.
+(lambda Utils.auto-compile-lua []
+  ; Add a hook here
+  (Utils.add-hook :GlobalHook :BufWritePost "*fnl" (fn []
+                                                     (let [filename (vim.fn.expand "%:p")
+                                                           basename (path.name filename)
+                                                           ws (path.parent filename)
+                                                           s (core.slurp filename)
+                                                           compiled (fnl.compileString s)
+                                                           dest-filename (Utils.sed filename "fnl$" "lua")
+                                                           dest (if 
+                                                                  (Utils.grep filename "vdoom")
+                                                                  (Utils.fmt "%s/.vdoom.d/compiled/%s" (os.getenv "HOME") basename)
+                                                                  
+                                                                  (Utils.grep filename ".config/nvim")
+                                                                  (Utils.confp "compiled" basename)
+
+                                                                  dest-filename)]
+                                                       (core.spit dest compiled)))))
+
+Utils

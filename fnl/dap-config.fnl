@@ -1,7 +1,7 @@
-(module dap-config
-  {autoload {utils utils}})
+(local Dap {})
+(local utils (require :utils))
 
-(defn- supports-dap [ft]
+(fn Dap.supports-dap [ft]
   (let [first-path (utils.path-exists (utils.datap "vimspector" ft))
         second-path (utils.path-exists (utils.confp "support" "vimspector" ft))]
     (if 
@@ -13,8 +13,8 @@
 
       false)))
 
-(defn- copy-default-json [ft dest]
-  (let [src (supports-dap ft)]
+(fn Dap.copy-default-json [ft dest]
+  (let [src (Dap.supports-dap ft)]
 
     (if src
       (do (utils.sh (string.format "cp %s/default.json %s/.vimspector.json"
@@ -23,15 +23,15 @@
         true)
       false)))
 
-(defn- get-workspace-dir [s]
+(fn Dap.get-workspace-dir [s]
   (string.gsub s "/[^/]+$" ""))
 
-(defn- start-debugger []
-  (when (copy-default-json vim.bo.filetype (get-workspace-dir (vim.fn.expand "%:p")))
+(fn Dap.start-debugger []
+  (when (Dap.copy-default-json vim.bo.filetype (Dap.get-workspace-dir (vim.fn.expand "%:p")))
     (vim.call "vimspector#Continue")))
 
 (utils.define-keys [{:keys "<leader>dd" 
-                     :exec start-debugger
+                     :exec Dap.start-debugger
                      :help "Start vimspector"}
 
                     {:keys "<leader>dk"
@@ -61,3 +61,5 @@
                     {:keys "<leader>ds"
                      :exec ":call vimspector#StepInto()<CR>"
                      :help "Step in/step"}])
+
+Dap

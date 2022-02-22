@@ -1,6 +1,3 @@
-(module specs
-  {autoload {utils utils}})
-
 (local specs! _G.specs!)
 
 ; MarkdownPreview does not build itself by default. 

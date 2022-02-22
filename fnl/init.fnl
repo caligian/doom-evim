@@ -1,115 +1,102 @@
-(module initialize
-  {autoload {fnl fennel
-             logger logger
-             core aniseed.core
-             utils utils
-             lsp-configs lsp-configs}})
+(set _G.doom (require :globals))
+(local utils (require :utils))
+(local logger (require :logger))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Doom logging starts
-(logger.ilog "=================================================")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(utils.try-then-else (fn [] 
+                       (let [fnl (require :fennel)
+                             kbd (require :keybindings)
+                             pkg (require :packages)
+                             runner (require :runners)
+                             core (require :aniseed.core)
+                             repl (require :repl)
+                             snippet (require :snippets)
+                             lsp (require :lsp-configs)]
 
-; Require globals. They will be contained in _G.doom
-(when (not (. _G :doom))
-  (utils.try-require :globals :DOOM))
+                         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                         ; Doom logging starts
+                         (logger.ilog "=================================================")
+                         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Append required modules to doom
-(set doom.utils utils)
-(set doom.logger logger)
+                         ; Make some of these modules accessible to the user
+                         (set doom.utils utils)
+                         (set doom.logger logger)
+                         (set doom.runner runner)
 
-; Use this to set post-package-init configuration
-(set _G.after! (lambda after! [pkg config-f ?defer]
-                 (let [packages (utils.listify pkg)
-                       loaded   (core.filter #(. doom.packages $1) packages)
-                       equals   (= (length packages) (length loaded))]
-                   (if equals 
-                     (if ?defer
-                       (vim.defer_fn config-f ?defer)
-                       (do (config-f) true))
-                     false))))
+                         ; Use this to set post-package-init configuration
+                         (set _G.after! (lambda after! [pkg config-f ?defer]
+                                          (let [packages (utils.listify pkg)
+                                                loaded   (core.filter #(. doom.packages $1) packages)
+                                                equals   (= (length packages) (length loaded))]
+                                            (if equals 
+                                              (if ?defer
+                                                (vim.defer_fn config-f ?defer)
+                                                (do (config-f) true))
+                                              false))))
 
-(set _G.specs! (lambda specs! [pkg specs]
-                 (let [required-pkg (. doom.packages pkg)]
-                   (if required-pkg 
-                     (each [k v (pairs specs)]
-                       (tset (. doom.packages pkg) k v))))))
+                         (set _G.specs! (lambda specs! [pkg specs]
+                                          (let [required-pkg (. doom.packages pkg)]
+                                            (if required-pkg 
+                                              (each [k v (pairs specs)]
+                                                (tset (. doom.packages pkg) k v))))))
 
+                         ; Setup packages
+                         (pkg.setup)
 
-; Require packages
-(utils.try-require :packages :DOOM)
+                         ; Setup doom runner & REPL
+                         (runner.setup)
+                         (repl.setup)
 
-; Require user-overrides
-(utils.try-require :user-init "DOOM") 
+                         ; Load default configurations
+                         (require :configs)
+                         (require :specs)
 
-; Setup LSP
-(when doom.lsp.load_default
-  (utils.try-require :lsp-configs "DOOM")
+                         ; Require user-overrides
+                         (require :user-init)
+                         (require :user-specs)
 
-  (after! [:nvim-lspconfig 
-           :nvim-treesitter
-           :nvim-lsp-installer
-           :nvim-cmp
-           :cmp-nvim-lsp
-           :cmp-vsnip
-           :vim-vsnip
-           :trouble.nvim
-           :cmp-buffer
-           :cmp-path
-           :cmp-cmdline]
-          #(lsp-configs.setup)
-          300))
+                         ; Setup LSP
+                         (when doom.lsp.load_default
+                           (after! [:nvim-lspconfig 
+                                    :nvim-treesitter
+                                    :nvim-lsp-installer
+                                    :nvim-cmp
+                                    :cmp-nvim-lsp
+                                    :cmp-vsnip
+                                    :vim-vsnip
+                                    :trouble.nvim
+                                    :cmp-buffer
+                                    :cmp-path
+                                    :cmp-cmdline]
+                                   #(lsp.setup)
+                                   300))
 
-; Setup vimspector
-(after! :vimspector 
-        #(utils.try-require :dap-config :DOOM)
-        500)
+                         ; Setup vimspector
+                         (after! :vimspector 
+                                 #(require :dap-config)
+                                 500)
 
-; Setup basic utility functions for running files
-(when doom.default_runner
-  (utils.try-require :runners :DOOM 100))
+                         ; Register help
+                         ; Register all help-groups in <leader>
+                         (let [wk (require :which-key)]
+                           (each [k group-name (pairs doom.map-help-groups.leader)]
+                             (wk.register {k {:name group-name}} {:prefix "<leader>"}))
 
-; Load doom's basic repl
-(when doom.default_repl
-  (utils.try-require :repl :DOOM 100))
+                           (each [k group-name (pairs doom.map-help-groups.localleader)]
+                             (wk.register {k {:name group-name}} {:prefix "<localleader>"})))
 
-; Load package-configs
-(when doom.default_package_configs
-  (utils.try-require :configs :DOOM))
+                         ; Compile user fennel configs
+                         ; They shall be required by users when needed
+                         (utils.convert-to-lua)
 
-; Load keybindings
-(when doom.default_keybindings
-  (utils.try-require :keybindings :DOOM 100))
+                         ; Load the theme and also change the modeline colors accordingly
+                         (utils.set-theme)
 
-; Default vim-help mappings
-(when doom.default_help_keybindings
-  (utils.try-require :vim-help :DOOM 100))
+                         ; Setup keybindings
+                         (kbd.setup)
 
-(when doom.default_formatter
-  (utils.try-require :formatter :DOOM 100))
-
-(utils.try-require :snippets :DOOM 100)
-
-; Register help
-; Register all help-groups in <leader>
-(let [wk (require :which-key)]
-  (each [k group-name (pairs doom.map-help-groups.leader)]
-    (wk.register {k {:name group-name}} {:prefix "<leader>"}))
-
-  (each [k group-name (pairs doom.map-help-groups.localleader)]
-    (wk.register {k {:name group-name}} {:prefix "<localleader>"})))
-
-; Compile user fennel configs
-; They shall be required by users when needed
-(when doom.fnl_config 
-  (utils.try-then-else #(utils.convert-to-lua)
-                       #(logger.ilog (utils.fmt "[USER]: User fennel modules compiled successfuly to lua: %s" (vim.inspect doom.user_compile_fnl)))
-                       #(logger.flog (utils.fmt "[USER]: Could not compile user fennel files. DEBUG REQUIRED\n $1"))))
-
-; Load the theme and also change the modeline colors accordingly
-(utils.set-theme)
-
-; Set an autocmd for theme changes
+                         ; Set an autocmd for theme changes
 ; This is to ensure that modeline colors follow suit
-(utils.autocmd "GlobalHook" "ColorScheme" "*" #((. (require :modeline) :setup_colors)))
+                         (utils.autocmd "GlobalHook" "ColorScheme" "*" #((. (require :modeline) :setup_colors)))))
+                     #(logger.ilog "Configuration loaded successfuly!")
+                     #(logger.flog (utils.fmt "DEBUG required:\n%s" $1)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

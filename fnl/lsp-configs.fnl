@@ -1,10 +1,10 @@
-(module lsp-configs
-  {autoload {utils utils
-             core aniseed.core
-             str aniseed.string
-             fnl fennel}})
+(local Lsp {})
+(local utils (require :utils))
+(local core (require :aniseed.core))
+(local str (require :aniseed.string))
+(local fnl (require :fennel))
 
-(defn setup-keybindings []
+(fn Lsp.setup-keybindings []
   (utils.define-keys [{:keys "<leader>lb"
                        :exec ":lua vim.lsp.buf.declaration()<CR>"
                        :help "Show declarations"}
@@ -73,11 +73,11 @@
                        :exec ":lua vim.lsp.diagnostic.set_loclist()<CR>"
                        :help "Set loclist"}]))
 
-(defn on-attach-f [arg bufnr]
+(fn Lsp.on-attach-f [arg bufnr]
   (vim.api.nvim_buf_set_option bufnr "omnifunc" "v:lua.vim.lsp.omnifunc")
   (vim.cmd "command! Format execute lua vim.lsp.buf.formatting()"))
 
-(defn setup-sumneko-lua []
+(fn Lsp.setup-sumneko-lua []
   (let [binary-path (utils.datap "lsp_servers" "sumneko_lua" "extension" "server" "bin" "lua-language-server")
         main-path (utils.datap "lsp_servers" "sumneko_lua" "extension" "server" "bin" "main.lua")
         runtime-path (vim.split package.path ";")
@@ -95,7 +95,7 @@
                                     :workspace {:library (vim.api.nvim_get_runtime_file "" true)}
                                     :telemetry {:enable false}}}})))
 
-(defn setup-servers [?servers]
+(fn Lsp.setup-servers [?servers]
   (let [cmp-nvim-lsp (require :cmp_nvim_lsp)
         nvim-lsp (require :lspconfig)
         langs (utils.keys doom.langs)
@@ -110,13 +110,13 @@
               config (or (. confs i) {})]
 
           (when (not (. config :on_attach))
-            (set config.on_attach on-attach-f))
+            (set config.on_attach Lsp.on-attach-f))
           (when (not (. config :capabilities))
             (set config.capabilities capabilities))
           (let [current-server (. nvim-lsp server)]
             (current-server.setup config)))))))
 
-(defn setup [] 
+(fn Lsp.setup [] 
   ; Disable the annoying lsp virtual text. We got trouble.nvim
   (vim.diagnostic.config {:virtual_text false
                           :signs true
@@ -125,9 +125,11 @@
                           :severity_sort true})
 
   (require :nvim_cmp_setup)
-  (setup-keybindings)
-  (setup-servers)
+  (Lsp.setup-keybindings)
+  (Lsp.setup-servers)
 
   (when doom.lsp.install_sumneko_lua
-    (setup-sumneko-lua))
+    (Lsp.setup-sumneko-lua))
   true)
+
+Lsp

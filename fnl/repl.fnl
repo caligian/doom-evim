@@ -1,13 +1,13 @@
-(module repl
-  {autoload {utils utils
-             core aniseed.core}})
-
+(local Repl {})
+(local utils (require :utils))
+(local core (require :aniseed.core))
 (local vimp (require :vimp))
+(set vimp.always_override true)
 
-(defn- echo [msg]
+(fn Repl.echo [msg]
   (vim.cmd (utils.fmt "echom \"[REPL]: %s\"" (utils.sed msg ["\""] ["\\\""]))))
 
-(defn- new [cmd ?id]
+(fn Repl.new [cmd ?id]
   (let [cmd-t (vim.split cmd " ")
         is-running (or (. doom.repl.running_repls cmd) false)
         does-bufexists (if is-running 
@@ -22,7 +22,7 @@
       (and is-running (not does-bufexists))
       (do 
         (tset doom.repl.running_repls cmd nil)
-        (new cmd))
+        (Repl.new cmd))
 
       (do 
         (vim.cmd "tabnew")
@@ -35,13 +35,13 @@
 
           (tset doom.repl.running_repls cmd {:buffer bufnr :cmd cmd :id id})
 
-          (echo (utils.fmt "REPL for command: '%s' has been launched" cmd))
+          (Repl.echo (utils.fmt "REPL for command: '%s' has been launched" cmd))
 
           (if ?id
             (. is-running :id)
             bufnr))))))
 
-(defn- buffer-new [?cmd ?id]
+(fn Repl.buffer-new [?cmd ?id]
   (let [ft vim.bo.filetype
         id (or ?id false)
         cmd (if 
@@ -54,11 +54,11 @@
               false)]
     
     (if cmd
-      (new cmd id)
+      (Repl.new cmd id)
       false)))
 
-(defn split-with-repl [?direction ?cmd]
-  (let [bufnr (buffer-new ?cmd)
+(fn Repl.split-with-repl [?direction ?cmd]
+  (let [bufnr (Repl.buffer-new ?cmd)
         direction (match ?direction 
                     :sp "sp"
                     :vsp "vsp"
@@ -67,16 +67,16 @@
     (when bufnr
       (vim.cmd (.. direction " | buffer " bufnr)))))
 
-(defn split [?cmd]
-  (split-with-repl :sp ?cmd))
+(fn Repl.split [?cmd]
+  (Repl.split-with-repl :sp ?cmd))
 
-(defn vsplit [?cmd]
-  (split-with-repl :vsp ?cmd))
+(fn Repl.vsplit [?cmd]
+  (Repl.split-with-repl :vsp ?cmd))
 
-(defn tabnew [?cmd]
-  (split-with-repl :tab ?cmd))
+(fn Repl.tabnew [?cmd]
+  (Repl.split-with-repl :tab ?cmd))
 
-(defn shutdown [?cmd]
+(fn Repl.shutdown [?cmd]
   (let [cmd (or ?cmd (. doom.repl.ft vim.bo.filetype) false)
         is-running (if cmd 
                      (. doom.repl.running_repls cmd)
@@ -87,32 +87,32 @@
       (do 
         (vim.call "chanclose" job-id)
         (tset doom.repl.running_repls cmd nil)
-        (echo (utils.fmt "REPL for command: '%s' has been shutdown" cmd))))))
+        (Repl.echo (utils.fmt "REPL for command: '%s' has been shutdown" cmd))))))
 
-(defn shutdown-all []
+(fn Repl.shutdown-all []
   (let [all-jobs (core.map #(. $1 :id) (utils.vals doom.repl.running_repls))]
     (core.map #(vim.call :chanclose $1) all-jobs)
     (set doom.repl.running_repls {})
-    (echo "All REPLs have been shutdown")))
+    (Repl.echo "All REPLs have been shutdown")))
 
-(defn split-shell []
-  (split-with-repl :sp "bash"))
+(fn Repl.split-shell []
+  (Repl.split-with-repl :sp "bash"))
 
-(defn vsplit-shell []
-  (split-with-repl :vsp "bash"))
+(fn Repl.vsplit-shell []
+  (Repl.split-with-repl :vsp "bash"))
 
-(defn tabnew-shell []
-  (split-with-repl :tab "bash"))
+(fn Repl.tabnew-shell []
+  (Repl.split-with-repl :tab "bash"))
 
-(defn- get-string [what]
+(fn Repl.get-string [what]
   (match what
     :visual (utils.vtext true)
     :line (utils.current-line) 
     :till-point (utils.buffer-string 0 [0 (utils.linenum)] true) 
     :buffer (utils.buffer-string 0 [0 -1] true)
-    nil (get-string :line)))
+    nil (Repl.get-string :line)))
 
-(defn- send [?cmd what]
+(fn Repl.send [?cmd what]
   (let [is-option (match what
                     :line "line"
                     :visual "visual"
@@ -120,98 +120,14 @@
                     :buffer "buffer"
                     nil false)
         s (if is-option
-            (.. (get-string what) "\n\r")
+            (.. (Repl.get-string what) "\n\r")
             (.. what "\n\r"))
-        id (buffer-new ?cmd true)]
+        id (Repl.buffer-new ?cmd true)]
     (when id
       (vim.call "chansend" id s))))
 
-; REPL stuff
-(vimp.map_command :REPLNew #(buffer-new $1))
-(vimp.map_command :REPLSend #(send $1 $2))
-(vimp.map_command :REPLSplit #(split $1))
-(vimp.map_command :REPLVsplit #(vsplit $1))
-(vimp.map_command :REPLTab #(tabnew $1))
-
-; Shell stuff
-(vimp.map_command :REPLTabShell tabnew-shell)
-(vimp.map_command :REPLVsplitShell split-shell)
-(vimp.map_command :REPLSplitShell vsplit-shell)
-(vimp.map_command :REPLShellSend #(send "bash" $1))
-
-; keys
-(utils.define-keys [{:keys "<localleader>,t"
-                     :exec tabnew
-                     :help "Open a ft REPL in a new tab"}
-
-                    {:keys "<localleader>,T"
-                     :exec tabnew-shell
-                     :help "Open a new bash REPL in a new tab"}
-
-                    {:keys "<localleader>,e"
-                     :exec #(send nil :line)
-                     :help "Send current line to ft REPL"}
-
-                    {:keys "<localleader>,."
-                     :exec #(send nil :till-point)
-                     :help "Send strings till-point to ft REPL"}
-
-                    {:keys "<localleader>,b"
-                     :exec #(send nil :buffer)
-                     :help "Send buffer to ft REPL"}
-                    
-                    {:keys "<localleader>,E"
-                     :exec #(send :bash :line)
-                     :help "Send current line to bash REPL"}
-
-                    {:keys "<localleader>,>"
-                     :exec #(send :bash :till-point)
-                     :help "Send strings till-point to bash REPL"}
-
-                    {:keys "<localleader>,B"
-                     :exec #(send :bash :buffer)
-                     :help "Send buffer to bash REPL"}
-
-                    {:keys "<localleader>,E"
-                     :modes "v"
-                     :exec #(send :bash :visual)
-                     :help "Send visual range to bash REPL"}
-
-                    {:keys "<localleader>,e"
-                     :modes "v"
-                     :exec #(send nil :visual)
-                     :help "Send visual range to ft REPL"}
-                    
-                    {:keys "<localleader>ts" 
-                     :exec split-shell
-                     :help "Split buffer and open shell"}
-
-                    {:keys "<localleader>tv" 
-                     :exec vsplit-shell
-                     :help "Split buffer and open shell"}
-
-                    {:keys "<localleader>,s" 
-                     :exec split
-                     :help "Split buffer and open ft REPL"}
-
-                    {:keys "<localleader>,v" 
-                     :exec vsplit
-                     :help "Vsplit buffer and open ft REPL"}
-
-                    {:keys "<localleader>,k"
-                     :exec shutdown
-                     :help "Shutdown current ft REPL"}
-                    
-                    {:keys "<localleader>,K"
-                     :exec shutdown-all
-                     :help "Shutdown all REPLs"}
-                    
-                    {:keys "<localleader>tk"
-                     :help "Shutdown bash shell"
-                     :exec #(shutdown "bash")}])
-
 ; Debugging addon
-(defn get-debugger [?cmd]
+(fn Repl.get-debugger [?cmd]
   (if ?cmd
     (.. ?cmd " " (vim.fn.expand "%:p"))
 
@@ -220,32 +136,119 @@
                  (?. doom.langs vim.bo.filetype :debug)
                  (vim.fn.expand "%:p")))))
 
-(defn start-debugger [?cmd]
-  (let [debugger (or ?cmd (get-debugger))]
+(fn Repl.start-debugger [?cmd]
+  (let [debugger (or ?cmd (Repl.get-debugger))]
     (when debugger
-      (buffer-new debugger))))
+      (Repl.buffer-new debugger))))
 
-(defn split-debugger [?cmd]
-  (when (start-debugger ?cmd)
-    (split (get-debugger ?cmd))))
+(fn Repl.split-debugger [?cmd]
+  (when (Repl.start-debugger ?cmd)
+    (Repl.split (Repl.get-debugger ?cmd))))
 
-(defn vsplit-debugger [?cmd]
-  (when (start-debugger ?cmd) 
-    (vsplit (get-debugger ?cmd))))
+(fn Repl.vsplit-debugger [?cmd]
+  (when (Repl.start-debugger ?cmd) 
+    (Repl.vsplit (Repl.get-debugger ?cmd))))
 
-(defn send-to-debugger [what ?cmd]
-  (let [debugger (get-debugger ?cmd)]
-    (when (start-debugger ?cmd)
-      (send debugger what)
+(fn Repl.send-to-debugger [what ?cmd]
+  (let [debugger (Repl.get-debugger ?cmd)]
+    (when (Repl.start-debugger ?cmd)
+      (Repl.send debugger what)
       what)))
 
-(defn kill-debugger [?cmd]
-  (shutdown (or ?cmd (get-debugger))))
+(fn Repl.kill-debugger [?cmd]
+  (Repl.shutdown (or ?cmd (Repl.get-debugger))))
 
-; Map to commands
-(vimp.map_command "SplitDebugger" #(split-debugger))
-(vimp.map_command "VsplitDebugger" #(vsplit-debugger))
-(vimp.map_command "DebuggerSend" #(send-to-debugger))
-(vimp.map_command "KillDebugger" #(kill-debugger))
-(vimp.map_command "StartDebugger" #(start-debugger))
-(vimp.map_command "GetDebugger" #(echo (get-debugger)))
+(fn Repl.setup []
+  ; REPL stuff
+  (vimp.map_command :REPLNew #(Repl.buffer-new $1))
+  (vimp.map_command :REPLSend #(Repl.send $1 $2))
+  (vimp.map_command :REPLSplit #(Repl.split $1))
+  (vimp.map_command :REPLVsplit #(Repl.vsplit $1))
+  (vimp.map_command :REPLTab #(Repl.tabnew $1))
+
+  ; Shell stuff
+  (vimp.map_command :REPLTabShell tabnew-shell)
+  (vimp.map_command :REPLVsplitShell split-shell)
+  (vimp.map_command :REPLSplitShell vsplit-shell)
+  (vimp.map_command :REPLShellSend #(Repl.send "bash" $1))
+
+  ; keys
+  (utils.define-keys [{:keys "<localleader>,t"
+                       :exec Repl.tabnew
+                       :help "Open a ft REPL in a new tab"}
+
+                      {:keys "<localleader>,T"
+                       :exec Repl.tabnew-shell
+                       :help "Open a new bash REPL in a new tab"}
+
+                      {:keys "<localleader>,e"
+                       :exec #(Repl.send nil :line)
+                       :help "Send current line to ft REPL"}
+
+                      {:keys "<localleader>,."
+                       :exec #(Repl.send nil :till-point)
+                       :help "Send strings till-point to ft REPL"}
+
+                      {:keys "<localleader>,b"
+                       :exec #(Repl.send nil :buffer)
+                       :help "Send buffer to ft REPL"}
+
+                      {:keys "<localleader>,E"
+                       :exec #(Repl.send :bash :line)
+                       :help "Send current line to bash REPL"}
+
+                      {:keys "<localleader>,>"
+                       :exec #(Repl.send :bash :till-point)
+                       :help "Send strings till-point to bash REPL"}
+
+                      {:keys "<localleader>,B"
+                       :exec #(Repl.send :bash :buffer)
+                       :help "Send buffer to bash REPL"}
+
+                      {:keys "<localleader>,E"
+                       :modes "v"
+                       :exec #(Repl.send :bash :visual)
+                       :help "Send visual range to bash REPL"}
+
+                      {:keys "<localleader>,e"
+                       :modes "v"
+                       :exec #(Repl.send nil :visual)
+                       :help "Send visual range to ft REPL"}
+
+                      {:keys "<localleader>ts" 
+                       :exec Repl.split-shell
+                       :help "Split buffer and open shell"}
+
+                      {:keys "<localleader>tv" 
+                       :exec Repl.vsplit-shell
+                       :help "Split buffer and open shell"}
+
+                      {:keys "<localleader>,s" 
+                       :exec Repl.split
+                       :help "Split buffer and open ft REPL"}
+
+                      {:keys "<localleader>,v" 
+                       :exec Repl.vsplit
+                       :help "Vsplit buffer and open ft REPL"}
+
+                      {:keys "<localleader>,k"
+                       :exec Repl.shutdown
+                       :help "Shutdown current ft REPL"}
+
+                      {:keys "<localleader>,K"
+                       :exec Repl.shutdown-all
+                       :help "Shutdown all REPLs"}
+
+                      {:keys "<localleader>tk"
+                       :help "Shutdown bash shell"
+                       :exec #(Repl.shutdown "bash")}])
+
+
+  (vimp.map_command "SplitDebugger" #(Repl.split-debugger))
+  (vimp.map_command "VsplitDebugger" #(Repl.vsplit-debugger))
+  (vimp.map_command "DebuggerSend" #(Repl.send-to-debugger))
+  (vimp.map_command "KillDebugger" #(Repl.kill-debugger))
+  (vimp.map_command "StartDebugger" #(Repl.start-debugger))
+  (vimp.map_command "GetDebugger" #(Repl.echo (Repl.get-debugger))))
+
+Repl

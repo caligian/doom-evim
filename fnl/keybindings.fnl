@@ -1,119 +1,123 @@
-(module keybindings
-  {autoload {utils utils
-             vimp vimp}})
+(local Keybindings {})
+(local utils (require :utils))
+(local vimp (require :vimp))
+(set vimp.always_override true)
 
-; File management
-(utils.define-keys [{:keys "<C-ScrollWheelUp>"
-                     :exec #(utils.adjust-font-size "+")
-                     :help "Increase font size"}
+(local fnl (require :fennel))
+(local core (require :aniseed.core))
 
-                    {:keys "<C-ScrollWheelDown>"
-                     :exec #(utils.adjust-font-size "-")
-                     :help "Decrease font size"}
-                    
-                    {:keys "<leader>fs"
-                     :exec ":w<CR>"
-                     :help "Save curent file"}
+(fn Keybindings.setup []
+  (utils.define-keys [{:keys "<C-ScrollWheelUp>"
+                       :exec #(utils.adjust-font-size "+")
+                       :help "Increase font size"}
 
-                    {:keys "<leader>fv"
-                     :exec ":w <bar> source %<CR>"
-                     :help "Source current file"}
+                      {:keys "<C-ScrollWheelDown>"
+                       :exec #(utils.adjust-font-size "-")
+                       :help "Decrease font size"}
 
-                    {:keys "<leader>fp"
-                     :exec ":e ~/.config/nvim/fnl<CR>"
-                     :help "Open doom config dir"}
+                      {:keys "<leader>fs"
+                       :exec ":w<CR>"
+                       :help "Save curent file"}
 
-                    {:keys "<leader>fP"
-                     :exec ":e ~/.vdoom.d<CR>"
-                     :help "Open private config dir"}
+                      {:keys "<leader>fv"
+                       :exec ":w <bar> source %<CR>"
+                       :help "Source current file"}
 
-                    {:keys "<leader>fV"
-                     :exec ":source ~/.config/nvim/init.lua<CR>"
-                     :help "Source doom's init.lua"}
+                      {:keys "<leader>fp"
+                       :exec ":e ~/.config/nvim/fnl<CR>"
+                       :help "Open doom config dir"}
 
-                    ; Tab management 
-                    {:keys "<leader>tk"
-                     :exec ":tabclose<CR>"
-                     :help "Close current tab"}
+                      {:keys "<leader>fP"
+                       :exec ":e ~/.vdoom.d<CR>"
+                       :help "Open private config dir"}
 
-                    {:keys "<leader>tn"
-                     :exec ":tabnext<CR>"
-                     :help "Go to next tab"}
+                      {:keys "<leader>fV"
+                       :exec ":source ~/.config/nvim/init.lua<CR>"
+                       :help "Source doom's init.lua"}
 
-                    {:keys "<leader>tp"
-                     :exec ":tabprevious<CR>"
-                     :help "Go to previous tab"}
+                      ; Tab management 
+                      {:keys "<leader>tk"
+                       :exec ":tabclose<CR>"
+                       :help "Close current tab"}
 
-                    {:keys "<leader>tf"
-                     :exec ":tabfind"
-                     :help "Find tab"}
+                      {:keys "<leader>tn"
+                       :exec ":tabnext<CR>"
+                       :help "Go to next tab"}
 
-                    {:keys "<leader>te"
-                     :exec ":tabedit<CR>"
-                     :help "Open file in a new tab"}
+                      {:keys "<leader>tp"
+                       :exec ":tabprevious<CR>"
+                       :help "Go to previous tab"}
 
-                    {:keys "<leader>tt"
-                     :exec ":tabnew<CR>"
-                     :help "Open a new tab"}
+                      {:keys "<leader>tf"
+                       :exec ":tabfind"
+                       :help "Find tab"}
 
-                    ; Buffers 
-                    {:keys "<leader>qw"
-                     :exec ":xa!<CR>"
-                     :help "Save buffers and quit"}
+                      {:keys "<leader>te"
+                       :exec ":tabedit<CR>"
+                       :help "Open file in a new tab"}
 
-                    {:keys "<leader>bp"
-                     :exec ":bprev<CR>"
-                     :help "Previous buffer"}
+                      {:keys "<leader>tt"
+                       :exec ":tabnew<CR>"
+                       :help "Open a new tab"}
 
-                    {:keys "<leader>bn"
-                     :exec ":bnext<CR>"
-                     :help "Next buffer"}
+                      ; Buffers 
+                      {:keys "<leader>qw"
+                       :exec ":xa!<CR>"
+                       :help "Save buffers and quit"}
 
-                    {:keys "<leader>br"
-                     :exec ":e<CR>"
-                     :help "Revert buffer"}
+                      {:keys "<leader>bp"
+                       :exec ":bprev<CR>"
+                       :help "Previous buffer"}
 
-                    {:keys "<leader>bR"
-                     :exec ":set readonly<CR>"
-                     :help "Read-only buffer"}
+                      {:keys "<leader>bn"
+                       :exec ":bnext<CR>"
+                       :help "Next buffer"}
 
-                    {:keys "<leader>bk"
-                     :exec ":hide<CR>"
-                     :help "Hide current buffer"}
+                      {:keys "<leader>br"
+                       :exec ":e<CR>"
+                       :help "Revert buffer"}
 
-                    {:keys "<leader>qq"
-                     :exec ":qa!<CR>"
-                     :help "Quit unconditionally"}
+                      {:keys "<leader>bR"
+                       :exec ":set readonly<CR>"
+                       :help "Read-only buffer"}
 
-                    {:keys "<del>"
-                     :exec ":noh<CR>"
-                     :help "No highlight"}
+                      {:keys "<leader>bk"
+                       :exec ":hide<CR>"
+                       :help "Hide current buffer"}
 
-                    ; Easy command access 
-                    {:keys "<leader>;"
-                     :exec ": "
-                     :help "Open command mode"}
-                    
-                    {:keys "<localleader>&"
-                     :exec #(utils.async-sh (utils.get-user-input "bash % " 
-                                                                  (fn [input]
-                                                                    (let [input (utils.match-sed input
-                                                                                           ["{%}" "{%:p}" "{%:t}" "{%:e}" "{%:h}" "{%:r}"] 
-                                                                                           [(vim.fn.expand "%")
-                                                                                            (vim.fn.expand "%:p")
-                                                                                            (vim.fn.expand "%:t")
-                                                                                            (vim.fn.expand "%:e")
-                                                                                            (vim.fn.expand "%:h")
-                                                                                            (vim.fn.expand "%:r")])]
-                                                                      input))
-                                                                  true
-                                                                  {:use_function true}))
-                     :help "Run an async sh command"}
-                  
-                    ; Clipboad
-                    {:keys "<leader>xp"
-                     :help "Paste from clipboard"
-                     :exec ":normal! \"+p<CR>"}])
+                      {:keys "<leader>qq"
+                       :exec ":qa!<CR>"
+                       :help "Quit unconditionally"}
+
+                      {:keys "<del>"
+                       :exec ":noh<CR>"
+                       :help "No highlight"}
+
+                      ; Easy command access 
+                      {:keys "<leader>;"
+                       :exec ": "
+                       :help "Open command mode"}
+
+                      {:keys "<localleader>&"
+                       :exec #(utils.async-sh (utils.get-user-input "bash % " 
+                                                                    (fn [input]
+                                                                      (let [input (utils.match-sed input
+                                                                                                   ["{%}" "{%:p}" "{%:t}" "{%:e}" "{%:h}" "{%:r}"] 
+                                                                                                   [(vim.fn.expand "%")
+                                                                                                    (vim.fn.expand "%:p")
+                                                                                                    (vim.fn.expand "%:t")
+                                                                                                    (vim.fn.expand "%:e")
+                                                                                                    (vim.fn.expand "%:h")
+                                                                                                    (vim.fn.expand "%:r")])]
+                                                                        input))
+                                                                    true
+                                                                    {:use_function true}))
+                       :help "Run an async sh command"}
+
+; Clipboad
+{:keys "<leader>xp"
+ :help "Paste from clipboard"
+ :exec ":normal! \"+p<CR>"}])
 
 ; Reload entire config
 (utils.define-keys [{:keys "<leader>hrl"
@@ -131,15 +135,7 @@
                                   new-font (if (utils.grep font "GohuFont")
                                              (.. "UbuntuMono NF:h" 14)
                                              (.. "GohuFont NF:h11"))]
-                              (set vim.o.guifont new-font))}
-
-                    {:keys "<leader>hrr"
-                     :help "Reload doom"
-                     :exec (fn [] 
-                             (set doom.user_packages (require :user-packages))
-                             (set doom.essential_packages (require :essential_packages))
-                             (set doom.default_packages (require :default_packages))
-                             (require :init))}])
+                              (set vim.o.guifont new-font))}])
 
 ; Quickly adjust indentation
 ; Respects v:count and lines in visual range
@@ -194,11 +190,11 @@
                      :exec ":vimgrep /(require/ *fnl %<CR>"}
 
                     {:keys "<localleader>qf"
-                     :help "Search defns in buffer"
+                     :help "Search functions in buffer"
                      :key-attribs "buffer"
                      :patterns "fennel"
                      :events "FileType"
-                     :exec ":vimgrep /(defn / *fnl %<CR>"}
+                     :exec ":vimgrep /(\\(lambda\\|fn\\) / *fnl %<CR>"}
 
                     {:keys "<localleader>qL"
                      :help "Search locals in buffer"
@@ -222,11 +218,11 @@
                      :exec ":vimgrep /(require/ *fnl<CR>"}
 
                     {:keys "<localleader>qF"
-                     :help "Search defns"
+                     :help "Search functions in cwd"
                      :key-attribs "buffer"
                      :patterns "fennel"
                      :events "FileType"
-                     :exec ":vimgrep /(defn / *fnl<CR>"}
+                     :exec ":vimgrep /(\\(lambda\\|fn\\) / *fnl<CR>"}
 
                     {:keys "<localleader>qL"
                      :help "Search locals"
@@ -241,4 +237,6 @@
 (vimp.map_command "CopyUserPackages" #(utils.sh "cp ~/.vdoom.d/user-packages.lua ~/.config/nvim/lua/default_packages.lua"))
 (vimp.map_command "EditDefaultPackages" #(utils.exec ":e ~/.config/nvim/lua/default_packages.lua"))
 (vimp.map_command "EditUserPackages" #(utils.exec ":e ~/.vdoom.d/user-packages.lua"))
-(vimp.map_command "CopySamplePackages" #(utils.sh "cp ~/.config/nvim/lua/default_packages.lua ~/.config/nvim/sample-user-configs/user-packages.lua"))
+(vimp.map_command "CopySamplePackages" #(utils.sh "cp ~/.config/nvim/lua/default_packages.lua ~/.config/nvim/sample-user-configs/user-packages.lua")))
+
+Keybindings

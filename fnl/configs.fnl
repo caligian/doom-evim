@@ -1,8 +1,5 @@
-(module configs
-  {autoload {utils utils
-             core aniseed.core}})
-
-; Very doom-emacs-esque after!
+(local utils (require :utils))
+(local core (require :aniseed.core))
 (local after! _G.after!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

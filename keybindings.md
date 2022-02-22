@@ -291,15 +291,6 @@ Please download this file if you want a keybindings cheatsheet to refer to.
         <th>patterns</th>
     </tr>
     <tr>
-        <td>SPC hrr</td>
-        <td>Reload doom</td>
-        <td>n</td>
-        <td>true</td>
-        <td>silent</td>
-        <td>all</td>
-        <td>all</td>
-    </tr>
-    <tr>
         <td>SPC hrf</td>
         <td>Toggle back and forth between Gohu and BitstreamVeraSans</td>
         <td>n</td>
