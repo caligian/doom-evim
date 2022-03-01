@@ -4,12 +4,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; git-signs
+(after! :vim-bookmarks #(do 
+                          (set vim.g.bookmark_save_per_working_dir 1)
+                          (set vim.g.bookmark_auto_save 1)))
+
 (after! :gitsigns.nvim
         #((. (require :gitsigns) :setup)))
 
 (after! :neorg #(require :configs.neorg-config))
 
-
+(after! :conjure #(vim.cmd "let g:conjure#client#hy#stdio#command = 'hy'"))
 
 (after! :vim-vsnip #(require :configs.vim-vsnip-config))
 
@@ -112,9 +116,14 @@
 
 (after! [:telescope.nvim 
          :telescope-project.nvim 
+         :telescope-vim-bookmarks.nvim
          :telescope-file-browser.nvim 
          :telescope-fzf-native.nvim]
-        #(require :configs.telescope-config))
+        #(do 
+           (require :configs.telescope-config)
+
+           (let [tscope-font-switcher (require :telescope-font-switcher)]
+             (tscope-font-switcher.setup))))
 
 (after! :nvim-treesitter-textobjects
         #(require :configs.nvim-treesitter-textobjects-config)

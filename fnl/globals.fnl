@@ -3,9 +3,7 @@
 (vim.cmd "autocmd GlobalHook WinLeave _temp_output_buffer :q")
 
 ; Globals
-{:version "v1.0.0"
-
- :fnl_config true
+{:fnl_config true
 
  ; theme
  :theme "night-owl" 
@@ -41,6 +39,14 @@
                    :localleader {"," "REPL"
                                  "t" "REPL"
                                  "e" "REPL"}}
+
+ ; All stuff for templates.fnl
+ :templates {:extensions [:fnl :py :rb :lua :hy]
+             :ft-ext-assoc {:fennel "fnl"
+                            :hy "hy"
+                            :python "py"
+                            :ruby "rb"
+                            :perl "pl"}}
 
  ; LSP defaults
  :lsp {:install_sumneko_lua false

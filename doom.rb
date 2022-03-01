@@ -28,6 +28,8 @@ class SetupDoom
       'pineapplegiant/spaceduck' => '0d06e20f8390b58de3e69a1ac5c43d2ca833ce39',
       'archseer/colibri.vim' => 'ad82132e0cbbdfa194d722f15c2df8f0d04b5b71',
       'haishanh/night-owl.vim' => '783a41a27f7fe55ed91d1ec0f0351d06ae17fbc7',
+      'MattesGroeger/vim-bookmarks' => '9cc5fa7ecc23b052bd524d07c85356c64b92aeef',
+      'tom-anders/telescope-vim-bookmarks.nvim' => 'b7a436eba6102c2bc73f49766a12e79d24ab8fb5',
     }
   end
 

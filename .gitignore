@@ -10,3 +10,4 @@ vim/*
 *tmp
 *swp
 *~
+.vim-bookmarks

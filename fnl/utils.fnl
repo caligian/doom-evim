@@ -1,5 +1,6 @@
 (local Utils {})
 (local core (require :aniseed.core))
+(local fs (require :path.fs))
 (local logger (require :logger))
 (local path (require :path))
 (local str (require :aniseed.string))
@@ -23,20 +24,12 @@
 (fn Utils.fmt [...]
   (string.format ...))
 
-(fn Utils.path-exists [path]
-  (let [exists (vim.fn.glob path)]
-    (if (= (length exists) 0)
-      false
-      exists)))
+(fn Utils.path-exists [p]
+  (path.exists p))
 
-(fn Utils.list-dir [path]
-  (let [path (Utils.path-exists path)]
-    (if path
-      (let [path-arr (Utils.split path "\n")]
-        (if (= (length path-arr) 0)
-          path
-          path-arr))
-      false)))
+(fn Utils.list-dir [p]
+  (when (path.exists p)
+    (icollect [f _ (fs.dir p)] f)))
 
 (fn Utils.register [f ?keybinding]
   (table.insert doom.lambdas f)
@@ -191,10 +184,10 @@
         rest-s))
     s))
 
-; Traverses through r-a and tries to match regex to s 
+; Traverses through r-a and tries to match regex to s
 ; If match is true then return the sed string
 (fn Utils.match-sed [s r-a s-a]
-  (if (= (length r-a) 0) 
+  (if (= (length r-a) 0)
     s
     (let [current-regex (Utils.first r-a)
           rest-regex (Utils.rest r-a)
@@ -203,11 +196,11 @@
           rest-sub (Utils.rest s-a)
 
           does-match (rx.match s current-regex)]
-      (if does-match 
+      (if does-match
         (Utils.match-sed (rx.gsub s current-regex current-sub)
                    []
                    [])
-        (Utils.match-sed s 
+        (Utils.match-sed s
                    rest-regex
                    rest-sub)))))
 
@@ -267,8 +260,10 @@
                                s)))
 
 (fn Utils.set-lines [?bufnr [start-row ?end-row] s]
-  (let [end-row (or ?end-row (+ 1 start-row))
-        s (Utils.listify s)
+  (let [s (if (= (type s) "string")
+            (Utils.split s "[\n\r]+")
+            (Utils.listify s))
+        end-row (or ?end-row (length s))
         bufnr (or ?bufnr 0)]
     (vim.api.nvim_buf_set_lines bufnr start-row end-row false s)))
 
@@ -378,15 +373,13 @@
         bufnr (if (= buf-exists -1)
                 (do
                   (vim.fn.bufadd buffer-name)
-                  (vim.cmd (Utils.fmt "call setbufvar('%s', '%s', '%s')" buffer-name "&buftype" "nofile"))
+                  (set vim.bo.buftype :nofile)
                   (vim.fn.bufnr buffer-name))
-
                 (vim.fn.bufnr buffer-name))
         number-of-lines (Utils.get-line-count bufnr)]
     (Utils.set-lines bufnr [0 number-of-lines] "")
     (Utils.set-lines bufnr [0 (- s-len 1)] s)
     (vim.cmd (Utils.fmt ":%s | b %s" direction buffer-name))))
-
 
 (fn Utils.sh [s ?buf]
   (lambda get-output [s]
@@ -409,8 +402,7 @@
             (if (= (type ?d) "function")
               (?d data)
               (Utils.to-temp-buffer data (or ?d "sp"))))]
-    (core.spit (.. (os.getenv "HOME") "/.config/nvim/tmp/temp.sh") s)
-    (vim.fn.jobstart "/bin/bash ~/.config/nvim/tmp/temp.sh"
+    (vim.fn.jobstart s
                      {:on_stdout f
                       :stdout_buffered true})))
 
@@ -605,7 +597,7 @@
 (fn Utils.try-require [module-name type-module ?exec ?defer]
   (if ?defer
     (vim.defer_fn #(Utils.try-then-else
-                     (fn [] 
+                     (fn []
                        (let [m (require module-name)]
                          (when ?exec
                            (?exec m))))
@@ -619,8 +611,7 @@
 
 ; Increases the size of current font by 1
 (fn Utils.adjust-font-size [inc-or-dec]
-  (let [size (rx.match vim.go.guifont ":h([0-9]+)$")
-        font (rx.match vim.go.guifont "^[^:]+")
+  (let [(font size) (string.match vim.go.guifont "([^:]+):h([^$]+)")
         new (if (= inc-or-dec "+")
               (+ size 2)
               (- size 2))
@@ -642,6 +633,11 @@
           (if loop
             (Utils.get-user-input prompt validate true)))))))
 
+(fn Utils.get-user-inputs [...]
+  (let [args [...]]
+    (each [_ i (ipairs args)]
+      (Utils.get-user-input (unpack i)))))
+
 (fn Utils.set-theme [?theme-name]
   (if doom.theme
     (vim.cmd (.. "color " doom.theme))
@@ -660,14 +656,70 @@
                                                            s (core.slurp filename)
                                                            compiled (fnl.compileString s)
                                                            dest-filename (Utils.sed filename "fnl$" "lua")
-                                                           dest (if 
+                                                           dest (if
                                                                   (Utils.grep filename "vdoom")
                                                                   (Utils.fmt "%s/.vdoom.d/compiled/%s" (os.getenv "HOME") basename)
-                                                                  
+
                                                                   (Utils.grep filename ".config/nvim")
                                                                   (Utils.confp "compiled" basename)
 
                                                                   dest-filename)]
                                                        (core.spit dest compiled)))))
+
+; This function is best useful when used in tandem with other functions
+; that work with the open buffer.
+; However, if you don't use any other function after open a temp buffer
+; and quit it, nothing happens and the buffer just closes.
+(lambda Utils.open-temp-input-buffer [bufname ?direction ?ft]
+  (let [current-ft (if
+                     true
+                     vim.bo.filetype
+
+                     ?ft
+                     ?ft
+
+                     false)
+        direction (or ?direction "sp")]
+
+    (if (= direction "vsp")
+      (vim.cmd (Utils.fmt ":vsplit %s" bufname))
+      (vim.cmd (Utils.fmt ":split %s" bufname)))
+
+    (set vim.bo.buftype "nofile")
+    (set vim.bo.buflisted false)
+
+    (when current-ft
+      (set vim.bo.filetype current-ft))))
+
+
+; callback function should accept one argument
+; This argument is the string obtained from buffer defined by bufname
+(fn Utils.get-temp-buffer-string-and-cb [bufname f]
+  (let [s (Utils.buffer-string (vim.call :bufnr bufname) [0 -1] false)]
+    (if (and (= 1 (length s))
+             (= (. s 1) ""))
+      false
+      (f s))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Json utils
+(lambda Utils.slurp-json [path ?cb]
+  (let [s (vim.call :json_decode (core.slurp path))]
+    (if ?cb
+      (?cb s)
+      s)))
+
+; post-write-cb does not take any args
+; pre-write-cb is called on the data before converting it to json
+(lambda Utils.spit-json [path data ?pre-write-cb ?post-write-cb]
+  (let [str (if ?pre-write-cb
+              (?pre-write-cb data)
+              data)
+        json (vim.call :json_encode str)]
+    (core.spit path json)
+
+    (if ?post-write-cb
+      (?post-write-cb)
+      json)))
 
 Utils

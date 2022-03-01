@@ -34,7 +34,7 @@
                        _ _extra-args)
                      "")
 
-        final-cmd (string.format "%s %s %s %s %s" pipe-args binary binary-args file extra-args)]
+        final-cmd (string.format "%s %s %s %s %s &>/dev/stdout" pipe-args binary binary-args file extra-args)]
     (values final-cmd file)))
 
 (fn Runner._runner [binary ?hook]

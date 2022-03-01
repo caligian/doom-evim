@@ -6,27 +6,33 @@
   ; All the user snippets will go in ~/.local/share/nvim/user-snippets/
   (set vim.g.vsnip_snippet_dir (utils.datap "user-snippets"))
 
-  ; Open a new split/vsplit window and set buffer props
-  (utils.define-key {:keys "<leader>&ns"
-                     :exec (fn []
-                             (let [current-ft vim.bo.filetype]
-                               (vim.cmd ":split _new_snippet | :wincmd k")
-                               (set vim.bo.buftype "nofile")
-                               (set vim.bo.buflisted false)
-                               (set vim.bo.filetype current-ft)))})
 
-  (utils.define-key {:keys "<leader>&nv"
-                     :exec (fn []
-                             (let [current-ft vim.bo.filetype]
-                               (vim.cmd ":vsplit _new_snippet | :wincmd k")
-                               (set vim.bo.buftype "nofile")
-                               (set vim.bo.buflisted false)
-                               (set vim.bo.filetype current-ft)))})
+                      
+                      {:keys "<leader>&ts"
+                       :help "Edit new template in split"
+                       :exec #(let [ft vim.bo.filetype
+                                    bufname (.. "_new_template_" ft)]
+                                (Utils.open-temp-input-buffer bufname :sp ft))}
+                      
+
+
+  ; Open a new split/vsplit window and set buffer props
+  (utils.define-key {:keys "<leader>&sv"
+                     :help "Edit new snippet in vsplit"
+                     :exec #(let [ft vim.bo.filetype
+                                  bufname (.. "_new_snippet_" ft)]
+                              (Utils.open-temp-input-buffer bufname :vsp ft))})
+
+  (utils.define-key {:keys "<leader>&ss"
+                     :help "Edit new snippet in split"
+                     :exec #(let [ft vim.bo.filetype
+                                  bufname (.. "_new_snippet_" ft)]
+                              (Utils.open-temp-input-buffer bufname :sp ft))})
 
   ; Get the string from the buffer and save the snippet
   (utils.define-key {:keys "gx"
                      :key-attribs "buffer"
-                     :patterns "_new_snippet"
+                     :patterns "_new_snippet_*"
                      :events "BufEnter"
                      :exec (fn []
                              (let [s (utils.buffer-string (vim.call :winbufnr 0) [0 -1] false)]
@@ -55,11 +61,11 @@
                                        (core.spit fname (vim.call :json_encode new-json))))))))})
 
   ; Some keybindings for vsnip
-  (utils.define-keys [{:keys "<leader>&ev"
+  (utils.define-keys [{:keys "<leader>&sev"
                        :exec ":VsnipOpenVsplit<CR>"
                        :help "Open a snippets json in vsplit"}
 
-                      {:keys "<leader>&es"
+                      {:keys "<leader>&ses"
                        :exec ":VsnipOpenSplit<CR>"
                        :help "Open a snippets json in split"}]))
 
