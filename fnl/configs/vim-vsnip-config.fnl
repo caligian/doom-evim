@@ -1,5 +1,9 @@
 (module vim-vsnip-config
-  {autoload {utils utils}})
+  {autoload {utils utils
+             Path path}})
+
+(set vim.g.vsnip_snippet_dir (Path (vim.fn.stdpath "data") "doom-snippets"))
+
 
 (utils.define-keys [{:keys "<C-j>"
                      :noremap false

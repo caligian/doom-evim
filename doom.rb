@@ -99,6 +99,8 @@ class SetupDoom
     `luarocks --lua-version 5.1 --local install lualogging`
     `luarocks --lua-version 5.1 --local install lpath`
     `luarocks --lua-version 5.1 --local install fun`
+    `luarocks --lua-version 5.1 --local install colorise`
+    `luarocks --lua-version 5.1 --local install array`
 
     puts 'Run this command: "luarocks --lua-version 5.1 path >> ~/<.bashrc or .zshrc or .xxxrc> to use the rocks with doom."'
     puts 'Reopen your shell in order to use the lua packages.'

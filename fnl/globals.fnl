@@ -6,7 +6,7 @@
 {:fnl_config true
 
  ; theme
- :theme "night-owl" 
+ :theme "palenight" 
 
  ; Lisp langs to which delimitMate will not start
  :lisp_langs ["fennel" "clojure" "scheme"]

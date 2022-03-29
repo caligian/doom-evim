@@ -5,14 +5,11 @@
 (fn Snippet.setup []
   ; All the user snippets will go in ~/.local/share/nvim/user-snippets/
   (set vim.g.vsnip_snippet_dir (utils.datap "user-snippets"))
-
-
-                      
                       {:keys "<leader>&ts"
                        :help "Edit new template in split"
                        :exec #(let [ft vim.bo.filetype
                                     bufname (.. "_new_template_" ft)]
-                                (Utils.open-temp-input-buffer bufname :sp ft))}
+                                (utils.open-temp-input-buffer bufname :sp ft))}
                       
 
 
@@ -21,14 +18,15 @@
                      :help "Edit new snippet in vsplit"
                      :exec #(let [ft vim.bo.filetype
                                   bufname (.. "_new_snippet_" ft)]
-                              (Utils.open-temp-input-buffer bufname :vsp ft))})
+                              (utils.open-temp-input-buffer bufname :vsp ft))})
 
   (utils.define-key {:keys "<leader>&ss"
                      :help "Edit new snippet in split"
                      :exec #(let [ft vim.bo.filetype
                                   bufname (.. "_new_snippet_" ft)]
-                              (Utils.open-temp-input-buffer bufname :sp ft))})
+                              (utils.open-temp-input-buffer bufname :sp ft))})
 
+  
   ; Get the string from the buffer and save the snippet
   (utils.define-key {:keys "gx"
                      :key-attribs "buffer"
@@ -40,8 +38,8 @@
                                         (= (. s 1) ""))
                                  false
                                  (let [name (utils.get-user-input "Snippet name > " #(~= $1 "") true)
-                                       dest-dir (utils.datap "user-snippets")
-                                       fname (utils.datap "user-snippets" (.. vim.bo.filetype ".json"))
+                                       dest-dir (utils.datap "doom-snippets")
+                                       fname (utils.datap "doom-snippets" (.. vim.bo.filetype ".json"))
                                        prefix (utils.get-user-input "Snippet prefix > " #(~= $1 "") true)
                                        json {}]
 
@@ -51,15 +49,16 @@
                                      (utils.sh (.. "mkdir " dest-dir)))
 
                                    (if (not (utils.path-exists fname))
-                                     (core.spit fname (vim.call :json_encode json))
-                                     (let [_file (core.slurp fname)
-                                           file (if (not (string.match _file "[{}]"))
-                                                  {}
-                                                  _file)
-                                           current-json (vim.call :json_decode (core.slurp fname))
-                                           new-json (vim.tbl_extend :force current-json json)]
-                                       (core.spit fname (vim.call :json_encode new-json))))))))})
+                                     (core.spit fname (vim.call :json_encode json)))
 
+                                   (let [_file (core.slurp fname)
+                                         file (if (not (string.match _file "[{}]"))
+                                                {}
+                                                _file)
+                                         current-json (vim.call :json_decode (core.slurp fname))
+                                         new-json (vim.tbl_extend :force current-json json)]
+                                     (core.spit fname (vim.call :json_encode new-json)))
+                                   ))))})
   ; Some keybindings for vsnip
   (utils.define-keys [{:keys "<leader>&sev"
                        :exec ":VsnipOpenVsplit<CR>"

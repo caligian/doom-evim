@@ -295,10 +295,10 @@
 
 ; Just like emacs' save-excursion except that this is not a macro
 ; Executes a function and then returns the cursor to its original position
-(fn Utils.save-excursion [?bufnr f]
-  (let [original-pos (Utils.pos)
-        output       (f)]
-    (Utils.set-pos ?bufnr original-pos)
+(fn Utils.save-excursion [f]
+  (let [current-bufnr (Utils.get-bufnr :%)
+        output        (f)]
+    (vim.cmd (.. ":buffer " current-bufnr)) 
     output))
 
 ; Get text in visual range
@@ -358,10 +358,10 @@
 
 (fn Utils.get-line [?bufnr ?lineno]
   (let [bufnr (or ?bufnr 0)
-        lineno (or ?lineno (Utils.linenum))
+        lineno (or ?lineno (Utils.lineno))
         s (Utils.buffer-string bufnr [lineno (+ 1 lineno)] true)]
     (if (= (length s) 0)
-      false
+      ""
       s)))
 
 (fn Utils.to-temp-buffer [s ?direction]

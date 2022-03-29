@@ -31,8 +31,7 @@ You can either clone the repo and use `ruby doom.rb set-version` to select a ver
 ### Basic requirements
 1. [neovim >= 0.5](https://github.com/neovim/neovim/wiki/Installing-Neovim).
 2. `fdfind`, `lua5.1`, `luarocks`, `rg`, `ruby`, `node` and `npm`. You OS package manager should have these. After you install these, please install `yarn` via `npm`.
-3. lua5.1 modules: [rex_pcre2](https://rrthomas.github.io/lrexlib/manual.html), [luafun](https://luafun.github.io/), [lualogging](https://neopallium.github.io/lualogging/index.html), [lpath](https://github.com/starwing/lpath) and [lua-set](https://github.com/EvandroLG/set-lua). With ruby you can run `doom.rb` to install these.
-4. GNU/Linux. Currently doom-evim only supports GNU/Linux.
+3. GNU/Linux. Currently doom-evim only supports GNU/Linux.
 
 ### How to install other requirements?
 Assuming that you have all of the above tasks done, you can use `doom.rb` to provide a basic utility script to do other tasks that may confuse the user. Please visit here: [doom.rb](./doomrb.md)

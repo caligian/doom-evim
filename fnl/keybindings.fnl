@@ -1,6 +1,7 @@
 (local Keybindings {})
 (local utils (require :utils))
 (local vimp (require :vimp))
+(local Str (require :aniseed.string))
 (set vimp.always_override true)
 
 (local fnl (require :fennel))
@@ -238,5 +239,25 @@
 (vimp.map_command "EditDefaultPackages" #(utils.exec ":e ~/.config/nvim/lua/default_packages.lua"))
 (vimp.map_command "EditUserPackages" #(utils.exec ":e ~/.vdoom.d/user-packages.lua"))
 (vimp.map_command "CopySamplePackages" #(utils.sh "cp ~/.config/nvim/lua/default_packages.lua ~/.config/nvim/sample-user-configs/user-packages.lua")))
+
+; Insert time strings
+(vimp.map_command "InsertTimeString" #(let [put-str #(vim.api.nvim_put [(vim.call :strftime $1)] :c true true)
+                                            insert-date #(put-str "%a:%d/%m/%Y")
+                                            insert-time #(put-str "%H:%M:%S")
+                                            default-insert #(do (insert-date) (put-str " ") (insert-time))
+                                            insert-what (vim.call :input "Time format ([D]efault [d]ate [t]ime) % ")
+                                            insert-what (Str.trim insert-what)
+                                            insert-what (if (= 0 (length insert-what))
+                                                          :D 
+                                                          insert-what)]
+                                        (if (not (utils.grep insert-what "^[Ddt]$"))
+                                          (put-str insert-what)
+                                          (match insert-what 
+                                            :D (default-insert)
+                                            :d (insert-date)
+                                            :t (insert-time)
+                                            "" (default-insert)))))
+
+(vim.cmd "noremap <C-c>t :InsertTimeString<CR>")
 
 Keybindings

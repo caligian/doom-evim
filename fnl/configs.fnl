@@ -19,7 +19,7 @@
 
 (after! :vim-qf (fn []
                   (utils.define-key {:keys "<leader>qf"
-                                     :noremap false
+                                    :noremap false
                                      :help "Toggle qflist"
                                      :exec "<Plug>(qf_qf_toggle)"})
                   (set vim.g.qf_mapping_ack_style 1)))
@@ -112,7 +112,7 @@
             (treesitter-configs.setup {:ensure_installed doom.treesitter_langs
                                        :sync_install true
                                        :highlight {:enable true}
-                                       :indent {:enable true}}))))
+                                       :indent {:enable false}}))))
 
 (after! [:telescope.nvim 
          :telescope-project.nvim 

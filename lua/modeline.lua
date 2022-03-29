@@ -3,6 +3,7 @@
 -- Credit: glepnir
 local lualine = require("lualine")
 local utils = require("utils")
+local Colorise = require('colorise')
 local export = {}
 
 function export.get_gui_colors()
@@ -36,16 +37,26 @@ function export.darker(color_value, darker_n)
     return result
 end
 
-function export.setup_colors(bg, fg)
-    local current_gui_colors = {export.get_gui_colors()}
-    bg = bg or current_gui_colors[1]
-    fg = fg or current_gui_colors[2]
+function export.get_luminance(hex)
+    local r,g,b = Colorise.hex2rgb(hex)
+    local luminance = (r*0.2126) + (g*0.7152) + (b*0.0722)
+    return luminance < (255/2)
+end
 
+function get_luminance(hex)
+    local r,g,b = Colorise.hex2rgb(hex)
+    local luminance = (r*0.2126) + (g*0.7152) + (b*0.0722)
+    return luminance < (255/2)
+end
+
+function export.setup_colors(bg, fg)
     local colors = {}
     colors.bg, colors.fg = export.get_gui_colors()
     colors.bg = export.darker(colors.bg, "6")
 
-    if vim.o.background == "dark" then
+    local is_dark = export.get_luminance(colors.bg)
+
+    if is_dark then
         colors.yellow = "#de935f"
         colors.cyan = "#5e8d87"
         colors.darkblue = "#5f819d"
@@ -55,7 +66,7 @@ function export.setup_colors(bg, fg)
         colors.magenta = "#f996e2"
         colors.blue = "#81a2be"
         colors.red = "#e92f2f"
-    elseif vim.o.background == "light" then
+    else
         colors.yellow = "#4e4e07"
         colors.cyan = "#0b4b45"
         colors.darkblue = "#21287d"

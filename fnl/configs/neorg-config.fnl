@@ -1,15 +1,23 @@
 (local org (require :neorg))
+(local Wk (require :which-key))
+(local Utils (require :utils))
 
 (org.setup {:load {:core.keybinds {:config {:default_keybinds true
                                             :neorg_leader "<Leader>o"}}
-
-                   :core.norg.concealer {}
 
                    :core.integrations.nvim-cmp {:config {}}
 
                    :core.norg.journal {:config {:workspace "journal"
                                                 :strategy "flat"}}
                    :core.defaults {}
+
+                   :core.norg.concealer {:config {}}
+
+                   :core.presenter {:config {}}
+
+                   :core.norg.qol.toc {:config {}}
+
+                   :core.norg.manoeuvre {:config {}}
 
                    :core.norg.dirman {:config {:workspaces {:work "~/Work"
                                                             :journal "~/Personal/Journal"
@@ -18,26 +26,29 @@
                                                             :personal "~/Personal"
                                                             :diary "~/Personal/Diary"}}}}})
 
-(lambda get-bullet-or-heading-under-point [?bufnr ?lineno]
-  (let [lineno (or ?lineno (utils.linenum))
-        lineno (if (~= lineno 0)
-                 (- lineno 1)
-                 0)
-        bufnr (or ?bufnr 0)
-        line (utils.get-line bufnr lineno)]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Making up the lack of promotion/demotion functions & insertion functions
+
+(lambda linenum0 [?bufnr]
+  (- (Utils.linenum ?bufnr) 1))
+
+; 0 indexed
+(lambda get-bullet-or-heading-under-point [?lineno]
+  (let [lineno (or ?lineno (linenum0))
+        line (Utils.get-line 0 lineno)]
     (if line
-      (let [(wt bullet bullet-type contains) (utils.grep line "^( *)(-+|~+|>+)(>)? *([^$]*)?")
-            (heading hcontains) (utils.grep line "^(\\*+) *([^$]*)")]
+      (let [(wt bullet bullet-type contains) (Utils.grep line "^( *)(-+|~+|>+)(>)? *([^$]*)?")
+            (hwt heading hcontains) (Utils.grep line "^( *)(\\*+) *([^$]*)")]
         (if 
           bullet
           (let [single (string.match bullet "^.")
-                task (or (utils.grep contains "\\[[^]]*\\]") false)
-                contains (utils.sed contains " *\\[[^]]*\\] *" "")
+                task (or (Utils.grep contains "\\[[^]]*\\]") "")
+                contains (Utils.sed contains " *\\[[^]]*\\] *" "")
                 len (length bullet)
                 d {:single single
                    :base bullet
                    :task task
-                   :type bullet-type
+                   :type (or bullet-type "")
                    :is "bullet"
                    :whitespace wt
                    :contains contains
@@ -47,167 +58,121 @@
           heading
           {:is "heading"
            :base heading
+           :whitespace hwt
            :len (length heading)
-           :single (utils.grep heading "\\*")
+           :single (Utils.grep heading "\\*")
            :contains hcontains} 
 
           false)))))
 
-(lambda _replace-heading-or-bullet-under-point [?bufnr ?lineno direction by ?opts]
-  (let [is-task (?. ?opts :task)
-        sym (get-bullet-or-heading-under-point ?bufnr ?lineno)]
-    (when sym 
-      (let [by (if (= direction -1)
-                 (if 
-                   (= by 0)
-                   0 
+(lambda edit-base-and-get-sym [?by opts]
+  (let [by (or ?by 1)
+        sym (get-bullet-or-heading-under-point)]
+    (when sym
+      (let [base-len sym.len
+            new-len (if opts.inc
+                      (+ base-len by)
+                      (- base-len by))
+            final-len (if (< new-len 1)
+                        1
+                        new-len)]
+        (set sym.base (string.rep sym.single final-len))
+        sym))))
 
-                   (= by sym.len)
-                   0
+(lambda edit-base [?by opts]
+  (let [sym (edit-base-and-get-sym ?by opts)]
+    (when sym
 
-                   (> by sym.len)
-                   0 
+      ; No buffer switching here.
+      (vim.cmd (Utils.fmt ":s/\\( *\\)[>~*-]\\{1,\\}/\\1%s/ | noh"  sym.base)))))
 
-                   (= by sym.len 1)
-                   0
+(lambda construct-bullet-or-heading [sym]
+  (if (= sym.is :bullet)
+    (.. sym.whitespace sym.base sym.type " " sym.task " " sym.contains)
+    (.. sym.whitespace sym.base " " sym.contains)))
 
-                   by)
-                 by)]
-        (if (= direction 1)
-          (set sym.base (string.rep sym.single (+ by sym.len)))
-          (set sym.base (string.sub sym.base (+ by 1) -1)))
+; If ?sym is provided then use that
+(lambda insert-new-bullet-or-heading [?sym]
+  (let [sym (or ?sym (get-bullet-or-heading-under-point))]
+    (if sym
+      (vim.api.nvim_put [(do 
+                           (set sym.contains "") 
+                           (construct-bullet-or-heading sym))] 
+                        :l 
+                        true 
+                        true))))
 
-        (if 
-          (= sym.is :heading)
-          (.. sym.base " " sym.contains)
+; 0 indexed
+(lambda --get-previous-heading-linenum-recurse [current-linenum]
+  (if (= current-linenum -1)
+    false
+    (let [current-line (Utils.get-line 0 current-linenum)
+          matches (Utils.grep current-line "^ *\\*{1,}")] 
+      (if matches
+        current-linenum
+        (--get-previous-heading-linenum-recurse (- current-linenum 1))))))
 
-          (and (= sym.is :bullet) 
-               is-task)
-          (.. sym.whitespace sym.base (or sym.type "")  " " is-task " " sym.contains)
+; 0 indexed
+(lambda --get-next-heading-linenum-recurse [current-linenum]
+  (if (= current-linenum (Utils.get-line-count))
+    false
+    (let [current-line (Utils.get-line 0 current-linenum)
+          matches (Utils.grep current-line "^ *\\*{1,}")] 
+      (if matches
+        current-linenum
+        (--get-next-heading-linenum-recurse (+ current-linenum 1))))))
 
-          (and (= sym.is :bullet) 
-               sym.task)
-          (.. sym.whitespace sym.base (or sym.type "")  " " sym.task " " sym.contains)
+(lambda goto-linenum0 [linenum0]
+  (vim.call :setpos :. [0 (+ linenum0 1) 1]))
 
-          (.. sym.whitespace sym.base (or sym.type "") " " sym.contains))))))
+(lambda goto-next-heading []
+  (let [current-linenum0 (linenum0)
+        next-heading-linenum0 (--get-next-heading-linenum-recurse current-linenum0)]
+    (print next-heading-linenum0)
+    (when next-heading-linenum0
+      (goto-linenum0 next-heading-linenum0))))
 
-(lambda replace-heading-or-bullet-under-point [?bufnr ?lineno direction by ?opts]
-  (let [is-task (?. ?opts :task)
-        lineno (or ?lineno (utils.linenum))
-        bufnr (or ?bufnr 0)
-        replacement (_replace-heading-or-bullet-under-point bufnr lineno direction by ?opts)]
-    (if replacement
-      (utils.set-lines bufnr [(- lineno 1)  lineno] [replacement]))))
+(lambda goto-previous-heading []
+  (let [current-linenum0 (linenum0)
+        previous-heading-linenum0 (--get-previous-heading-linenum-recurse current-linenum0)]
+    (when previous-heading-linenum0
+      (goto-linenum0 previous-heading-linenum0))))
 
-(lambda insert-bullet-or-heading [?bufnr ?lineno ?opts]
-  (let [is-task (?. ?opts :task)
-        linenum (or ?lineno (utils.linenum))
-        linenum (- linenum 1)
-        bufnr (or ?bufnr 0)
-        put #(utils.set-lines bufnr [(+ linenum 1) (+ linenum 1)] [$1])]
-    (let [sym (get-bullet-or-heading-under-point bufnr linenum)]
-        (if (?. sym :is)
-          (if 
-            (and (= sym.is :bullet) 
-                 (not (utils.grep sym.contains "\\[[^]]*\\]"))
-                 is-task)
-            (put (utils.fmt "%s" (.. sym.whitespace sym.base (or sym.type "") is-task " ")))
+; 0 indexed
+(lambda insert-new-heading []
+  (let [current-linenum0 (linenum0)
+        previous-linenum0 (--get-previous-heading-linenum-recurse current-linenum0)
+        sym (when previous-linenum0
+              (get-bullet-or-heading-under-point previous-linenum0))]
+    (if sym
+      (insert-new-bullet-or-heading sym))))
 
-            (= sym.is :bullet)
-            (put (utils.fmt "%s" (.. sym.whitespace sym.base (or sym.type "") " ")))
+(Utils.define-keys [{:keys "<C-b>"
+                     :events "BufEnter"
+                     :patterns "*norg"
+                     :exec goto-previous-heading}
 
-            (put (utils.fmt "%s" (.. sym.base " "))))
-          (put "* ")))))
+                    {:keys "<C-f>"
+                     :events "BufEnter"
+                     :patterns "*norg"
+                     :exec goto-next-heading}
 
-(lambda promote-bullet-or-heading [?bufnr ?lineno ?by]
-  (replace-heading-or-bullet-under-point ?bufnr 
-                                         ?lineno
-                                         1 
-                                         (or ?by 1)))
+                    {:keys "<C-j>"
+                     :events "BufEnter"
+                     :patterns "*norg"
+                     :exec insert-new-bullet-or-heading}
 
-(lambda demote-bullet-or-heading [?bufnr ?lineno ?by]
-  (replace-heading-or-bullet-under-point ?bufnr 
-                                         ?lineno
-                                         -1 
-                                         (or ?by 1)))
+                    {:keys "<C-return>"
+                     :events "BufEnter"
+                     :patterns "*norg"
+                     :exec insert-new-heading}
 
-(lambda edit-bullet [?bufnr ?lineno ?task-type]
-  (let [task-type (match ?task-type
-                    :pending "[-]"
-                    :done "[x]"
-                    :hold "[=]"
-                    :cancelled "[_]"
-                    :urgent "[!]"
-                    :recurring "[+]"
-                    :uncertain "[?]"
-                    _ "[]")]
-    (replace-heading-or-bullet-under-point ?bufnr ?lineno 1 0 {:task task-type})))
-
-(lambda next-heading []
-  (vim.cmd "/^\\*")
-  (vim.cmd "noh"))
-
-(lambda prev-heading []
-  (vim.cmd "?^\\*")
-  (vim.cmd "noh"))
-
-(when doom.neorg_keybindings 
-  (utils.define-keys [{:keys "<leader>ol"
-                       :help "Display buffer headings in qflist"
-                       :exec (.. ":vimgrep \"^\\*\" " (vim.fn.expand "%:p") "<CR>")}
-
-                      {:keys "<leader>oL"
-                       :help "Display cwd headings in qflist"
-                       :exec ":vimgrep \"^\\*\" *norg <CR>"}
-
-                      {:keys "<C-c><C-c>"
-                       :noremap false
-                       :key-attribs ["buffer" "silent"]
-                       :events "BufEnter"
-                       :patterns "*norg"
-                       :exec #(let [sym (get-bullet-or-heading-under-point) ]
-                                (when (= sym.is :bullet)
-                                  (let [input (utils.get-user-input "Task type (p/d/h/c/u/r/u) > " 
-                                                                    #(match $1
-                                                                       :p :pending
-                                                                       :d :done
-                                                                       :h :hold
-                                                                       :c :cancelled
-                                                                       :u :urgent
-                                                                       :r :recurring
-                                                                       :u :uncertain
-                                                                       _ nil)
-                                                                    true
-                                                                    {:use_function true})]
-                                    (edit-bullet nil nil input))))}
-
-                      {:keys "<C-j>"
-                       :key-attribs ["buffer" "silent"]
-                       :events "BufEnter"
-                       :patterns "*norg"
-                       :exec insert-bullet-or-heading}
-
-                      {:keys "<C-f>"
-                       :key-attribs ["buffer" "silent"]
-                       :events "BufEnter"
-                       :patterns "*norg"
-                       :exec next-heading}
-
-                      {:keys "<C-b>"
-                       :key-attribs ["buffer" "silent"]
-                       :events "BufEnter"
-                       :patterns "*norg"
-                       :exec prev-heading}
-
-                      {:keys "<A-l>"
-                       :key-attribs ["buffer" "silent"]
-                       :events "BufEnter"
-                       :patterns "*norg"
-                       :exec promote-bullet-or-heading}
-
-                      ; Demote bullet or point
-                      {:keys "<A-h>"
-                       :key-attribs ["buffer" "silent"]
-                       :events "BufEnter"
-                       :patterns "*norg"
-                       :exec demote-bullet-or-heading}]))
+                    {:keys "<C-=>"
+                     :events "BufEnter"
+                     :patterns "*norg"
+                     :exec #(edit-base 1 {:inc true})}
+                    
+                    {:keys "<C-->"
+                     :events "BufEnter"
+                     :patterns "*norg"
+                     :exec #(edit-base 1 {:dec true})}])

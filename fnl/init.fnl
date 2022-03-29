@@ -13,7 +13,6 @@
 (local runners (require :runners))
 (local core (require :aniseed.core))
 (local repl (require :repl))
-(local snippets (require :snippets))
 (local templates (require :templates))
 (local lsp (require :lsp-configs))
 
@@ -22,7 +21,6 @@
 (set doom.logger logger)
 (set doom.runners runners)
 (set doom.templates templates)
-(set doom.snippets snippets)
 
 ; Use this to set post-package-init configuration
 (set _G.after! (lambda after! [pkg config-f ?defer]
@@ -55,10 +53,6 @@
 
 (utils.try-then-else #(repl.setup)
                      #(logger.ilog "REPL has been setup.")
-                     #(logger.flog (.. "Debugging required:\n" $1)))
-
-(utils.try-then-else #(snippets.setup)
-                     #(logger.ilog "Snippets have been setup.")
                      #(logger.flog (.. "Debugging required:\n" $1)))
 
 (utils.try-then-else # (templates.setup)
