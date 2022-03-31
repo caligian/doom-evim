@@ -115,8 +115,6 @@ function Utils.getUserInput(prompts_hooks_t, opts)
                     collectHook(resp)
                 end
 
-                Utils.dump(resp)
-
                 _getInput(varname, prompt, f, loop)
             else
                 _getInput(varname, prompt, f, loop)

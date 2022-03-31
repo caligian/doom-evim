@@ -204,8 +204,6 @@ function BufUtils.setSubstring(buffer, lines, opts)
         local pos = BufUtils.getCursorPosition()
         local curRow = pos.row
         local curCol = pos.col
-        curRow = curRow - 1
-        curCol = curCol - 1
 
         if not insert_lines then
             fromRow = fromRow or curRow

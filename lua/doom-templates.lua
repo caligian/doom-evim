@@ -82,7 +82,7 @@ end
 function Template.vsplitEdit(buffer, opts)
     opts = opts or {}
     opts.direction = 'vsp'
-    Snippet.splitEdit(buffer, opts)
+    Template.splitEdit(buffer, opts)
 end
 
 function Template.makeKeybindings()

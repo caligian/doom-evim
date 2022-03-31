@@ -28,7 +28,7 @@ function Indent.indent(fromRow, toRow, opts)
         else
             toRow = toRow + times
         end
-        times = 1 
+        times = 1
     end
 
     local function _indentLine(lineNumber, times)
@@ -52,7 +52,7 @@ function Indent.indent(fromRow, toRow, opts)
                 if opts.forwards then
                     BufUtils.setSubstring(
                     opts.buffer or 0,
-                    {string.rep(' ', spacesLen + spacesLen * (times - 1))},
+                    {string.rep(' ', spacesLen + sw * (times - 1))},
                     {
                         fromRow = lineNumber,
                         toRow = lineNumber,

@@ -237,8 +237,48 @@ function Repl.liveSend(opts)
         })
 end
 
+function Repl.shutdown(opts)
+    opts = opts or {}
+    local ft = opts.ft or vim.bo.filetype
+    local bin = opts.bin or Repl.ftExecutables[ft]
+
+    if opts.shell then
+        bin = opts.shell
+    end
+
+    if bin and Repl.active[bin] then
+        Repl.active[bin].delete()
+    end
+end
+
+function Repl.shutdownAll()
+    for cmd, _ in pairs(Repl.active) do
+        Repl.shutdown({bin = cmd})
+    end
+end
+
 function Repl.makeKeybindings()
     Kbd.new({
+        leader = 'll',
+        keys = ',k',
+        help = 'Kill ft REPL',
+        exec = Repl.shutdown
+    },
+    {
+        leader = 'll',
+        keys = ',K',
+        help = 'Kill shell REPL',
+        exec = function ()
+            Repl.shutdown({bin = doom.shell or 'bash'})
+        end
+    },
+    {
+        leader = 'll',
+        keys = ',!',
+        help = 'Kill all REPLs',
+        exec = Repl.shutdownAll,
+    },
+    {
         leader = 'll',
         keys = ',t',
         help = 'Launch a REPL for this filetype',
@@ -264,7 +304,7 @@ function Repl.makeKeybindings()
         keys = ',v',
         help = 'vsplit buffer with ft REPL',
         exec = function ()
-            Repl.split('vsp', {bin = doom.shell or 'bash'})
+            Repl.split('vsp')
         end
     },
     {
@@ -378,10 +418,6 @@ function Repl.makeKeybindings()
             Repl.bufferAction('testing')
         end
     })
-end
-
-while true do
-    vim.fn.chansend(643, vim.fn.input('% ') .. "\n\r")
 end
 
 return Repl
