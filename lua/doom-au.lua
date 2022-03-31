@@ -1,5 +1,5 @@
 local Au = {}
-local Utils = dofile('doom-utils.lua')
+local Utils = require('doom-utils')
 
 function Au.autocmdStr(name, event, pattern, exec)
     if not name then

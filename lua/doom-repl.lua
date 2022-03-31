@@ -4,18 +4,6 @@ local Str = require('aniseed.string')
 local BufUtils = require('doom-buffer-utils')
 
 local Repl = {
-    active = {},
-
-    auto = true,
-
-    compiler = {
-        lua = 'lua5.1',
-    },
-
-    debugger = {},
-    builder = {},
-    testing = {},
-
     ftExecutables = {
         ruby = 'pry',
         lua = 'lua5.1',
@@ -144,7 +132,7 @@ end
 
 function Repl.bufferAction(action, direction, opts)
     direction = direction or 'sp'
-    action = action or 'compiler'
+    action = action or 'compile'
     opts = opts or {}
     local binary = false
     local currentFile = vim.fn.expand('%')
@@ -154,10 +142,8 @@ function Repl.bufferAction(action, direction, opts)
 
     if opts.binary then
         binary = opts.binary
-    elseif Repl[action] then
-        if Repl[action][ft] then
-            binary = Repl[action][ft]
-        end
+    elseif doom.langs[ft] and doom.langs[ft][action] then
+        binary = doom.langs[ft][action]['cmd']
     else
         print(string.format('No binary set for ft (%s) for action (%s)', ft, action))
         return false

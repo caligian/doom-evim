@@ -145,4 +145,15 @@ function Kbd.new(...)
     end
 end
 
+function Kbd.setup()
+    for key, name in pairs(doom.kbdNames.leader) do
+        Wk.register({[key] = {name = name}}, {prefix = '<leader>'})
+
+    end
+
+    for key, name in pairs(doom.kbdNames.localleader) do
+        Wk.register({[key] = {name = name}}, {prefix = '<localleader>'})
+    end
+end
+
 return Kbd

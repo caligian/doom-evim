@@ -56,14 +56,24 @@ function Async.spawn(opts)
     local args = opts.args or {}
     local cwd = opts.cwd or os.getenv('HOME')
 
-    Job:new({
-        command = cmd,
-        args = args,
-        cwd = cwd,
-        on_stdout = stdoutHook,
-        on_stderr = stderrHook,
-        on_exit = exitHook,
-    }):sync()
+    if opts.split then
+        Job:new({
+            command = cmd,
+            args = args,
+            cwd = cwd,
+            on_stdout = stdoutHook,
+            on_stderr = stderrHook,
+            on_exit = exitHook,
+        }):sync()
+    else
+        Job:new({
+            command = cmd,
+            args = args,
+            cwd = cwd,
+            on_stdout = stdoutHook,
+            on_stderr = stderrHook,
+        }):sync()
+    end
 end
 
 return Async
