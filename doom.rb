@@ -5,9 +5,6 @@ class SetupDoom
   def initialize
     @main_config_dir = "#{ENV['HOME']}/.config/nvim"
     @user_dir = "#{ENV['HOME']}/.vdoom.d"
-    @user_files = ['user-init.lua', 'user-packages.lua', 'user-specs.lua']
-    @user_other_dirs = %w[lua fnl]
-
     @package_dest = "#{ENV['HOME']}/.local/share/nvim/site/pack/packer/start"
     @packages = {
       'wbthomason/packer.nvim' => '7182f0ddbca2dd6f6723633a84d47f4d26518191',
@@ -33,50 +30,6 @@ class SetupDoom
     }
   end
 
-  def set_doom_version
-    # Fetch all tags first
-    # And other updates
-    `bash -c "git pull origin main &>/dev/null"`
-
-    # Get tags
-    tags = `git tag --list`
-    tags = tags.split /\n/
-
-    show_tags = ->() {
-      tags.each_with_index { |t, idx|
-        printf("%-3s %s\n", "#{idx}." , t)
-      }
-    }
-
-    get_input = ->(current_input) {
-      if !current_input
-        show_tags.call()
-
-        printf "Enter index %% "
-
-        current_input = gets().strip()
-
-        if ! current_input
-          get_input.call(false)
-        elsif !(current_input =~ /^[0-9]+$/)
-          puts "Invalid input supplied."
-          get_input.call(false)
-        elsif current_input.to_i < 0 or current_input.to_i > (tags.length - 1)
-          puts "Invalid index provided."
-          get_input.call(false)
-        else
-          get_input.call(current_input)
-        end
-      else
-        tags[current_input.to_i]
-      end
-    }
-
-    version = get_input.call(false)
-    `bash -c "git checkout #{version} &>/dev/null"`
-    puts "Doom version has been set to #{version}"
-  end
-
   def get_repo_basename(repo)
     repo.match(%r{/([^$]+)})[1]
   end
@@ -96,11 +49,11 @@ class SetupDoom
 
   def setup_lua
     puts 'Installing: lualogging, lpath, luafun'
-    `luarocks --lua-version 5.1 --local install lualogging`
-    `luarocks --lua-version 5.1 --local install lpath`
-    `luarocks --lua-version 5.1 --local install fun`
-    `luarocks --lua-version 5.1 --local install colorise`
-    `luarocks --lua-version 5.1 --local install array`
+    %x(luarocks --lua-version 5.1 --local install lualogging)
+    %x(luarocks --lua-version 5.1 --local install lpath)
+    %x(luarocks --lua-version 5.1 --local install array)
+    %x(luarocks --lua-version 5.1 --local install lrexlib-pcre2)
+    %x(luarocks --lua-version 5.1 --local install yaml)
 
     puts 'Run this command: "luarocks --lua-version 5.1 path >> ~/<.bashrc or .zshrc or .xxxrc> to use the rocks with doom."'
     puts 'Reopen your shell in order to use the lua packages.'

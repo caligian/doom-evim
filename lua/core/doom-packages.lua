@@ -2,15 +2,10 @@ local Packages = {}
 local Utils = require('doom-utils')
 local Core = require('aniseed.core')
 local Packer = require('packer')
+local PackageLoader = require('doom-package-loader')
 
 function Packages.setup()
-    local systemPackages = require('doom-essential-packages')
-    local userPackages = require('doom-user-packages')
-    local defaultPackages = require('doom-default-packages')
-
-    Doom.packages = vim.tbl_extend('force', defaultPackages, systemPackages, userPackages)
-    require('specs')
-    require('user-specs')
+    Doom.packages = PackageLoader.createMasterList()
 
     vim.cmd('packadd packer.nvim')
 
@@ -34,5 +29,6 @@ function Packages.setup()
         end
     end)
 end
+
 
 return Packages

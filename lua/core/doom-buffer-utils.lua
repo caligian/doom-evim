@@ -42,6 +42,7 @@ function BufUtils.getVisualCursorPosition()
 end
 
 function BufUtils.isValidBuffer(buf, newBufName, newBufOpts)
+    print(buf)
     assert(type(buf) == 'number' or type(buf) == 'string')
 
     if type(buf) == 'number' then
@@ -101,35 +102,7 @@ function BufUtils.splitEdit(buffer, newBuffer, direction, opts)
         end
     end
 
-    if hook then hook() end
-end
-
-function BufUtils.loadTemporaryBuffer(buffer, direction, opts)
-    opts = opts or {}
-    buffer = BufUtils.isValidBuffer(buffer, buffer)
-    direction = direction or 'sp'
-    local temp_buf_name = ''
-
-    if not Doom.temporaryBuffers then
-        Doom.temporaryBuffers = {}
-        table.insert(Doom.temporaryBuffers, 'temp_buffer_1')
-        temp_buf_name = 'temp_buffer_' .. #Doom.temporaryBuffers
-    else
-        if opts.index then
-            temp_buf_name = 'temp_buffer_' .. opts.index
-        else
-            temp_buf_name = 'temp_buffer_' .. #Doom.temporaryBuffers + 1
-            table.insert(Doom.temporaryBuffers, temp_buf_name)
-        end
-    end
-        
-    local reverse = opts.reverse or false
-
-    BufUtils.splitEdit(buffer, temp_buf_name, direction, {
-        settings = {buftype = 'nofile'},
-        hook = opts.hook,
-        reverse = reverse,
-    })
+    if hook then return hook() end
 end
 
 -- All coordinates must be zero-indexed
@@ -146,6 +119,7 @@ function BufUtils.getSubstring(buffer, opts)
         local toColumn = opts.toColumn
         local fromColumn = opts.fromColumn
         local concat = opts.concat or false
+        local all = opts.all or false
 
         if opts.visual then
             local cood = BufUtils.getVisualCursorPosition()
@@ -155,7 +129,9 @@ function BufUtils.getSubstring(buffer, opts)
             toColumn = cood.endColumn
         end
 
-        if fromColumn or toColumn then
+        if all then
+            return vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+        elseif fromColumn or toColumn then
             local current_line = vim.call('getline', current_pos.row + 1)
             fromColumn = fromColumn or 0
             toColumn = toColumn or #current_line
@@ -188,9 +164,10 @@ function BufUtils.setSubstring(buffer, lines, opts)
     local insert_not_replace = opts.insert or false
     local insert_type = opts.type or 'c'
     local follow_insert = opts.follow or false
-    local insert_after = opts.after or true
+    local insert_after = not opts.after == false and not opts.after and true or false
     local lines = lines or {}
-    local bufnr = BufUtils.isValidBuffer(buffer or 0, buffer, {})
+    buffer = BufUtils.isValidBuffer(buffer or 0, buffer, {})
+    local delete = opts.delete or false
 
     if opts.visual then
         local vcood = BufUtils.getVisualCursorPosition()
@@ -200,10 +177,30 @@ function BufUtils.setSubstring(buffer, lines, opts)
         toColumn = vcood.endColumn
     end
 
-    if not insert_not_replace then
+    if delete then
+        local pos = BufUtils.getCursorPosition()
+        local fromRow, toRow = nil, nil
+        local fromColumn, toColumn = nil, nil
+
+        fromRow = opts.fromRow or pos.row
+        toRow = opts.toRow or vim.api.nvim_buf_line_count(buffer) - 1
+        fromColumn = opts.fromColumn or 0
+
+        local current_line = BufUtils.getSubstring(buffer, {
+            fromRow = toRow,
+        })
+
+        toColumn = opts.toColumn or #(current_line[1]) - 1
+
+        vim.api.nvim_buf_set_text(buffer, fromRow, fromColumn, toRow, toColumn, {})
+    elseif not insert_not_replace then
         local pos = BufUtils.getCursorPosition()
         local curRow = pos.row
         local curCol = pos.col
+
+        if type(lines) == 'string' then
+            lines = vim.split(lines, "[\n\r]+")
+        end
 
         if not insert_lines then
             fromRow = fromRow or curRow
@@ -217,20 +214,79 @@ function BufUtils.setSubstring(buffer, lines, opts)
             toRow = toRow or fromRow + #lines
             vim.api.nvim_buf_set_lines(bufnr, fromRow, toRow, false, lines)
         end
-    else
+    elseif insert_not_replace then
+        if type(lines) == 'string' then
+            lines = vim.split(lines, "[\n\r]+")
+        end
+
         vim.api.nvim_put(lines, insert_type, insert_after, follow_insert)
     end
 end
 
-function BufUtils.setPos(bufnr, row, col)
-    row = row - 1
+function BufUtils.loadTemporaryBuffer(buffer, direction, opts)
+    opts = opts or {}
+    local lines = opts.lines or {}
+    local input = opts.input or false
+    local hook = opts.hook
+    buffer = BufUtils.isValidBuffer(buffer, buffer)
+    direction = direction or 'sp'
+    local temp_buf_name = ''
 
-    if col then
-        col = col - 1
-    else
-        col = 1
+    if type(lines) == 'string' then
+        lines = vim.split(lines, "[\n\r]+")
     end
 
+    if not Doom.temporaryBuffers then
+        Doom.temporaryBuffers = {}
+        table.insert(Doom.temporaryBuffers, 'temp_buffer_1')
+        temp_buf_name = 'temp_buffer_' .. #Doom.temporaryBuffers
+    else
+        if opts.index then
+            temp_buf_name = 'temp_buffer_' .. opts.index
+        else
+            temp_buf_name = 'temp_buffer_' .. #Doom.temporaryBuffers + 1
+            table.insert(Doom.temporaryBuffers, temp_buf_name)
+        end
+    end
+        
+    local reverse = opts.reverse or false
+
+    if lines and #lines > 0 then
+        return BufUtils.splitEdit(buffer, temp_buf_name, direction, {
+            settings = {buftype = 'nofile'},
+            hook = function ()
+                BufUtils.setSubstring(temp_buf_name, lines, {insert = true})
+                if hook and not input then
+                    hook(temp_buf_name, lines)
+                elseif hook and input then
+                    hook(temp_buf_name, lines, Utils.getUserInput(input))
+                end
+            end,
+            reverse = reverse,
+        })
+    else
+        return BufUtils.splitEdit(buffer, temp_buf_name, direction, {
+            settings = {buftype = 'nofile'},
+            hook = opts.hook,
+            reverse = reverse,
+        })
+    end
+end
+
+
+
+function BufUtils.setPos(bufnr, row, col, one_indexed)
+    if one_indexed then
+        row = row - 1
+
+        if col then
+            col = col - 1
+        else
+            col = 1
+        end
+    end
+
+    col = col or row + 1
     vim.cmd(string.format(":call setpos('.',[0, %d, %d, %d])", bufnr, row, col, 0))
 end
 
@@ -248,7 +304,6 @@ function BufUtils.makeRepeatable(exec, times, opts)
         local linewise = opts.linewise or false
         local cood = BufUtils.getCursorPosition()
         local lineNumber = opts.line or cood.row
-        lineNumber = lineNumber + 1
         local line = {0, lineNumber, cood.col, 0}
 
         if not linewise then
@@ -265,7 +320,7 @@ function BufUtils.makeRepeatable(exec, times, opts)
                vim.cmd(exec)
             end
         else
-            for i=lineNumber,lineNumber+times-1 do
+            for i=lineNumber,lineNumber+times do
                 BufUtils.setPos(bufnr, i)
                 vim.cmd(exec)
             end
@@ -273,36 +328,53 @@ function BufUtils.makeRepeatable(exec, times, opts)
     end
 end
 
-function BufUtils.put(lines, row, col)
+function BufUtils.put(lines, row, col, opts)
     opts = opts or {}
     local line = opts.line
     local buffer = BufUtils.isValidBuffer(0)
+
+    if not opts.after == false and opts.after == nil then
+        opts.after = true
+    end
+
+    if not opts.follow == false and opts.follow == nil then
+        opts.follow = true
+    end
 
     if buffer then
         if line then
             BufUtils.setPos(0, row, col)
         end
 
-        vim.api.nvim_put(lines, opts.type or 'c', opts.after or true, opts.follow or true)
+        vim.api.nvim_put(lines, opts.type or 'c', opts.after, opts.follow)
     end
 end
 
-function BufUtils.withVisualRange(buffer, f)
+function BufUtils.withVisualRange(buffer, f, str)
     assert(type(f) == "function")
 
     local buf = BufUtils.isValidBuffer(buffer or 0)
 
     if buf then
-        return function ()
-            f(BufUtils.getVisualCursorPosition())
+        if str then
+            return function ()
+                local cood = BufUtils.getVisualCursorPosition()
+
+                return f(
+                cood,
+                BufUtils.getSubstring(buf, {
+                    fromRow = cood.startRow,
+                    toRow = cood.endRow,
+                    fromColumn = cood.startColumn,
+                    toColumn = cood.endColumn,
+                }))
+            end
+        else
+            return function ()
+                return f(BufUtils.getVisualCursorPosition())
+            end
         end
     end
-end
-
-function BufUtils.loadTemporaryInputBuffer(buffer, prompt_t, hook)
-    buffer = BufUtils.isValidBuffer(buffer)
-    local resp = Utils.getUserInput(prompt_t)
-    return hook(resp)
 end
 
 return BufUtils

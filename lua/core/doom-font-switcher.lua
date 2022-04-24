@@ -7,7 +7,7 @@ local TActionState = require('telescope.actions.state')
 local TIvy = require('telescope.themes').get_ivy()
 local Rx = require('rex_pcre2')
 local TFontSwitcher = {}
-local exclude_fonts = doom.telescope_exclude_fonts or '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)'
+local exclude_fonts = Doom.telescope_exclude_fonts or '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)'
 
 function TFontSwitcher.get_fonts(filter_regex)
     local fonts = vim.fn.system('fc-match -a')
@@ -40,7 +40,7 @@ end
 function TFontSwitcher.switch_fonts(opts)
     opts = opts or {}
     opts = vim.tbl_extend('force', opts, TIvy)
-    local filter_regex = opts.filter_regex or doom.telescope_exclude_fonts or '(Hack|Mono|Monoid)'
+    local filter_regex = opts.filter_regex or Doom.telescope_exclude_fonts or '(Hack|Mono|Monoid)'
 
     TPickers.new(opts, {
         prompt_title = 'fonts',

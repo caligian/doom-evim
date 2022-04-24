@@ -138,12 +138,12 @@ function Repl.bufferAction(action, direction, opts)
     local currentFile = vim.fn.expand('%')
     local currentFileAbs = vim.fn.expand("%:p")
     local ft = opts.ft or vim.bo.filetype
-    local shell = opts.shell or doom.shell or 'bash'
+    local shell = opts.shell or Doom.shell or 'bash'
 
     if opts.binary then
         binary = opts.binary
-    elseif doom.langs[ft] and doom.langs[ft][action] then
-        binary = doom.langs[ft][action]['cmd']
+    elseif Doom.langs[ft] and Doom.langs[ft][action] then
+        binary = Doom.langs[ft][action]['cmd']
     else
         print(string.format('No binary set for ft (%s) for action (%s)', ft, action))
         return false
@@ -255,7 +255,7 @@ function Repl.makeKeybindings()
         keys = ',K',
         help = 'Kill shell REPL',
         exec = function ()
-            Repl.shutdown({bin = doom.shell or 'bash'})
+            Repl.shutdown({bin = Doom.shell or 'bash'})
         end
     },
     {
@@ -276,7 +276,7 @@ function Repl.makeKeybindings()
         keys = ',T',
         help = 'Launch shell',
         exec = function ()
-            Repl.new({bin = doom.shell or 'bash'})
+            Repl.new({bin = Doom.shell or 'bash'})
         end
     },
     {
@@ -298,7 +298,7 @@ function Repl.makeKeybindings()
         keys = ',S',
         help = 'Split buffer with shell',
         exec = function ()
-            Repl.split('sp', {bin = doom.shell or 'bash'})
+            Repl.split('sp', {bin = Doom.shell or 'bash'})
         end
     },
     {
@@ -306,7 +306,7 @@ function Repl.makeKeybindings()
         keys = ',V',
         help = 'Vsplit buffer with shell',
         exec = function ()
-            Repl.split('vsp', {bin = doom.shell or 'bash'})
+            Repl.split('vsp', {bin = Doom.shell or 'bash'})
         end
     },
     {
@@ -339,7 +339,7 @@ function Repl.makeKeybindings()
         keys = ',E',
         help = 'Send current line to shell REPL',
         exec = function ()
-            Repl.sendString('line', {bin = doom.shell or 'bash', count = true})
+            Repl.sendString('line', {bin = Doom.shell or 'bash', count = true})
         end
     },
     {
@@ -347,7 +347,7 @@ function Repl.makeKeybindings()
         keys = ',>',
         help = 'Send strings till point to shell REPL',
         exec = function ()
-            Repl.sendString('till-point', {bin = doom.shell or 'bash'})
+            Repl.sendString('till-point', {bin = Doom.shell or 'bash'})
         end
     },
     {
@@ -356,7 +356,7 @@ function Repl.makeKeybindings()
         keys = ',E',
         help = 'Send visual range to shell REPL',
         exec = function ()
-            Repl.sendString('visual', {bin = doom.shell or 'bash'})
+            Repl.sendString('visual', {bin = Doom.shell or 'bash'})
         end
     },
     {
@@ -371,7 +371,7 @@ function Repl.makeKeybindings()
         keys = ',:',
         help = 'Send strings to shell REPL',
         exec = function ()
-            Repl.liveSend({bin = doom.shell or 'bash'})
+            Repl.liveSend({bin = Doom.shell or 'bash'})
         end
     },
     {

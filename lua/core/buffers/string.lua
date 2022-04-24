@@ -62,6 +62,13 @@ function Str:text(opts)
     end
 end
 
+function Str:visual_range(opts)
+    opts = opts or {nl=true}
+    local cood = self.buffer:position {visual=true}
+    local str = self:text(cood, opts)
+    return str
+end
+
 function Str:dump(method_name, args, kwargs, schedule)
     if args and type(args) ~= 'table' then
         args = {args}

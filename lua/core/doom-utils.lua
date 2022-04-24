@@ -72,59 +72,65 @@ function Utils.getUserInput(prompts_hooks_t, opts)
     local all_responses = {}
     local collect = opts.collect or false
     local collectHook = opts.collectHook
+    local iterator = ipairs
+    local n = #(Utils.keys(prompts_hooks_t))
 
-    if #(Utils.keys(prompts_hooks_t)) == 0 then
-        prompts_hooks_t['default'] = {'%', true}
+    if n == 0 and #prompts_hooks_t > 0 then
+        iterator = ipairs
+    elseif n > 0  then
+        iterator = pairs
+    else
+        iterator = ipairs
+        table.insert(prompts_hooks_t, {'%', true})
     end
 
     local function _getInput(varname, prompt, f, loop)
-        if f then
-            if type(f) == 'boolean' then
-                f = function (s)
-                    if #s > 0 then
-                        return s
-                    else
-                        return false
-                    end
+        loop = loop or false
+
+        if f == false or f == nil then
+            f = false
+        else
+            f = function (s)
+                if #s > 0 then
+                    return s
+                else
+                    return false
                 end
             end
         end
-        loop = loop or false
 
         local input = vim.fn.input(prompt .. ' % ')
-        local resp = nil
+        local resp = false
 
-        if f and type(f) == 'function' then
+        if f then
             resp = f(input)
+        elseif #input > 0 then
+            resp = input
         end
 
-        if not resp then
-            resp = ''
-        elseif resp:match('EOF') then
+        if not resp or resp:match('EOF') then
             resp = false
         end
 
-        if (loop and not resp) or (resp and collect) then
-            if collect then
-                if not all_responses[varname] then
-                    all_responses[varname] = {}
-                end
-                table.insert(all_responses[varname], resp)
-
-                if collectHook then
-                    collectHook(resp)
-                end
-
-                _getInput(varname, prompt, f, loop)
-            else
-                _getInput(varname, prompt, f, loop)
+        if resp and collect then
+            if not all_responses[varname] then
+                all_responses[varname] = {}
             end
-        elseif resp then
+            table.insert(all_responses[varname], resp)
+
+            if collectHook then
+                collectHook(resp)
+            end
+        end
+
+        if resp ~= false then
             all_responses[varname] = resp
+        elseif loop and not resp then
+            _getInput(varname, prompt, f, loop)
         end
     end
 
-    for var, prompt_f in pairs(prompts_hooks_t) do
+    for var, prompt_f in iterator(prompts_hooks_t) do
         _getInput(var, prompt_f[1], prompt_f[2], opts.loop)
 
         if type(all_responses[var]) == 'table' then
@@ -145,12 +151,12 @@ function Utils.register(f, opts)
             return string.format('%s', f)
         end
     elseif type(f) == 'function' then
-        table.insert(doom.lambdas, f)
+        table.insert(Doom.lambdas, f)
 
         if opts.kbd then
-            return string.format(':lua f = doom.lambdas[%d]; f()<CR>', #doom.lambdas)
+            return string.format(':lua f = Doom.lambdas[%d]; f()<CR>', #Doom.lambdas)
         else
-            return string.format('lua f = doom.lambdas[%d]; f()', #doom.lambdas)
+            return string.format('lua f = Doom.lambdas[%d]; f()', #Doom.lambdas)
         end
     end
 end

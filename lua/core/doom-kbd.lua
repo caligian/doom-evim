@@ -63,7 +63,7 @@ function Kbd.new(...)
             leader = '<leader>'
         end
 
-        noremap = noremap or true
+        noremap = not noremap == false and not noremap and true or false
         if noremap then
             noremap = 'noremap'
         else
@@ -146,12 +146,12 @@ function Kbd.new(...)
 end
 
 function Kbd.setup()
-    for key, name in pairs(doom.kbdNames.leader) do
+    for key, name in pairs(Doom.kbdNames.leader) do
         Wk.register({[key] = {name = name}}, {prefix = '<leader>'})
 
     end
 
-    for key, name in pairs(doom.kbdNames.localleader) do
+    for key, name in pairs(Doom.kbdNames.localleader) do
         Wk.register({[key] = {name = name}}, {prefix = '<localleader>'})
     end
 end

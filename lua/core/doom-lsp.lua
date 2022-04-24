@@ -60,5 +60,4 @@ function Lsp.setupServers()
     end
 end
 
-function Lsp.setup()
-end
+return Lsp

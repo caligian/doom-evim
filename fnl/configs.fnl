@@ -19,7 +19,7 @@
 
 (after! :vim-qf (fn []
                   (utils.define-key {:keys "<leader>qf"
-                                    :noremap false
+                                     :noremap false
                                      :help "Toggle qflist"
                                      :exec "<Plug>(qf_qf_toggle)"})
                   (set vim.g.qf_mapping_ack_style 1)))
@@ -51,16 +51,16 @@
                                   save-dir (.. (vim.fn.stdpath "data") "/sessions/")]
 
                               (utils.define-keys [{:keys "<leader>sl"
-                                                   :exec ":lua require('persistence').load()<CR>"
-                                                   :help "Load session"}
+                                                   :exec ":lua require('persistence').load()<cr>"
+                                                   :help "load session"}
 
-                                                  {:keys "<leader>sL"
-                                                   :exec ":lua require('persistence').load({last=true})<CR>"
-                                                   :help "Load last session"}
+                                                  {:keys "<leader>sl"
+                                                   :exec ":lua require('persistence').load({last=true})<cr>"
+                                                   :help "load last session"}
 
                                                   {:keys "<leader>ss"
-                                                   :exec ":lua require('persistence').save()<CR>"
-                                                   :help "Save current session"}])
+                                                   :exec ":lua require('persistence').save()<cr>"
+                                                   :help "save current session"}])
 
                               (persistence.setup {:dir save-dir}))))
 
@@ -69,8 +69,8 @@
           (let [trouble (require :trouble)]
             (trouble.setup)
             (utils.define-key {:keys "<leader>lt"
-                               :exec ":TroubleToggle<CR>"
-                               :help "Toggle trouble"})))
+                               :exec ":troubletoggle<cr>"
+                               :help "toggle trouble"})))
         300)
 
 (after! :dashboard-nvim (fn []
@@ -78,31 +78,31 @@
                                 banner (utils.split banner "\n")]
                             (set vim.g.dashboard_custom_footer [ (.. " " (length (utils.keys doom.packages)) " packages loaded.")])
                             (set vim.g.dashboard_custom_header banner)
-                            (set vim.g.indentLine_fileTypeExclude [:dashboard])
+                            (set vim.g.indentline_filetypeexclude [:dashboard])
                             (set vim.g.dashboard_default_executive "telescope")
-                            (set vim.g.dashboard_custom_section {:a {:description   ["  Load previous session               SPC s l"]
+                            (set vim.g.dashboard_custom_section {:a {:description   ["  load previous session               spc s l"]
                                                                      :command "lua require('persistence').load({last=true})"}
-                                                                 :b {:description   ["  Recently Opened Files               SPC f r"]
+                                                                 :b {:description   ["  recently opened files               spc f r"]
                                                                      :command  "lua require('telescope.builtin').oldfiles(require('telescope.themes').get_ivy())"}
-                                                                 :c {:description   ["  Change colorscheme                  SPC h t"]
+                                                                 :c {:description   ["  change colorscheme                  spc h t"]
                                                                      :command "lua require('telescope.builtin').colorscheme(require('telescope.themes').get_ivy())"}
-                                                                 :d {:description   ["  Split window with terminal          COM t s"]
-                                                                     :command ":REPLSplitShell"}
-                                                                 :e {:description   ["  Find File                           SPC f f"]
+                                                                 :d {:description   ["  split window with terminal          com t s"]
+                                                                     :command ":replsplitshell"}
+                                                                 :e {:description   ["  find file                           spc f f"]
                                                                      :command  "lua require('telescope.builtin').find_files(require('telescope.themes').get_ivy())"}
-                                                                 :f {:description   ["  Open system configuration           SPC f p"]
+                                                                 :f {:description   ["  open system configuration           spc f p"]
                                                                      :command ":e ~/.vdoom.d/"}
-                                                                 :g {:description   ["  Open private configuration          SPC f P"]
+                                                                 :g {:description   ["  open private configuration          spc f p"]
                                                                      :command ":e ~/.vdoom.d/"}}))))
 
 ; undotree
 (after! :undotree
         (fn []
-          (set vim.g.undotree_SetFocusWhenToggle 1)))
+          (set vim.g.undotree_setfocuswhentoggle 1)))
 
 ; zen-mode
 (after! :zen-mode.nvim
-        #(utils.define-key {:keys "<leader>bz" :help "Activate ZenMode" :exec ":ZenMode<CR>"})
+        #(utils.define-key {:keys "<leader>bz" :help "activate zenmode" :exec ":zenmode<cr>"})
         100)
 
 ; treesitter
@@ -129,44 +129,44 @@
         #(require :configs.nvim-treesitter-textobjects-config)
         100)
 
-; Tagbar
+; tagbar
 (after! :tagbar
         (fn []
-          (utils.define-key {:keys "<C-t>"
-                             :help "Open Tagbar"
-                             :exec ":TagbarToggle<CR>"}))
+          (utils.define-key {:keys "<c-t>"
+                             :help "open tagbar"
+                             :exec ":tagbartoggle<cr>"}))
         100)
 
 ; nvim-cmp
 (after! :nvim-cmp
         (fn []
-          (vim.cmd "highlight! CmpItemAbbrDeprecated guibg=NONE gui=strikethrough guifg=#808080")
-          (vim.cmd "highlight! CmpItemAbbrMatch guibg=NONE guifg=#569CD6")
-          (vim.cmd "highlight! CmpItemAbbrMatchFuzzy guibg=NONE guifg=#569CD6")
-          (vim.cmd "highlight! CmpItemKindVariable guibg=NONE guifg=#9CDCFE")
-          (vim.cmd "highlight! CmpItemKindInterface guibg=NONE guifg=#9CDCFE")
-          (vim.cmd "highlight! CmpItemKindText guibg=NONE guifg=#9CDCFE")
-          (vim.cmd "highlight! CmpItemKindFunction guibg=NONE guifg=#C586C0")
-          (vim.cmd "highlight! CmpItemKindMethod guibg=NONE guifg=#C586C0")
-          (vim.cmd "highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4"))
+          (vim.cmd "highlight! cmpitemabbrdeprecated guibg=none gui=strikethrough guifg=#808080")
+          (vim.cmd "highlight! cmpitemabbrmatch guibg=none guifg=#569cd6")
+          (vim.cmd "highlight! cmpitemabbrmatchfuzzy guibg=none guifg=#569cd6")
+          (vim.cmd "highlight! cmpitemkindvariable guibg=none guifg=#9cdcfe")
+          (vim.cmd "highlight! cmpitemkindinterface guibg=none guifg=#9cdcfe")
+          (vim.cmd "highlight! cmpitemkindtext guibg=none guifg=#9cdcfe")
+          (vim.cmd "highlight! cmpitemkindfunction guibg=none guifg=#c586c0")
+          (vim.cmd "highlight! cmpitemkindmethod guibg=none guifg=#c586c0")
+          (vim.cmd "highlight! cmpitemkindkeyword guibg=none guifg=#d4d4d4"))
         100)
 
 ;  vim-fugitive
 (after! :vim-fugitive
         (fn []
-          (utils.define-keys [{:keys "<leader>gg" :exec ":Git<CR>" :help "Open Fugitive in cwd"}
-                              {:keys "<leader>gi" :exec ":Git init<CR>" :help "Initialize git in cwd"}
-                              {:keys "<leader>ga" :exec ":Git add %<CR>" :help "Track current file"}
-                              {:keys "<leader>gs" :exec ":Git stage %<CR>" :help "Stage current file"}
-                              {:keys "<leader>gc" :exec ":Git commit %<CR>" :help "Commit changes"}
-                              {:keys "<leader>gp" :exec ":Git push<CR>" :help "Push commits"}
-                              {:keys "<leader>gm" :exec ":Git merge<CR>" :help "Merge from remote"}]))
+          (utils.define-keys [{:keys "<leader>gg" :exec ":git<cr>" :help "open fugitive in cwd"}
+                              {:keys "<leader>gi" :exec ":git init<cr>" :help "initialize git in cwd"}
+                              {:keys "<leader>ga" :exec ":git add %<cr>" :help "track current file"}
+                              {:keys "<leader>gs" :exec ":git stage %<cr>" :help "stage current file"}
+                              {:keys "<leader>gc" :exec ":git commit %<cr>" :help "commit changes"}
+                              {:keys "<leader>gp" :exec ":git push<cr>" :help "push commits"}
+                              {:keys "<leader>gm" :exec ":git merge<cr>" :help "merge from remote"}]))
         200)
 
-; Luapad
+; luapad
 (after! :nvim-luapad
         (fn []
-          (utils.define-key {:keys "<F3>" :exec ":Luapad<CR>" :help "Start Luapad"}))
+          (utils.define-key {:keys "<f3>" :exec ":luapad<cr>" :help "start luapad"}))
         100)
 
 ; vimp
@@ -180,9 +180,9 @@
 (after! :which-key.nvim
         (fn []
           (let [wk (require :which-key)]
-            (wk.setup {:key_labels {"<space>" "SPC"
-                                    "<cr>" "RET"
-                                    "<tab>" "TAB"}}))))
+            (wk.setup {:key_labels {"<space>" "spc"
+                                    "<cr>" "ret"
+                                    "<tab>" "tab"}}))))
 
 ; vim-bbye
 (after! :vim-bbye

@@ -18,9 +18,13 @@ function QuickTscope.new(opts)
 
     assert(defaultFunc and getter)
 
+    if not type(getter) == 'table' then
+        getter = getter(unpack(getterArgs))
+    end
+
     TPickers.new(pickerArgs, {
         prompt_title = promptTitle,
-        finder = TFinders.new_table({results = getter(unpack(getterArgs))}),
+        finder = TFinders.new_table({results = getter}),
         sorter = TConf.generic_sorter(pickerArgs),
         attach_mappings = function (bufnr, map)
             TActions.select_default:replace(function ()

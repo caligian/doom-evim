@@ -68,7 +68,6 @@ function Snippet.new()
     })
 end
 
-
 function Snippet.splitEdit(buffer, opts)
     buffer = buffer or 0
     opts = opts or {}

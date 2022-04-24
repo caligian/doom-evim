@@ -8,7 +8,7 @@ function Indent.indent(fromRow, toRow, opts)
     toRow = toRow or fromRow+1
     local visual = opts.visual or false
     local times = opts.times or 1
-    local linesOnly = opts.linesOnly or true
+    local linesOnly = not opts.linesOnly == false and not opts.linesOnly and true or false
     local count = opts.count
 
     if count and vim.v.count > 0 then

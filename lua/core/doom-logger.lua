@@ -1,7 +1,7 @@
 local Logger = {}
 local FileLogger = require('logging.file')
 local Path = require('path')
-local LOGPATH = Path(vim.fn.stdpath('data'), 'doom-evim.log')
+local LOGPATH = Path(vim.fn.stdpath('data'), 'doom.log')
 
 function Logger.log(level, message)
     local logger = FileLogger(LOGPATH, "%d-%m-%Y-%H-%M-%S", "[%date] [%level] %message")
@@ -18,26 +18,43 @@ function Logger.log(level, message)
         logger:fatal(message)
     elseif level:match('warn') then
         logger:warn(message)
- 
     end
 end
 
-function Logger.dlog(msg)
+function Logger.debug(msg)
     Logger.log('debug', msg)
 end
 
-function Logger.elog(msg)
+function Logger.error(msg)
     Logger.log('error', msg)
 end
 
-function Logger.flog(msg)
+function Logger.fatal(msg)
     Logger.log('fatal', msg)
 end
 
-function Logger.ilog(msg)
+function Logger.info(msg)
     Logger.log('info', msg)
 end
 
-doom.log_path = Path(vim.fn.stdpath('data'), 'doom-evim.log')
+function Logger.registerModule(M)
+    for key, value in pairs(M) do
+        if type(value) == 'function' then
+            local withErrHandling = function (...)
+                local status, final = pcall(value, ...)
 
+                if status then
+                    return final
+                else
+                    Logger.fatal(final)
+                end
+            end
+
+            M[key] = withErrHandling
+        end
+    end
+end
+
+Doom.logPath = LOGPATH
+_G.Logger = Logger
 return Logger
