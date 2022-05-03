@@ -6,48 +6,83 @@ local Doom = require('core.doom-globals')
 
 local BufString = require('core.buffers.string')
 local BufFloat = require('core.buffers.floating')
-
---local BufFloat = dofile('floating.lua')
 local BufWrite = require('core.buffers.writer')
 local BufPrompt = require('core.buffers.prompt')
+local BufExceptions = require('core.buffers.exceptions')
 
 local Buffer = Class('doom-buffer')
-Buffer.status = {}
-Buffer.temporary = {}
-Buffer.floating = {}
-Buffer.prompts = {}
+
+if not Doom.Buffer then
+    Doom.Buffer = {status={}, temporary={}, floating={}, prompts={}}
+end
+
+Buffer.status = Doom.Buffer.status
+Buffer.temporary = Doom.Buffer.temporary
+Buffer.floating = Doom.Buffer.floating
+Buffer.prompts = Doom.Buffer.prompts
 
 function Buffer:exists()
     if vim.fn.bufexists(self.bufnr) == 1 then
         self.bufnr = vim.fn.bufnr(self.bufname)
-        local info = vim.fn.getbufinfo(self.bufnr)
-
-        if #info > 0 then
-            info = info[1]
-        end
-
-        self.info = info
 
         Buffer.status[self.bufname] = self
 
-        return true
+        return self.bufnr
     else
         return false
     end
 end
 
 function Buffer:is_visible()
-    if self:exists() then
-        local winnr = vim.fn.bufwinnr(self.bufnr)
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        if winnr ~= -1 then
-            self.winnr = winnr
-            return winnr
-        else
-            self.winnr = false
-            return false
-        end
+    local winnr = vim.fn.bufwinnr(self.bufnr)
+
+    if winnr ~= -1 then
+        self.winnr = winnr
+        return winnr
+    else
+        self.winnr = false
+        return false
     end
+end
+
+function Buffer:focus(direction)
+    self.exceptions:assert(self:exists(), 'invalid')
+
+    direction = direction or 'sp'
+
+    if self:is_visible() then
+        vim.fn.win_gotoid(self.winnr)
+    elseif direction:match('^sp') then
+        vim.cmd('sp | wincmd j | buffer ' .. self.bufname)
+    elseif direction:match('^vsp') then
+        vim.cmd('vsp | wincmd l | buffer ' .. self.bufname)
+    elseif direction:match('tab') then
+        vim.cmd('tabnew ' .. self.bufname)
+    elseif direction:match('float') then
+        self.float:show()
+    end
+
+    return self
+end
+
+function Buffer:winsaveview()
+    self.exceptions:assert(self:exists(), 'invalid')
+    self.exceptions:assert(self:is_visible(), 'invisible')
+
+    self.winview = vim.fn.winsaveview()
+
+    return self.winview
+end
+
+function Buffer:winrestview()
+    self.exceptions:assert(self:exists(), 'invalid')
+    self.exceptions:assert(self:is_visible(), 'invisible')
+
+    vim.fn.winrestview(self.winview)
+
+    return self
 end
 
 function Buffer.cleanup(what)
@@ -68,7 +103,7 @@ function Buffer.cleanup(what)
             end
         end
     end
-    
+
     local function _cleanup_prompts()
         for key, value in pairs(Buffer.prompts) do
             if not value.buffer:exists() then
@@ -92,51 +127,52 @@ function Buffer.cleanup(what)
 end
 
 function Buffer:unlist()
-    if self:exists() then
-        self.listed = false
-        vim.api.nvim_buf_set_option(self.bufnr, 'buflisted', false)
-        return true
-    end
+    self.exceptions:assert(self:exists(), 'invalid')
+
+    self.listed = false
+    vim.api.nvim_buf_set_option(self.bufnr, 'buflisted', false)
+
+    return self
 end
 
 function Buffer:setopts(options)
-    if self:exists() then
-        for key, value in pairs(options) do
-            vim.api.nvim_buf_set_option(self.bufnr, key, value)
-        end
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        return true
+    for key, value in pairs(options) do
+        vim.api.nvim_buf_set_option(self.bufnr, key, value)
     end
+
+    return self
 end
 
 function Buffer:setvars(vars)
-    if self:exists() then
-        for key, value in pairs(options) do
-            vim.api.nvim_buf_set_var(self.bufnr, key, value)
-        end
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        return true
+    for key, value in pairs(vars) do
+        vim.api.nvim_buf_set_var(self.bufnr, key, value)
     end
+
+    return self
 end
 
 function Buffer:kill()
-    if self:exists() then
-        local visible_buffers = #(vim.fn.tabpagebuflist())
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        if visible_buffers > 0 then
-            vim.cmd('bwipeout ' .. self.bufname)
-            Buffer.status[self.bufname] = nil
-            return true
-        else
-            return false
-        end
+    if not self:is_visible() then
+        vim.cmd('bwipeout! ' .. self.bufname)
+        self.killed = true
+        Buffer.status[self.bufname] = nil
     end
 end
 
 function Buffer:count()
-    if self:exists() then
-        return vim.api.nvim_buf_line_count(self.bufnr)
-    end
+    self.exceptions:assert(self:exists(), 'invalid')
+
+    return vim.api.nvim_buf_line_count(self.bufnr)
+end
+
+function Buffer:__eq(buf_obj)
+    return self.bufnr == buf_obj.bufnr
 end
 
 function Buffer:create()
@@ -145,180 +181,226 @@ function Buffer:create()
     end
 
     self.bufnr = vim.fn.bufnr(self.bufname)
+    self.bufname = vim.fn.bufname(self.bufnr)
+
     Buffer.status[self.bufname] = self
-    self:exists()
+
+    return self
 end
 
 function Buffer:hook(event_name, f, schedule)
-    if self:exists() then
-        event_name = event_name or 'BufEnter'
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        if not schedule then
-            Au.autocmd('Global', event_name, self.bufname, f)
-        else
-            Au.autocmd('Global', event_name, self.bufname, function ()
-                f(self)
-            end)
-        end
+    event_name = event_name or 'BufEnter'
 
-        return true
+    if not schedule then
+        Au.autocmd('Global', event_name, self.bufname, f)
+    else
+        Au.autocmd('Global', event_name, self.bufname, function ()
+            f(self)
+        end)
     end
+
+    return self
 end
 
 -- opts as required by Kbd.new({...})
 function Buffer:kbd(...)
-    if self:exists() then
-        for _, opts in ipairs({...}) do
-            opts.pattern = self.bufname
-            opts.event = opts.event or 'BufEnter'
-            Kbd.new(opts)
+    self.exceptions:assert(self:exists(), 'invalid')
 
-            return true
-        end
+    for _, opts in ipairs({...}) do
+        opts.pattern = self.bufname
+        opts.event = opts.event or 'BufEnter'
+        Kbd.new(opts)
+
+        return self
     end
 end
 
 function Buffer:load()
-    if self:exists() then
-        if vim.fn.bufloaded == 0 then
-            vim.fn.bufload(self.bufname)
+    self.exceptions:assert(self:exists(), 'invalid')
 
-            return true
-        end
+    if vim.fn.bufloaded == 0 then
+        vim.fn.bufload(self.bufname)
+        return self
     end
 end
 
 function Buffer:hide()
-    if self:exists() then
-        local winnr = vim.fn.bufwinnr(self.bufnr)
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        if winnr == 1 then
-            vim.api.nvim_win_close(winnr, true)
-        end
+    local tabpage_buflist_n = #(vim.fn.tabpagebuflist(vim.fn.tabpagenr()))
+
+    if self:is_visible() and tabpage_buflist_n > 1 then
+        vim.fn.win_gotoid(self.winnr)
+        vim.cmd('q')
+
+        return self
     end
 end
 
-function Buffer:exec(f, schedule)
-    if self:exists() then
-        local bufname = self.bufname
+-- If sync is provided then only wait for output
+function Buffer:exec(f, opts)
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        vim.cmd('tabnew ' .. bufname)
+    opts = opts or {}
+    opts.sync = opts.sync or {}
+    opts.sync.try = opts.sync.try or 10
+    opts.sync.wait = opts.sync.wait or 1
+    opts.sync.inc = opts.sync.inc or 0.6
 
-        if schedule then
-            vim.schedule(function ()
-                f(self)
-            end)
-        else
-            f(self)
+    local out = false
+    local _, err = nil, nil
+
+    local function _sync()
+        local try_n = opts.sync.try or 10
+        local wait = opts.sync.wait or 10
+        local inc = opts.sync.inc or 0.5
+
+        while not out and try_n >= 0 do
+            vim.wait(wait)
+            wait = wait + wait * inc
+            try_n = try_n - 1
         end
 
-        vim.cmd('q')
+        if not out and try_n == 0 then
+            self.exceptions:timeout()
+        end
+    end
 
-        return true
+    local function _f()
+        if self:is_visible() then
+            local current_winnr = vim.fn.winnr()
+
+            vim.fn.win_gotoid(self.winnr)
+
+            if opts.schedule then
+                vim.schedule(function ()
+                    out = f(self)
+                end)
+            else
+                out = f(self)
+            end
+
+            vim.fn.win_gotoid(current_winnr)
+        else
+            vim.cmd('tabnew | b ' .. self.bufname)
+
+            if opts.schedule then
+                vim.schedule(function ()
+                    out = f(self)
+                end)
+            else
+                out = f(self)
+            end
+
+            vim.cmd('q')
+        end
+    end
+
+    opts.protected = type(opts.protected) == 'boolean' and not opts.protected and false or true
+
+    if opts.protected then
+        pcall(function ()
+            _f()
+
+            if opts.output then
+                _, err = _sync()
+            end
+        end)
+    else
+        _f()
+    end
+
+    if err then
+        return err
+    else
+        return out
     end
 end
 
 function Buffer:getpos(expr)
-    if self:exists() then
-        self:exec(function ()
-            expr = vim.fn.getpos(expr)
-        end)
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        return expr
-    end
+    self:exec(function ()
+        expr = vim.fn.getpos(expr)
+    end)
 end
 
 function Buffer:position(opts)
-    if self:exists() then
-        opts = opts or {}
+    self.exceptions:assert(self:exists(), 'invalid')
 
-        local visual_cood = {
-            row = {
-                from = 0,
-                till = false,
-            },
-            col = {
-                from = 0,
-                till = false
-            }
-        }
+    opts = opts or {}
 
-        local cood = {
-            row = false,
-            col = false,
-        }
+    local cood = {row={}, col={}}
 
-        if opts.visual then
-            self:exec(function ()
-                local from = vim.fn.getcurpos("'<")
-                local till = vim.fn.getcurpos("'>")
+    if opts.visual then
+        local from = vim.api.nvim_buf_get_mark(self.bufnr, "<")
+        local till = vim.api.nvim_buf_get_mark(self.bufnr, ">")
 
-                cood.row.from = from[2] - 1
-                cood.row.till = till[2] - 1
-                cood.col.from = till[3] - 1
-                cood.col.till = from[3] - 1
-            end)
-        else
-            cood.row = vim.fn.getcurpos('.')[2] - 1
-            cood.col = vim.fn.getcurpos('.')[3] - 1
-        end
+        cood.row.from = from[1] - 1
+        cood.row.till = till[1] - 1
 
-        return cood
+        cood.col.from = from[2]
+        cood.col.till = till[2]
+    else
+        self:exec(function ()
+            cood.col = vim.fn.col('.') - 1
+            cood.row = vim.fn.line('.') - 1
+        end)
     end
+
+    return cood
 end
+
 
 -- Split this buffer and...
 -- In order to do this, the buffer should be visible.
 function Buffer:split(buf_obj_or_bufname, direction, opts)
-    if self:exists() then
-        local winnr = self:is_visible()
+    self.exceptions:assert(self:exists(), 'invalid')
+    self.exceptions:assert(self:is_visible(), 'invisible')
 
-        if winnr then
-            vim.fn.win_gotoid(winnr)
-            local buf_obj = nil
-            direction = direction or 'sp'
-            opts = opts or {}
+    vim.fn.win_gotoid(self.winnr)
+    local buf_obj = nil
+    direction = direction or 'sp'
+    opts = opts or {}
 
-            assert(buf_obj_or_bufname)
-
-
-            if type(buf_obj_or_bufname) == 'string' then
-                buf_obj = Buffer(buf_obj_or_bufname)
-            elseif Class.is_a(buf_obj_or_bufname, Buffer) then
-                buf_obj = buf_obj_or_bufname
-            else
-                buf_obj = Buffer()
-            end
-
-            if direction == 'sp' then
-                if not opts.reverse then
-                    vim.cmd('sp | wincmd j | buffer ' .. buf_obj.bufname)
-                else
-                    vim.cmd('sp | buffer ' .. buf_obj.bufname)
-                end
-            elseif direction == 'vsp' then
-                if opts.reverse then
-                    vim.cmd('vsp | buffer ' .. buf_obj.bufname)
-                else
-                    vim.cmd('vsp | wincmd l | buffer ' .. buf_obj.bufname)
-                end
-            elseif direction:match('tab') then
-                vim.cmd('tabnew ' .. buf_obj.bufname)
-            elseif direction:match('float') then
-                Utils.dump(opts)
-                opts = opts or {}
-                buf_obj.float:show(opts)
-            end
-
-            if opts.hook then
-                buf_obj:exec(opts.hook, opts.schedule or false)
-            end
-
-            return buf_obj
-        else
-            return false
-        end
+    if type(buf_obj_or_bufname) == 'string' then
+        buf_obj = Buffer(buf_obj_or_bufname)
+    elseif Class.is_a(buf_obj_or_bufname, Buffer) then
+        buf_obj = buf_obj_or_bufname
+    else
+        buf_obj = Buffer()
     end
+
+    if direction:match('^sp') then
+        if not opts.reverse then
+            vim.cmd('sp | wincmd j | buffer ' .. buf_obj.bufname)
+        else
+            vim.cmd('sp | buffer ' .. buf_obj.bufname)
+        end
+    elseif direction:match('vsp') then
+        if opts.reverse then
+            vim.cmd('vsp | buffer ' .. buf_obj.bufname)
+        else
+            vim.cmd('vsp | wincmd l | buffer ' .. buf_obj.bufname)
+        end
+    elseif direction:match('tab') then
+        vim.cmd('tabnew ' .. buf_obj.bufname)
+    elseif direction:match('float') then
+        opts = opts or {}
+        buf_obj.float:show(opts)
+    end
+
+    local out = nil
+    if opts.on_open then
+        out = buf_obj:exec(opts.on_open, {
+            protected=opts.protected,
+            schedule=opts.scheduled,
+            stdout=opts.stdout})
+    end
+
+    return buf_obj, out
 end
 
 function Buffer.list()
@@ -326,39 +408,34 @@ function Buffer.list()
     local buffers = {}
 
     for i = 1, n_buffers do
-        local info = vim.fn.getbufinfo(i)
-        local name = vim.fn.bufname(i)
         local bufnr = vim.fn.bufnr(i)
 
         if bufnr ~= -1 then
-            if #info > 0 then
-                info = info[1]
-            end
+            local bufname = vim.fn.bufname(bufnr)
 
-            buffers[name] = info
-            buffers[bufnr] = info
+            if not Buffer.status[bufname] then
+                buffers[bufname] = Buffer(bufname)
+-- code            else
+                buffers[bufname] = Buffer.status[bufname]
+            end
         end
     end
 
     return buffers
 end
 
+-- Always save the name of the calling buffer.
 function Buffer:__init(bufname, opts)
     opts = opts or {}
-    local is_temp_buffer = false
 
     if not bufname then
-        bufname = string.format('_temp_buffer_%d', #Buffer.temporary + 1)
-        is_temp_buffer = true
+        self.bufname = string.format('_temp_buffer_%d', #Buffer.temporary + 1)
         self.scratch = true
-    end
-
-    self.bufname = bufname
-    self:create()
-
-    if self.bufname and self.bufname:match('^%%:..?') then
+    elseif bufname:match('^%%?:?..?') then
         self.bufname = vim.fn.expand(self.bufname)
     end
+
+    self:create()
 
     self.float = BufFloat(self, opts)
     self.prompt = BufPrompt(self.float)
@@ -366,8 +443,10 @@ function Buffer:__init(bufname, opts)
     self.write = BufWrite(self)
     self.string = BufString(self)
 
-    if is_temp_buffer then
-        self:setopts({buftype='nofile'})
+    self.exceptions = BufExceptions(self)
+
+    if self.scratch then
+        self:setopts({buftype='nofile', buflisted=true})
     end
 end
 

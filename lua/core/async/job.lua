@@ -1,8 +1,9 @@
 local Class = require('classy')
 local Path = require('path')
-local Buf = dofile('/home/Minerva/.config/nvim/lua/core/buffers/init.lua')
+local Buf = require('core.buffers')
 local Notify = require('core.doom-notify')
 local Utils = require('core.doom-utils')
+local JobException = require('core.async.exceptions')
 local Job = Class('doom-async-job')
 
 Job.status = {}
@@ -26,35 +27,6 @@ local job_opts_template = {
     },
 }
 
--- Any args required for jobopen/termopen
-function Job:termopen(direction, cmd, opts)
-    direction = direction or 'float'
-    opts = opts or {}
-    cmd = string.format('tabnew term://%s', cmd)
-
-    vim.cmd(cmd)
-    self.job_id = vim.b.terminal_job_id
-    self.pid = vim.fn.jobpid(self.job_id)
-    self.terminal = {
-        bufname = vim.fn.bufname(),
-        bufnr = vim.fn.bufnr(),
-        job_id = self.job_id,
-    }
-    vim.cmd('tabclose')
-
-    local term_buffer = Buf(self.terminal.bufname)
-    self.terminal.buffer = term_buffer
-
-    if direction:match('float') then
-        term_buffer.float:show(opts)
-    elseif direction:match('^sp') then
-        local current_buf = Buf(vim.fn.expand('%'))
-        current_buf:split(term_buffer, direction)
-    elseif direction:match('tab') then
-        vim.cmd('tabnew ' .. self.terminal.bufname)
-    end
-end
-
 -- Same args as `jobstart() or termopen()`
 -- Make a job object but don't start the job.
 -- @param name string Name of the job
@@ -71,12 +43,12 @@ function Job:__init(name, cmd, opts)
     self._opts = opts
     self.running = false
     self.done = false
-    self.pending = true
+    self.exceptions = JobException(self)
 
     Job.status[self.name] = self
 end
 
-function Job:close()
+function Job:kill()
     if not self.done then
         vim.fn.chanclose(self.job_id)
         self.done = true
@@ -84,24 +56,24 @@ function Job:close()
     end
 end
 
-function Job.close_all()
+function Job.killall()
     for key, value in pairs(Job.status) do
         if value.running then
-            value:close()
+            value:kill()
         end
     end
 end
 
 function Job:send(s)
-    if self.running then
+    self.exceptions:assert(self.running, 'pending')
+
         if type(s) == 'table' then
             s = table.concat(s, "\n")
         end
 
-        s = s .. "\n\r"
+        s = s .. "\n"
 
         vim.fn.chansend(self.job_id, s)
-    end
 end
 
 function Job:sanitize_opts(opts)
@@ -133,116 +105,122 @@ function Job:sanitize_opts(opts)
     return new
 end
 
+-- Only works if terminal=true
+function Job:focus(direction)
+    local opts = self._opts or {}
+    direction = direction or self._opts.direction or 'sp'
+
+    if self._opts.terminal then
+        self.terminal.buffer:focus(direction)
+    end
+end
+
 function Job:show_output(opts)
+    opts = opts or self._opts or {}
+    opts.show = opts.show or {}
+    opts.show.method = opts.show.method or 'sp'
+    opts.show.stdout = not opts.show.stdout and type(opts.show.stdout) == 'boolean' and false or true
+    opts.show.stderr = not opts.show.stderr and type(opts.show.stderr) == 'boolean' and false or true
+
     self:sync()
 
-    vim.schedule(function ()
-        opts = opts or self._opts or {}
-        opts.show = opts.show or {}
-        opts.show.method = opts.show.method or 'split'
-        opts.show.stdout = not opts.show.stdout and type(opts.show.stdout) == 'boolean' and false or true
-        opts.show.stderr = not opts.show.stderr and type(opts.show.stderr) == 'boolean' and false or true
+    local function _notify()
+        local title = opts.show.title or string.format('doom job for command `%s` says', self.cmd)
 
-        local function _notify()
-            local title = opts.show.title or string.format('doom job for command `%s` says', self.cmd)
+        local args = opts.show.args or {}
 
-            local args = opts.show.args or {}
-
-            if opts.show.stdout and #self.stdout > 0 then
-                Notify.info(title, self.stdout, args)
-            end
-
-            if opts.show.stderr and #self.stderr > 0 then
-                Notify.info(title, self.stderr, args)
-            end
+        if opts.show.stdout and #self.stdout > 0 then
+            Notify.info(title, self.stdout, args)
         end
 
-        local function _echo()
-            if opts.show.stdout and #self.stdout > 0 then
-                vim.api.nvim_echo({{table.concat(self.stdout, "\n")}}, false, {})
-            end
+        if opts.show.stderr and #self.stderr > 0 then
+            Notify.info(title, self.stderr, args)
+        end
+    end
 
-            if opts.show.stderr and #self.stderr > 0 then
-                vim.api.nvim_echo({{table.concat(self.stderr, "\n")}}, false, {})
-            end
+    local function _echo()
+        if opts.show.stdout and #self.stdout > 0 then
+            vim.api.nvim_echo({{table.concat(self.stdout, "\n")}}, false, {})
         end
 
-        local function _err()
-            if opts.show.stdout and #self.stdout > 0 then
-                vim.api.nvim_err_writeln(table.concat(self.stdout, "\n"))
-            end
+        if opts.show.stderr and #self.stderr > 0 then
+            vim.api.nvim_echo({{table.concat(self.stderr, "\n")}}, false, {})
+        end
+    end
 
-            if opts.show.stderr and #self.stderr > 0 then
-                vim.api.nvim_err_writeln(table.concat(self.stderr, "\n"))
-            end
+    local function _err()
+        if opts.show.stdout and #self.stdout > 0 then
+            vim.api.nvim_err_writeln(table.concat(self.stdout, "\n"))
         end
 
-        local function _split()
-            local current_buf = Buf(vim.fn.expand('%'))
+        if opts.show.stderr and #self.stderr > 0 then
+            vim.api.nvim_err_writeln(table.concat(self.stderr, "\n"))
+        end
+    end
 
-            if opts.show.stdout and self.stdout and #self.stdout > 0 then
-                local bufname = '_async_command_stdout_' .. #(Utils.keys(current_buf.status))
-                current_buf:split(bufname, opts.show.direction or 'sp', {
-                    hook = function (buf_obj)
-                        buf_obj.write:lines(self.stdout)
-                    end,
-                    create = true,
-                })
+    local function _split()
+        local current_buf = Buf(vim.fn.expand('%'))
 
-                current_buf:setopts {buftype='nofile'}
-            end
+        if opts.show.stdout and self.stdout and #self.stdout > 0 then
+            local buf = Buf('_async_command_stdout_' .. #(Utils.keys(current_buf.status)))
 
-            if opts.show.stderr and self.stderr and #self.stderr > 0 then
-                local bufname = '_async_command_stdout_' .. #(Utils.keys(current_buf.status))
-                current_buf:split(bufname, opts.show.direction or 'sp', {
-                    hook = function (buf_obj)
-                        buf_obj.write:lines(self.stderr)
-                    end,
-                    create = true,
-                })
-
-                current_buf:setopts {buftype='nofile'}
-            end
+            current_buf:split(buf, opts.show.direction or 'sp', {
+                on_open = function (buf_obj)
+                    buf_obj.write:lines(self.stdout, {row={from=0}})
+                    buf_obj:setopts {buflisted=false, buftype='nofile'}
+                end,
+            })
         end
 
-        local function _win()
-            local floating_temp_buf = Buf.temp()
+        if opts.show.stderr and self.stderr and #self.stderr > 0 then
+            local bufname = '_async_command_stdout_' .. #(Utils.keys(current_buf.status))
+            current_buf:split(bufname, opts.show.direction or 'sp', {
+                on_open = function (buf_obj)
+                    buf_obj.write:lines(self.stderr, {row={from=0}})
+                end,
+                create = true,
+            })
 
-            if #self.stdout > 0 and self.show.stdout then
-                floating_temp_buf.write:lines(self.stdout)
-            end
+            current_buf:setopts {buftype='nofile'}
+        end
+    end
 
-            if #self.stderr > 0 and self.show.stderr then
-                floating_temp_buf.write:lines(self.stderr)
-            end
+    local function _win()
+        local floating_temp_buf = Buf()
 
-            floating_temp_buf:show()
-            floating_temp_buf:setopts {buftype='nofile'}
+        if #self.stdout > 0 and opts.show.stdout then
+            floating_temp_buf.write:lines(self.stdout, {row={from=0}})
         end
 
-        local method = opts.show.method
-        if method == 'split' then
-            _split()
-        elseif method == 'err' then
-            _err()
-        elseif method == 'win' then
-            _win()
-        elseif method == 'echo' then
-            _echo()
-        elseif method == 'notify' then
-            _notify()
+        if #self.stderr > 0 and opts.show.stderr then
+            floating_temp_buf.write:lines(self.stderr, {row={from=0}})
         end
-    end)
+
+        floating_temp_buf.float:show()
+        floating_temp_buf:setopts {buftype='nofile', buflisted=false}
+    end
+
+    local method = opts.show.method
+    if method:match('sp') then
+        _split()
+    elseif method:match('err') then
+        _err()
+    elseif method:match('win') or method:match('float') then
+        _win()
+    elseif method:match('echo') then
+        _echo()
+    elseif method:match('noti') then
+        _notify()
+    end
 end
 
 -- Works just like jobwait() but with incremental time delay
 -- @param what string Stdout or Stderr? Waits until output is obtained. Default: stdout
 -- @param wait number Milliseconds to wait for before reading output. This will be incremented at each failure to read by 0.1 Default: 150
 -- @param n number Number of times to try to read output. Default: 100 (10 seconds)
-function Job:sync(what, wait, n)
-    assert(self.running, 'Job has not been started.')
+function Job:sync(wait, n)
+    self.exceptions:assert(self.running and not self.done, 'killed')
 
-    what = what or 'stdout'
     wait = wait or 10
     n = n or 10
 
@@ -260,68 +238,80 @@ function Job:sync(what, wait, n)
 end
 
 function Job:open(opts)
-    if not self.done then
-        opts = opts or self._opts or {}
+    self.exceptions:assert(not self.done and not self.running, 'done')
 
-        if not opts.on_exit then
-            opts.on_exit = function (...)
-                self.done = true
-                self.running = false
+    opts = opts or self._opts or {}
+
+    if not opts.on_exit then
+        opts.on_exit = function (...)
+            self.done = true
+            self.running = false
+        end
+    end
+
+    local function on_stdout(job_id, data, err)
+        if not self.stdout then
+            self.stdout = {}
+        end
+
+        for _, value in ipairs(Utils.toList(data)) do
+            if #value > 0 then
+                table.insert(self.stdout, value)
             end
         end
+    end
 
-        opts.on_stdout = opts.on_stdout or function (job_id, data, err)
-            if not self.stdout then
-                self.stdout = {}
-            end
-
-            for _, value in ipairs(Utils.toList(data)) do
-                if #value > 0 then
-                    table.insert(self.stdout, value)
-                end
-            end
+    local function on_stderr(job_id, data, err)
+        if not self.stderr then
+            self.stderr = {}
         end
 
-        opts.on_stderr = opts.on_stderr or function (job_id, data, err)
-            if not self.stderr then
-                self.stderr = {}
-            end
-
-            for _, value in ipairs(Utils.toList(data)) do
-                if #value > 0 then
-                    table.insert(self.stderr, value)
-                end
+        for _, value in ipairs(Utils.toList(data)) do
+            if #value > 0 then
+                table.insert(self.stderr, value)
             end
         end
+    end
 
-        opts.env = opts.env or {
-            HOME = os.getenv('HOME'),
-            PATH = os.getenv('PATH'),
-        }
+    opts.on_stdout = not opts.on_stdout and type(opts.on_stdout) == 'boolean' and nil or on_stdout
+    opts.on_stderr = not opts.on_stderr and type(opts.on_stderr) == 'boolean' and nil or on_stderr
 
-        opts.cwd = opts.cwd or os.getenv('HOME')
+    opts.env = opts.env or {
+        HOME = os.getenv('HOME'),
+        PATH = os.getenv('PATH'),
+    }
 
-        if not opts.stderr_buffered then
-            opts.stderr_buffered = true
-        end
+    opts.cwd = opts.cwd or os.getenv('HOME')
 
-        if not opts.stdout_buffered then
-            opts.stdout_buffered = true
-        end
+    if opts.on_stderr and not opts.stderr_buffered then
+        opts.stderr_buffered = true
+    end
 
-        if not opts.terminal then
-            local job = vim.fn.jobstart(self.cmd, self:sanitize_opts(opts))
-            self.job_id = job
-            self.pending = false
-            self.running = true
-            self.pid = vim.fn.jobpid(self.job_id)
-        else
-            -- Here opts are required for floating win
-            self:termopen(opts.direction or 'float', self.cmd, self:sanitize_opts(opts))
-            return true
-        end
+    if opts.on_stdout and not opts.stdout_buffered then
+        opts.stdout_buffered = true
+    end
+
+    local job = false
+    if not opts.terminal then
+        job = vim.fn.jobstart(self.cmd, self:sanitize_opts(opts))
+        self.job_id = job
+        self.running = true
+        self.done = false
     else
-        return false
+        self.terminal = {}
+        self.terminal.buffer = Buf()
+        self.buffer = self.terminal.buffer
+        self.buffer:setopts({buflisted=false})
+
+        do
+            vim.cmd('tabnew')
+            job = vim.fn.termopen(self.cmd, self:sanitize_opts(opts))
+            self.terminal.buffer = Buf(vim.fn.expand('%'))
+            self.job_id = job
+            self.running = true
+            self.done = false
+            vim.cmd('q')
+        end
     end
 end
 

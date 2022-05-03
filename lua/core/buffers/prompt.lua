@@ -27,51 +27,49 @@ end
 -- accepting input from that buffer
 -- Just provide lines for text and # will be prepended to each line
 function Prompt:float(text, opts)
-    if self.buffer:exists() then
-        opts = opts or {}
+    opts = opts or {}
 
-        if type(text) == 'string' then
-            text = vim.split(text, "[\n\r]+")
-        end
-
-        for index, value in ipairs(text) do
-            text[index] = '# ' .. value
-        end
-
-        self.win:show()
-
-        local default_text = [[# This is an input buffer
-        # When you are done, please press gs
-        # gs will trigger any action that you have set for post-submission
-        # Comments will be ignored while parsing this input]]
-        text = table.concat(text, "\n")
-        default_text = default_text .. "\n" .. text .. "\n"
-
-        vim.api.nvim_put(text, 'c', true, true)
-
-        self.buffer:kbd {
-            leader = false,
-            keys = 'gs',
-            help = 'Get input',
-            exec = function ()
-                vim.schedule(function ()
-                    local buffer_string = vim.api.nvim_buf_get_lines(0, 0, self.buffer:count(), false)
-
-                    for index, value in ipairs(buffer_string) do
-                        if value:match('^ *#') then
-                            buffer_string[index] = nil
-                        end
-                    end
-
-                    if opts.hook then
-                        opts.hook(buffer_string)
-                    end
-                end)
-
-                self.win:hide()
-            end
-        }
+    if type(text) == 'string' then
+        text = vim.split(text, "[\n\r]+")
     end
+
+    for index, value in ipairs(text) do
+        text[index] = '# ' .. value
+    end
+
+    self.win:show()
+
+    local default_text = [[# This is an input buffer
+    # When you are done, please press gs
+    # gs will trigger any action that you have set for post-submission
+    # Comments will be ignored while parsing this input]]
+    text = table.concat(text, "\n")
+    default_text = default_text .. "\n" .. text .. "\n"
+
+    vim.api.nvim_put(text, 'c', true, true)
+
+    self.buffer:kbd {
+        leader = false,
+        keys = 'gs',
+        help = 'Get input',
+        exec = function ()
+            vim.schedule(function ()
+                local buffer_string = vim.api.nvim_buf_get_lines(0, 0, self.buffer:count(), false)
+
+                for index, value in ipairs(buffer_string) do
+                    if value:match('^ *#') then
+                        buffer_string[index] = nil
+                    end
+                end
+
+                if opts.hook then
+                    opts.hook(buffer_string)
+                end
+            end)
+
+            self.win:hide()
+        end
+    }
 end
 
 function Prompt.default(prompts_hooks_t, opts)

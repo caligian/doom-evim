@@ -9,6 +9,7 @@ function Str:__init(obj)
 end
 
 function Str:count()
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
     self.line_count = vim.api.nvim_buf_line_count(self.bufnr)
     return self.line_count
 end
@@ -29,16 +30,21 @@ function Str:lines(opts)
 end
 
 function Str:current_line()
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invisible')
+    
     local cood = self.buffer:position()
     local opts = opts or {}
     opts.row = opts.row or {}
     opts.row.from = cood.row
-    opts.row.till = cood.col
+    opts.row.till = cood.row+1
 
     return self:lines(opts)[1]
 end
 
 function Str:line(ln)
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+
     assert(ln)
     local opts = opts or {}
     opts.row = opts.row or {}
@@ -53,6 +59,7 @@ function Str:text(opts)
     assert(opts.row)
     assert(opts.col)
 
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
     local buffer_string = vim.api.nvim_buf_get_text(self.bufnr, opts.row.from, opts.col.from, opts.row.till, opts.col.till, {})
 
     if opts.nl then
@@ -63,6 +70,9 @@ function Str:text(opts)
 end
 
 function Str:visual_range(opts)
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+    self.buffer.exceptions:assert(self.buffer:is_visible(), 'invisible')
+
     opts = opts or {nl=true}
     local cood = self.buffer:position {visual=true}
     local str = self:text(cood, opts)
@@ -70,6 +80,8 @@ function Str:visual_range(opts)
 end
 
 function Str:dump(method_name, args, kwargs, schedule)
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+
     if args and type(args) ~= 'table' then
         args = {args}
     end
@@ -136,6 +148,7 @@ function Str:read(...)
 
     local wait = 100
     local try_n = 100
+
     while not _has_string(fh) and try_n > 0 do
         fh:close()
         fh = io.open(fname, 'r')

@@ -6,7 +6,6 @@ local Floating = Class('doom-buffer-floating')
 
 function Floating:__init(buf_obj, opts)
     self.buffer = buf_obj
-    self.buffer.is_floating = true
     self.buffer.floating[self.buffer.bufname] = self
 
     opts = opts or {}
@@ -68,76 +67,55 @@ function Floating:sanitize_opts(opts)
 end
 
 function Floating:show(opts)
-    if self.buffer:exists() then
-        opts = opts or self._opts
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+    opts = opts or self._opts
 
-        if opts.options then
-            self.buffer:setopts(opts.options)
-        end
-
-        if opts.vars then
-            self.buffer:setvars(opts.vars)
-        end
-
-        opts = self:sanitize_opts()
-        self.winnr = vim.api.nvim_open_win(self.buffer.bufnr, true, opts)
+    if opts.options then
+        self.buffer:setopts(opts.options)
     end
+
+    if opts.vars then
+        self.buffer:setvars(opts.vars)
+    end
+
+    opts = self:sanitize_opts()
+    self.winnr = vim.api.nvim_open_win(self.buffer.bufnr, true, opts)
 end
 
 function Floating:is_visible()
-    if self.buffer:exists() then
-        self.winnr = self.buffer.is_visible()
-        return self.winnr
-    end
+    self.winnr = self.buffer:is_visible()
+    return self.winnr
 end
 
 function Floating:hide()
-    if self.buffer:exists() then
-        if self.winnr then
-            vim.api.nvim_win_close(self.winnr, true)
-            return true
-        end
-    end
-end
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
 
--- Only works if the window is actually visible
-function Floating:exec(f, schedule)
-    if self.buffer:exists() and self.buffer:is_visible() then
-        if schedule then
-            vim.schedule(function ()
-                f(self)
-            end)
-        else
-            f(self)
-        end
-
+    if self:is_visible() then
+        vim.api.nvim_win_close(self.winnr, true)
         return true
     end
 end
 
-function Floating:hook(event_name, f, schedule)
-    if self.buffer:exists() then
-        if not self._opts.noautocmd then
-            self.buffer:hook(event_name, f, schedule)
+-- Only works if the window is actually visible
+function Floating:exec(f, opts)
+    self.buffer.exceptions:assert(self.buffer:exists() and self:is_visible())
+    return slef.buffer:exec(f, opts)
+end
 
-            return true
-        else
-            local s = string.format('No autocmds can be applied to %s. Check options.', self.buffer.bufname)
-            Notify.warn('doom-buffer-floating says', s, {})
-        end
+function Floating:hook(event_name, f, schedule)
+    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+
+    if not self._opts.noautocmd then
+        self.buffer:hook(event_name, f, schedule)
+        return true
+    else
+        error({buffer=self.buffer, no_autocmd=true, reason='No autocmd can be applied to buffer'})
     end
 end
 
 function Floating:unfocus(opts)
     opts = opts or self._opts or {}
-
     local floating_buffers = {}
-
-    for key, value in pairs(self.buffer.floating) do
-        if value.winnr then
-            table.insert(floating_buffers, key)
-        end
-    end
 
     self.buffer.cleanup('floating')
 
@@ -171,15 +149,15 @@ function Floating:unfocus(opts)
             end
         end
     end
-
 end
 
 function Floating:focus(opts)
     opts = opts or {}
 
-    if opts.telescope then
-        self.buffer.cleanup('floating')
+    self.buffer.cleanup('floating')
+    self:hide()
 
+    if opts.telescope then
         Tscope.new {
             hook = function (selection, ...)
                 selection = selection[1]
@@ -191,8 +169,6 @@ function Floating:focus(opts)
             getter = Utils.keys(self.buffer.floating)
         }
     elseif opts.regex or type(opts) == 'string' then
-        self.buffer.cleanup('floating')
-
         local regex = type(opts) == 'string' and opts or opts.regex
 
         for key, value in pairs(self.buffer.floating) do
@@ -201,8 +177,6 @@ function Floating:focus(opts)
             end
         end
     elseif opts.eq then
-        self.buffer.cleanup('floating')
-
         for key, value in pairs(self.buffer.floating) do
             if key == opts.eq then
                 value:show()
