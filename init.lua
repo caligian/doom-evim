@@ -61,3 +61,17 @@ package.cpath = string.format('%s;%s/.luarocks/lib/lua/5.1/?.so', package.cpath,
 -- Open log quickly
 vim.cmd [[ noremap <leader>fl :e ~/.local/share/nvim/doom-evim.log<CR> ]]
 
+-- In case nvim config is fucked up
+if not _G.gkbd then 
+    _G.gkbd = function (mode, lhs, rhs, noremap, opts)
+        opts = opts or {}
+        noremap = noremap == nil and true or noremap
+        if noremap then opts.noremap = true end
+        vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
+    end
+end
+
+gkbd('n', '<leader>ff', ':Telescope find_files<CR>')
+gkbd('n', '<leader>fr', ':Telescope oldfiles<CR>')
+gkbd('n', '<leader>fs', ':w<CR>')
+gkbd('n', '<leader>qq', ':qa!')
