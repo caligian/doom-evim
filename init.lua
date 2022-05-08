@@ -1,5 +1,3 @@
-require('core.globals')
-
 -- Your config starts here.
 vim.o.foldenable = false
 vim.o.completeopt = "menu,menuone,noselect"
@@ -36,23 +34,7 @@ vim.g.maplocalleader = ","
 vim.cmd [[ tnoremap <Esc> <C-\><C-n> ]]
 vim.cmd [[ set inccommand=split ]]
 
--- Load impatient
-require 'impatient'
-
--- Adding fennel searchers
--- Add all user configurations to package path
-local fennel = require 'fennel'
-debug.traceback = fennel.traceback
-table.insert(package.loaders or package.searchers, fennel.searcher)
-
--- Change fennel-compiled results directory
-vim.cmd [[ let g:aniseed#env = {'input': stdpath('config') . '/fnl/', 'output': stdpath('config') . '/compiled/'} ]]
-
 local home = os.getenv('HOME')
-package.path = string.format('%s;%s/compiled/?.lua', package.path, vim.fn.stdpath('config'))
-package.path = string.format('%s;%s/.vdoom.d/compiled/?.lua', package.path, home)
-package.path = string.format('%s;%s/.vdoom.d/lua/?.lua', package.path, home)
-package.path = string.format('%s;%s/.vdoom.d/?.lua', package.path, home)
 
 -- Add luarock support
 package.path = string.format('%s;%s/.luarocks/share/lua/5.1/?.lua;%s/.luarocks/share/lua/5.1/?/init.lua', package.path, home, home)
@@ -74,4 +56,5 @@ end
 gkbd('n', '<leader>ff', ':Telescope find_files<CR>')
 gkbd('n', '<leader>fr', ':Telescope oldfiles<CR>')
 gkbd('n', '<leader>fs', ':w<CR>')
+gkbd('n', '<leader>fv', ':w <bar> luafile %<CR>')
 gkbd('n', '<leader>qq', ':qa!')

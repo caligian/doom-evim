@@ -1,8 +1,9 @@
 local Class = require('classy')
 local Path = require('path')
 local Buf = require('core.buffers')
-local Notify = require('core.doom-notify')
-local Utils = require('core.doom-utils')
+local Notify = require('core.notify')
+local utils = require('modules.utils')
+local tutils = require('modules.utils.table')
 local JobException = require('core.async.exceptions')
 local Job = Class('doom-async-job')
 
@@ -18,12 +19,12 @@ local job_opts_template = {
         stdout = true,
         stderr = true,
 
-        -- If method is notify
+        -- For nvim-notify
         title = 'message',
         args = 'other args',
 
         -- If method is float
-        -- Any args acceptable by nvim_open_win()
+        -- pass any args acceptable by nvim_open_win()
     },
 }
 
@@ -67,13 +68,13 @@ end
 function Job:send(s)
     self.exceptions:assert(self.running, 'pending')
 
-        if type(s) == 'table' then
-            s = table.concat(s, "\n")
-        end
+    if type(s) == 'table' then
+        s = table.concat(s, "\n")
+    end
 
-        s = s .. "\n"
+    s = s .. "\n"
 
-        vim.fn.chansend(self.job_id, s)
+    vim.fn.chansend(self.job_id, s)
 end
 
 function Job:sanitize_opts(opts)
@@ -119,8 +120,8 @@ function Job:show_output(opts)
     opts = opts or self._opts or {}
     opts.show = opts.show or {}
     opts.show.method = opts.show.method or 'sp'
-    opts.show.stdout = not opts.show.stdout and type(opts.show.stdout) == 'boolean' and false or true
-    opts.show.stderr = not opts.show.stderr and type(opts.show.stderr) == 'boolean' and false or true
+    opts.show.stdout = opts.show.stdout == nil and false or true
+    opts.show.stderr = opts.show.stderr == nil and false or true
 
     self:sync()
 
@@ -162,7 +163,7 @@ function Job:show_output(opts)
         local current_buf = Buf(vim.fn.expand('%'))
 
         if opts.show.stdout and self.stdout and #self.stdout > 0 then
-            local buf = Buf('_async_command_stdout_' .. #(Utils.keys(current_buf.status)))
+            local buf = Buf('_async_command_stdout_' .. #(tutils.keys(current_buf.status)))
 
             current_buf:split(buf, opts.show.direction or 'sp', {
                 on_open = function (buf_obj)
@@ -173,7 +174,7 @@ function Job:show_output(opts)
         end
 
         if opts.show.stderr and self.stderr and #self.stderr > 0 then
-            local bufname = '_async_command_stdout_' .. #(Utils.keys(current_buf.status))
+            local bufname = '_async_command_stdout_' .. #(tutils.keys(current_buf.status))
             current_buf:split(bufname, opts.show.direction or 'sp', {
                 on_open = function (buf_obj)
                     buf_obj.write:lines(self.stderr, {row={from=0}})
@@ -254,7 +255,7 @@ function Job:open(opts)
             self.stdout = {}
         end
 
-        for _, value in ipairs(Utils.toList(data)) do
+        for _, value in ipairs(utils.to_list(data)) do
             if #value > 0 then
                 table.insert(self.stdout, value)
             end
@@ -266,15 +267,15 @@ function Job:open(opts)
             self.stderr = {}
         end
 
-        for _, value in ipairs(Utils.toList(data)) do
+        for _, value in ipairs(utils.to_list(data)) do
             if #value > 0 then
                 table.insert(self.stderr, value)
             end
         end
     end
 
-    opts.on_stdout = not opts.on_stdout and type(opts.on_stdout) == 'boolean' and nil or on_stdout
-    opts.on_stderr = not opts.on_stderr and type(opts.on_stderr) == 'boolean' and nil or on_stderr
+    opts.on_stdout = opts.on_stdout == nil and false or on_stdout
+    opts.on_stderr = opts.on_stderr == nil and false or on_stderr
 
     opts.env = opts.env or {
         HOME = os.getenv('HOME'),
@@ -283,11 +284,11 @@ function Job:open(opts)
 
     opts.cwd = opts.cwd or os.getenv('HOME')
 
-    if opts.on_stderr and not opts.stderr_buffered then
+    if opts.on_stderr and opts.stderr_buffered == nil then
         opts.stderr_buffered = true
     end
 
-    if opts.on_stdout and not opts.stdout_buffered then
+    if opts.on_stdout and opts.stdout_buffered == nil then
         opts.stdout_buffered = true
     end
 

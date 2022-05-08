@@ -1,18 +1,13 @@
-local Utils = require('core.doom-utils')
 local Notify = require('notify')
 local Notification = {}
-
-Notify.setup {
-    stages = 'slide',
-}
 
 function Notification.notify(title, message, level, opts)
     assert(title)
     assert(message)
     opts = opts or {}
     level = level or 'INFO'
-    local on_open_hook = opts.onOpen
-    local on_close_hook = opts.onClose
+    local on_open_hook = opts.on_open
+    local on_close_hook = opts.on_close
     local timeout = opts.timeout or 2000
     local render = opts.render or 'default'
     level = string.upper(level)
@@ -23,8 +18,8 @@ function Notification.notify(title, message, level, opts)
 
     Notify(message, level, {
         on_open = on_open_hook,
+        on_close = on_close_hook,
         render = render,
-        on_close_hook = on_close_hook,
         timeout = timeout,
         title = title,
     })

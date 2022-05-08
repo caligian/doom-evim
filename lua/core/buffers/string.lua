@@ -1,25 +1,26 @@
-local Class = require('classy')
-local Path = require('path')
-local Fs = require('path.fs')
-local Str = Class('doom-buffer-string')
+local class = require('classy')
+local path = require('path')
+local fs = require('path.fs')
+local str = class('doom-buffer-string')
 
-function Str:__init(obj)
+function str:__init(obj)
     self.bufnr = obj.bufnr
     self.buffer = obj
 end
 
-function Str:count()
+function str:count()
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
     self.line_count = vim.api.nvim_buf_line_count(self.bufnr)
     return self.line_count
 end
 
-function Str:lines(opts)
+function str:lines(opts)
     assert(opts)
     assert(opts.row)
     assert(opts.row.from)
 
     opts.row.till = opts.row.till or self:count()
+
     local buffer_string = vim.api.nvim_buf_get_lines(self.bufnr, opts.row.from, opts.row.till, false)
 
     if opts.nl then
@@ -29,11 +30,13 @@ function Str:lines(opts)
     end
 end
 
-function Str:current_line()
+function str:current_line()
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
-    self.buffer.exceptions:assert(self.buffer:exists(), 'invisible')
+
+    local cood = self.buffer:exec(function(buffer)
+        return buffer:position()
+    end)
     
-    local cood = self.buffer:position()
     local opts = opts or {}
     opts.row = opts.row or {}
     opts.row.from = cood.row
@@ -42,7 +45,7 @@ function Str:current_line()
     return self:lines(opts)[1]
 end
 
-function Str:line(ln)
+function str:line(ln)
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
 
     assert(ln)
@@ -54,7 +57,7 @@ function Str:line(ln)
     return self:lines(opts)[1]
 end
 
-function Str:text(opts)
+function str:text(opts)
     assert(opts)
     assert(opts.row)
     assert(opts.col)
@@ -69,24 +72,29 @@ function Str:text(opts)
     end
 end
 
-function Str:visual_range(opts)
+function str:visual_range(opts)
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
-    self.buffer.exceptions:assert(self.buffer:is_visible(), 'invisible')
 
     opts = opts or {nl=true}
-    local cood = self.buffer:position {visual=true}
+
+    local cood = self.buffer:exec(function(buffer)
+        return buffer:position {visual=true}
+    end)
+
     local str = self:text(cood, opts)
     return str
 end
 
-function Str:dump(method_name, args, kwargs, schedule)
+function str:dump(method_name, args, kwargs, schedule)
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
+
+    schedule = utils.nil_p(schedule) and true
 
     if args and type(args) ~= 'table' then
         args = {args}
     end
 
-    local fname = Doom.temp_path or Path(vim.fn.stdpath('data'), 'doom-temp')
+    local fname = self.buffer.temp_path
 
     if not Path.exists(fname) then
         Fs.mkdir(fname)
@@ -128,7 +136,7 @@ function Str:dump(method_name, args, kwargs, schedule)
     end
 end
 
-function Str:read(...)
+function str:read(...)
     local function _has_string(fh)
         for i in fh:lines() do
             if not i:match('^ *$') then
@@ -162,4 +170,4 @@ function Str:read(...)
     return bufstr
 end
 
-return Str
+return str

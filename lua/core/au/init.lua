@@ -1,6 +1,9 @@
 local Class = require('classy')
-local Utils = require('core.utils')
+local utils = require('modules.utils')
+local tutils = require('modules.utils.table')
 local Au = Class('doom-augroup')
+
+if not _G.Doom then _G.Doom = {au={status={}, refs={}}} end
 
 if not Doom.au.status then
     Doom.au.status = {}
@@ -17,7 +20,7 @@ function Au.func2str(f)
     if type(f) == 'string' then
         return f
     elseif type(f) == 'function' then
-        local _, idx = Utils.len(Au.status)
+        local _, idx = #(tutils.keys(self.status))
         return sprintf('lua _G.refs[%d]()', idx+1)
     end
 end
@@ -41,7 +44,9 @@ end
 function Au:add(event, pat, f, opts)
     opts = opts or {}
     event = event or 'BufEnter'
+
     assert(pat)
+
     table.insert(_G.refs, f)
     f = self.func2str(f)
 

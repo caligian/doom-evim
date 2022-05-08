@@ -1,32 +1,34 @@
 local Class = require('classy')
-local Kbd = require('core.doom-kbd')
-local Au = require('core.doom-au')
-local Utils = require('core.doom-utils')
-local Doom = require('core.doom-globals')
-
+local Kbd = require('core.kbd')
+local Au = require('core.au')
 local BufString = require('core.buffers.string')
 local BufFloat = require('core.buffers.floating')
 local BufWrite = require('core.buffers.writer')
 local BufPrompt = require('core.buffers.prompt')
 local BufExceptions = require('core.buffers.exceptions')
-
 local Buffer = Class('doom-buffer')
+local utils = require('modules.utils')
 
-if not Doom.Buffer then
-    Doom.Buffer = {status={}, temporary={}, floating={}, prompts={}}
+if not Doom then 
+    _G.Doom = { buffer = { status = {} } }
 end
 
-Buffer.status = Doom.Buffer.status
-Buffer.temporary = Doom.Buffer.temporary
-Buffer.floating = Doom.Buffer.floating
-Buffer.prompts = Doom.Buffer.prompts
+if not Doom.buffer then 
+    Doom.buffer = { status = {} }
+end
+
+Buffer.status = Doom.buffer.status
+
+if not Doom.buffer.temp_path then
+    Doom.buffer.temp_path = utils.with_data_path('doom-temp')
+end
+
+Buffer.temp_path = Doom.buffer.temp_path
 
 function Buffer:exists()
     if vim.fn.bufexists(self.bufnr) == 1 then
         self.bufnr = vim.fn.bufnr(self.bufname)
-
-        Buffer.status[self.bufname] = self
-
+        self.status[self.bufname] = self
         return self.bufnr
     else
         return false
@@ -85,45 +87,14 @@ function Buffer:winrestview()
     return self
 end
 
-function Buffer.cleanup(what)
-    local function _cleanup_floating()
-        for key, value in pairs(Buffer.floating) do
-            if not value.buffer:exists() then
-                Buffer.floating[key] = nil
-                Buffer.status[key] = nil
-            end
+function Buffer.cleanup()
+    for key, value in pairs(self.status) do
+        if not value:exists() then
+            self.status[key] = nil
         end
     end
 
-    local function _cleanup_temporary()
-        for key, value in pairs(Buffer.temporary) do
-            if not value.buffer:exists() then
-                Buffer.temporary[key] = nil
-                Buffer.status[key] = nil
-            end
-        end
-    end
-
-    local function _cleanup_prompts()
-        for key, value in pairs(Buffer.prompts) do
-            if not value.buffer:exists() then
-                Buffer.prompts[key] = nil
-                Buffer.status[key] = nil
-            end
-        end
-    end
-
-    if what:match('all') then
-        _cleanup_floating()
-        _cleanup_prompts()
-        _cleanup_temporary()
-    elseif what:match('prompt') then
-        _cleanup_prompts()
-    elseif what:match('float') then
-        _cleanup_floating()
-    elseif what:match('temp') then
-        _cleanup_temporary()
-    end
+    return self
 end
 
 function Buffer:unlist()
@@ -161,7 +132,7 @@ function Buffer:kill()
     if not self:is_visible() then
         vim.cmd('bwipeout! ' .. self.bufname)
         self.killed = true
-        Buffer.status[self.bufname] = nil
+        self.status[self.bufname] = nil
     end
 end
 
@@ -182,16 +153,19 @@ function Buffer:create()
 
     self.bufnr = vim.fn.bufnr(self.bufname)
     self.bufname = vim.fn.bufname(self.bufnr)
+    self.path = self:exec(function(buf)
+        buf.path 
 
-    Buffer.status[self.bufname] = self
+    end)
+    self.status[self.bufname] = self
 
     return self
 end
 
 function Buffer:hook(event_name, f, schedule)
     self.exceptions:assert(self:exists(), 'invalid')
-
     event_name = event_name or 'BufEnter'
+    self.au = au(self.path)
 
     if not schedule then
         Au.autocmd('Global', event_name, self.bufname, f)
@@ -250,7 +224,7 @@ function Buffer:exec(f, opts)
     opts.sync.inc = opts.sync.inc or 0.6
 
     local out = false
-    local _, err = nil, nil
+    local err
 
     local function _sync()
         local try_n = opts.sync.try or 10
@@ -284,7 +258,7 @@ function Buffer:exec(f, opts)
 
             vim.fn.win_gotoid(current_winnr)
         else
-            vim.cmd('tabnew | b ' .. self.bufname)
+            self.floating:show()
 
             if opts.schedule then
                 vim.schedule(function ()
@@ -294,18 +268,20 @@ function Buffer:exec(f, opts)
                 out = f(self)
             end
 
-            vim.cmd('q')
+            self.floating:hide()
         end
     end
 
-    opts.protected = type(opts.protected) == 'boolean' and not opts.protected and false or true
+    opts.protected = opts.protected == nil and false or true
 
     if opts.protected then
-        pcall(function ()
+        local _ 
+
+        _, err = pcall(function ()
             _f()
 
             if opts.output then
-                _, err = _sync()
+                sync()
             end
         end)
     else

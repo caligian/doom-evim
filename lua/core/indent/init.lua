@@ -1,7 +1,7 @@
 local Indent = {}
-local Utils = require('doom-utils')
-local BufUtils = require('doom-buffer-utils')
+local BufUtils = require('core.buffers')
 
+-- Needs changing
 function Indent.indent(fromRow, toRow, opts)
     opts = opts or {}
     fromRow = fromRow or BufUtils.getCursorPosition().row

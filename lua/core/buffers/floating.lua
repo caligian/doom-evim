@@ -1,12 +1,11 @@
-local Class = require('classy')
-local Notify = require('core.doom-notify')
-local Utils = require('core.doom-utils')
-local Tscope = require('core.doom-telescope')
-local Floating = Class('doom-buffer-floating')
+local class = require('classy')
+local iter = require('rocks.fun')
+local tu = require('core.utils.table')
+local tscope = require('core.telescope')
+local floating = class('doom-buffer-floating')
 
-function Floating:__init(buf_obj, opts)
+function floating:__init(buf_obj, opts)
     self.buffer = buf_obj
-    self.buffer.floating[self.buffer.bufname] = self
 
     opts = opts or {}
     self._opts = opts
@@ -40,7 +39,19 @@ function Floating:__init(buf_obj, opts)
     self._opts = opts
 end
 
-function Floating:sanitize_opts(opts)
+function floating:get_visible()
+    local visible = {}
+
+    for _, value in pairs(self.buffer.status) do
+        if value:is_visible() then
+            table.insert(visible, value)
+        end
+    end
+
+    return visible
+end
+
+function floating:sanitize_opts(opts)
     opts = opts or self._opts
     local new = {}
 
@@ -66,7 +77,7 @@ function Floating:sanitize_opts(opts)
     return new
 end
 
-function Floating:show(opts)
+function floating:show(opts)
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
     opts = opts or self._opts
 
@@ -82,12 +93,12 @@ function Floating:show(opts)
     self.winnr = vim.api.nvim_open_win(self.buffer.bufnr, true, opts)
 end
 
-function Floating:is_visible()
+function floating:is_visible()
     self.winnr = self.buffer:is_visible()
     return self.winnr
 end
 
-function Floating:hide()
+function floating:hide()
     self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
 
     if self:is_visible() then
@@ -96,93 +107,68 @@ function Floating:hide()
     end
 end
 
--- Only works if the window is actually visible
-function Floating:exec(f, opts)
-    self.buffer.exceptions:assert(self.buffer:exists() and self:is_visible())
-    return slef.buffer:exec(f, opts)
-end
-
-function Floating:hook(event_name, f, schedule)
-    self.buffer.exceptions:assert(self.buffer:exists(), 'invalid')
-
-    if not self._opts.noautocmd then
-        self.buffer:hook(event_name, f, schedule)
-        return true
-    else
-        error({buffer=self.buffer, no_autocmd=true, reason='No autocmd can be applied to buffer'})
-    end
-end
-
-function Floating:unfocus(opts)
-    opts = opts or self._opts or {}
-    local floating_buffers = {}
-
-    self.buffer.cleanup('floating')
-
-    if opts.telescope then
-        if #floating_buffers > 0 then
-            Tscope.new {
-                hook = function (selection)
-                    selection = selection[1]
-                    local floating_buffer = self.buffer.floating[selection]
-                    opts = opts or floating_buffer:sanitize_opts()
-                    floating_buffer:hide(opts)
-                end,
-
-                getter = floating_buffers
-            }
-
-            return true
-        end
-    elseif opts.regex or type(opts) == 'string' then
-        local regex = type(opts) == 'string' and opts or opts
-
-        for key, value in pairs(self.buffer.floating) do
-            if key:match(regex) then
-                value:show()
-            end
-        end
-    elseif opts.eq then
-        for key, value in pairs(self.buffer.floating) do
-            if key == opts.eq then
-                value:show()
-            end
-        end
-    end
-end
-
-function Floating:focus(opts)
+function floating:unfocus(opts)
     opts = opts or {}
-
-    self.buffer.cleanup('floating')
-    self:hide()
+    self.buffer.cleanup()
+    local visible = self:get_visible()
 
     if opts.telescope then
-        Tscope.new {
+        tscope.new {
             hook = function (selection, ...)
                 selection = selection[1]
-                local floating_buffer = self.buffer.floating[selection]
-                opts = opts or floating_buffer:sanitize_opts()
-                floating_buffer:show(opts)
+                local buffer = self.buffer.status[selection]
+                opts = opts or buffer.floating:sanitize_opts(opts)
+                buffer.floating:hide()
             end,
 
-            getter = Utils.keys(self.buffer.floating)
+            getter = tu.nth('bufname', unpack(visible))
         }
     elseif opts.regex or type(opts) == 'string' then
         local regex = type(opts) == 'string' and opts or opts.regex
-
-        for key, value in pairs(self.buffer.floating) do
-            if key:match(regex) then
-                value:show()
+        iter.each(function (buffer)
+            if not buffer:is_visible() and buffer.bufname:match(regex) then
+                buffer.floating:hide()
             end
-        end
+        end, visible)
     elseif opts.eq then
-        for key, value in pairs(self.buffer.floating) do
-            if key == opts.eq then
-                value:show()
+        iter.each(function (buffer)
+            if not buffer:is_visible() and buffer.bufname == opts.eq then
+                buffer.floating:hide()
             end
-        end
+        end, visible)
     end
 end
 
-return Floating
+function floating:focus(opts)
+    opts = opts or {}
+    self.buffer.cleanup()
+    local visible = self:get_visible()
+
+    if opts.telescope then
+        tscope.new {
+            hook = function (selection, ...)
+                selection = selection[1]
+                local buffer = self.buffer.status[selection]
+                opts = opts or buffer.floating:sanitize_opts(opts)
+                buffer.floating:show()
+            end,
+
+            getter = tu.nth('bufname', unpack(visible))
+        }
+    elseif opts.regex or type(opts) == 'string' then
+        local regex = type(opts) == 'string' and opts or opts.regex
+        iter.each(function (buffer)
+            if not buffer:is_visible() and buffer.bufname:match(regex) then
+                buffer.floating:show()
+            end
+        end, visible)
+    elseif opts.eq then
+        iter.each(function (buffer)
+            if not buffer:is_visible() and buffer.bufname == opts.eq then
+                buffer.floating:show()
+            end
+        end, visible)
+    end
+end
+
+return floating
