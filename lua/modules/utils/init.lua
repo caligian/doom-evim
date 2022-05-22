@@ -2,44 +2,8 @@ local path = require('path')
 local yaml = require('yaml')
 local utils = {}
 
-utils.dict_p = function(t)
-    if not type(t) == 'table' then
-        return false
-    else
-        if t.__name == 'doom-dict' then
-            return true
-        else
-            return false
-        end
-    end
-end
-
 utils.boolean_p = function(e)
     return type(e) == 'boolean'
-end
-
-utils.array_p = function(t)
-    if not type(t) == 'table' then
-        return false
-    else
-        local mt = getmetatable(t)
-
-        if not mt then return false end
-
-        if mt.__name == 'doom-array' then
-            return true
-        else
-            return false
-        end
-    end
-end
-
-utils.array_or_dict_p = function(o)
-    if utils.array_p(o) then return true 
-    elseif utils.dict_p(o) then return true
-    end
-
-    return false
 end
 
 utils.nil_p = function (o)
@@ -109,6 +73,8 @@ utils.str_p = function (s)
     return type(s) == 'string'
 end
 
+utils.string_p = utils.str_p
+
 utils.to_list = function (i, force)
     if utils.table_p(i) then
         if force then
@@ -141,7 +107,7 @@ utils.sprintf = function(fmt, ...)
     local args = {...}
 
     for index, val in ipairs(args) do
-        if table_p(val) then
+        if utils.table_p(val) then
             args[index] = vim.inspect(val)
         end
     end
@@ -202,21 +168,6 @@ utils.call = function (f, ...)
     return f(...)
 end
 
-utils.partial = function (f, ...)
-    local args = {...}
-
-    return function (...)
-        return f(unpack(extend(args, {...})))
-    end
-end
-
-utils.lpartial = function(f, ...)
-    local t = {...}
-    return function(...)
-        return f(unpack(extend(t, {...})))
-    end
-end
-
 -- File ops
 utils.slurp = function (src, iter)
     local fh = io.open(src, 'r')
@@ -251,11 +202,11 @@ utils.spit = function (dst, s, mode)
 end
 
 utils.yspit = function (dst, data)
-    spit(dst, yaml.dump(data))
+    utils.spit(dst, yaml.dump(data))
 end
 
 utils.yslurp = function (src)
-    return yaml.load(slurp(src))
+    return yaml.load(utils.slurp(src))
 end
 
 utils.ydump = yaml.dump
@@ -265,11 +216,11 @@ utils.jdump = vim.fn.json_encode
 utils.jload = vim.fn.json_decode
 
 utils.jspit = function (dst, data)
-    spit(dst, vim.fn.json_encode(data))
+    utils.spit(dst, vim.fn.json_encode(data))
 end
 
 utils.jslurp = function (dst)
-    return vim.fn.json_decode(slurp(dst))
+    return vim.fn.json_decode(utils.slurp(dst))
 end
 
 --
@@ -278,6 +229,12 @@ end
 utils.copy = vim.deepcopy
 
 utils.vcmd = vim.cmd
+
+utils.join_path = function(...)
+    return path(...)
+end
+
+utils.join = table.concat
 
 utils.with_data_path = function (...)
     return path(vim.fn.stdpath('data'), ...)
@@ -318,7 +275,7 @@ utils.globalize = function (mod, ks)
 
     if not ks then
         for k, f in pairs(mod) do 
-            if not _G[k] and not k:match('globalize') and utils.callable(f) then
+            if not _G[k] and not k:match('globalize') then
                 _G[k] = f
             end
         end
@@ -326,7 +283,7 @@ utils.globalize = function (mod, ks)
         for _, k in pairs(ks) do 
             f = mod[k]
 
-            if f and not _G[k] and not k:match('globalize') and utils.callable(f) then
+            if f and not _G[k] and not k:match('globalize') then
                 _G[k] = f
             end
         end

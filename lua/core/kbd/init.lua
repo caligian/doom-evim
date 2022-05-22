@@ -1,6 +1,5 @@
 local Class = require('classy')
 local Buf = require('core.buffers')
-local Str = require('core.string')
 local Au = require('core.au')
 local Wk = require('which-key')
 local Kbd = Class('doom-kbd')
@@ -115,7 +114,7 @@ function Kbd:__init(event, pat, modes, attribs, keys, f, doc, opts)
     if not modes then
         self.modes = {'n'}
     else
-        self.modes = split_at_comma(Str.trim(modes))
+        self.modes = split_at_comma(trim(modes))
     end
 
     self.attribs = {}
@@ -143,9 +142,9 @@ function Kbd:__init(event, pat, modes, attribs, keys, f, doc, opts)
         f = ''
     end
 
-    self.attribs.desc = Str.trim(doc)
+    self.attribs.desc = trim(doc)
     self.attribs.noremap = self.attribs.noremap == nil and true
-    self.keys = Str.trim(keys)
+    self.keys = trim(keys)
     self.cmd = f
     self.event = event
     self.pat = pat
