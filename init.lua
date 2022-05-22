@@ -18,6 +18,7 @@ vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
 vim.o.foldmethod = "indent"
+vim.o.guifont = 'JetBrains Mono:h13'
 vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.g.session_autoload = false

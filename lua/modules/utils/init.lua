@@ -14,6 +14,10 @@ utils.dict_p = function(t)
     end
 end
 
+utils.boolean_p = function(e)
+    return type(e) == 'boolean'
+end
+
 utils.array_p = function(t)
     if not type(t) == 'table' then
         return false

@@ -1,5 +1,4 @@
 local Class = require('classy')
-local REPLException = require('core.repl.exceptions')
 local Job = require('core.async.job')
 local Buf = require('core.buffers')
 local REPL = Class('doom-repl')
@@ -15,9 +14,6 @@ function REPL:open(opts)
     if not REPL.status[ft] then
         self.job = Job(ft .. '-repl' , cmd, opts)
         self.job:open()
-
-        self.exceptions:assert(self.job.running, 'unknown')
-
         self.buffer = self.job.terminal.buffer
 
         if not REPL.status[ft] then
@@ -47,7 +43,7 @@ function REPL:__init(opts)
         cmd = opts.cmd or get(Doom.langs, {ft, 'repl'})
     end
 
-    assert(cmd, 'Need a command to start an REPL')
+    oblige(cmd ~= '', 'Need a command to start an REPL')
 
     opts = opts or {}
     opts.direction = opts.direction or 'float'
@@ -59,7 +55,6 @@ function REPL:__init(opts)
     self._opts = opts
     self.cmd = cmd
     self.filetype = vim.bo.filetype
-    self.exceptions = REPLException(self)
 end
 
 -- @param method string How to send a string? 'line' for a single line of assoc buffer. 'till-point' to send everything till-point. 'visual' for strings in visual range. 'count' to send the next N strings where N is defined by v:count
@@ -75,8 +70,6 @@ function REPL:send(s, opts)
 
     local current_buf = Buf('%')
     local cood = current_buf:position()
-
-    self.exceptions:assert(not opts.no_ft and ft == vim.bo.filetype, 'filetype_mismatch')
 
     if s then
         self.job:send(s)
