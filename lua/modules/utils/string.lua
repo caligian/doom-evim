@@ -1,4 +1,5 @@
 local String = {}
+local utils = require('modules.utils')
 
 function String.trim(s)
     s = s:match('^%s*(.-)%s*$')
@@ -30,6 +31,10 @@ function String.sed(s, pat, sub, ...)
     end
 
     return s
+end
+
+function String.globalize(ks)
+    utils.globalize(String, ks)
 end
 
 return String
