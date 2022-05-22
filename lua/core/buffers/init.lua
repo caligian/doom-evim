@@ -1,28 +1,14 @@
 local Class = require('classy')
-local Kbd = require('core.kbd')
 local Au = require('core.au')
 local BufString = require('core.buffers.string')
 local BufFloat = require('core.buffers.floating')
 local BufWrite = require('core.buffers.writer')
 local BufPrompt = require('core.buffers.prompt')
 local BufExceptions = require('core.buffers.exceptions')
-local Buffer = Class('doom-buffer')
 local utils = require('modules.utils')
 
-if not Doom then 
-    _G.Doom = { buffer = { status = {} } }
-end
-
-if not Doom.buffer then 
-    Doom.buffer = { status = {} }
-end
-
+local Buffer = Class('doom-buffer')
 Buffer.status = Doom.buffer.status
-
-if not Doom.buffer.temp_path then
-    Doom.buffer.temp_path = utils.with_data_path('doom-temp')
-end
-
 Buffer.temp_path = Doom.buffer.temp_path
 
 function Buffer:exists()
@@ -153,10 +139,6 @@ function Buffer:create()
 
     self.bufnr = vim.fn.bufnr(self.bufname)
     self.bufname = vim.fn.bufname(self.bufnr)
-    self.path = self:exec(function(buf)
-        buf.path 
-
-    end)
     self.status[self.bufname] = self
 
     return self
@@ -176,19 +158,6 @@ function Buffer:hook(event_name, f, schedule)
     end
 
     return self
-end
-
--- opts as required by Kbd.new({...})
-function Buffer:kbd(...)
-    self.exceptions:assert(self:exists(), 'invalid')
-
-    for _, opts in ipairs({...}) do
-        opts.pattern = self.bufname
-        opts.event = opts.event or 'BufEnter'
-        Kbd.new(opts)
-
-        return self
-    end
 end
 
 function Buffer:load()
@@ -329,7 +298,6 @@ function Buffer:position(opts)
     return cood
 end
 
-
 -- Split this buffer and...
 -- In order to do this, the buffer should be visible.
 function Buffer:split(buf_obj_or_bufname, direction, opts)
@@ -405,10 +373,10 @@ function Buffer:__init(bufname, opts)
     opts = opts or {}
 
     if not bufname then
-        self.bufname = string.format('_temp_buffer_%d', #Buffer.temporary + 1)
+        self.bufname = string.format('_temp_buffer_%d', #Buffer.status + 1)
         self.scratch = true
     elseif bufname:match('^%%?:?..?') then
-        self.bufname = vim.fn.expand(self.bufname)
+        self.bufname = vim.fn.expand(bufname)
     end
 
     self:create()

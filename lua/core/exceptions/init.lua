@@ -1,5 +1,4 @@
 local Class = require('classy')
-local Utils = require('core.doom-utils')
 local Exception = Class('doom-exceptions')
 
 function Exception:__init(obj)

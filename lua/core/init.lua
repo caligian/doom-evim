@@ -1,8 +1,9 @@
--- Initialize all the packages
-local pkgs = require('core.pkgs')
-local p = pkgs()
-p:startup_packer()
-p:init_essential_packages()
+if not _G.Doom then _G.Doom = {} end
+
+require('modules.utils').globalize()
+require('modules.utils.table').globalize()
+require('modules.utils.string').globalize()
+require('core.globals')
 
 -- Globalize logger
 require('core.log')

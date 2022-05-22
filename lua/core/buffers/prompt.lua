@@ -1,10 +1,8 @@
 local Fs = require('path.fs')
-local Tscope = require('core.doom-telescope')
-local String = require('aniseed.string')
+local Tscope = require('core.telescope')
 local Path = require('path')
 local Class = require('classy')
-local Kbd = require('core.doom-kbd')
-local Utils = require('core.doom-utils')
+local Utils = require('modules.utils.table')
 local Prompt = Class('doom-buffer-prompt')
 
 -- Contains all the prompts

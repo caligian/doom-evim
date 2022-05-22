@@ -1,17 +1,5 @@
 local Class = require('classy')
-local utils = require('modules.utils')
-local tutils = require('modules.utils.table')
 local Au = Class('doom-augroup')
-
-if not _G.Doom then _G.Doom = {au={status={}, refs={}}} end
-
-if not Doom.au.status then
-    Doom.au.status = {}
-end
-
-if not Doom.au.refs then
-    Doom.au.refs = {}
-end
 
 Au.status = Doom.au.status
 Au.refs = Doom.au.refs
@@ -20,8 +8,8 @@ function Au.func2str(f)
     if type(f) == 'string' then
         return f
     elseif type(f) == 'function' then
-        local _, idx = #(tutils.keys(self.status))
-        return sprintf('lua _G.refs[%d]()', idx+1)
+        local idx = #(keys(Au.status))
+        return string.format('lua Doom.au.refs[%d]()', idx+1)
     end
 end
 
@@ -47,7 +35,7 @@ function Au:add(event, pat, f, opts)
 
     assert(pat)
 
-    table.insert(_G.refs, f)
+    table.insert(Doom.au.refs, f)
     f = self.func2str(f)
 
     pat = vim.split(pat, '%s*,%s*')
@@ -63,7 +51,7 @@ function Au:add(event, pat, f, opts)
                 f = '++nested ' .. f
             end
 
-            local cmd = sprintf('autocmd %s %s %s %s', self.name, j, i, f)
+            local cmd = string.format('autocmd %s %s %s %s', self.name, j, i, f)
             local save_as = i .. '::' .. j
             self.autocmds[save_as] = cmd
         end

@@ -1,9 +1,6 @@
-local Path = require('path')
-
-local bannerPath = Path(vim.fn.stdpath('config'), 'misc', 'punisher-logo.txt')
-local fh = io.open(bannerPath, 'r')
-local banner = fh:read()
-fh:close()
+local path = require('path')
+local banner_path = path(vim.fn.stdpath('config'), 'misc', 'punisher-logo.txt')
+local banner = slurp(banner_path)
 
 vim.g.dashboard_custom_footer = {string.format(' %d packages loaded.', #Doom.packages)}
 vim.g.dashboard_custom_header = banner

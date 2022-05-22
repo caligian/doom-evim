@@ -6,33 +6,41 @@ local Wk = require('which-key')
 local Kbd = Class('doom-kbd')
 
 if not Doom.kbd then
-    Doom.kbd = {status={}}
+    Doom.kbd = {}
 end
+
+if not Doom.kbd.status then Doom.kbd.status = {} end
 
 Kbd.status = Doom.kbd.status
 
-Kbd.prefixes = {
-    ["<leader>b"] = "Buffer",
-    ["<leader>q"] = "Buffers+close",
-    ["<leader>c"] = "Commenting",
-    ["<leader>i"] = "Insert",
-    ["<leader><space>"] = "Misc",
-    ["<leader>l"] = "LSP",
-    ["<leader>t"] = "Tabs",
-    ["<leader>o"] = "Neorg",
-    ["<leader>h"] = "Help+Telescope",
-    ["<leader>f"] = "Files",
-    ["<leader>p"] = "Project",
-    ["<leader>d"] = "Debug",
-    ["<leader>&"] = "Snippets",
-    ["<leader>x"] = "Misc",
-    ["<leader>m"] = "Filetype Actions",
-    ["<leader>s"] = "Session",
-    ["<leader>g"] = "Git",
-    ["<localleader>,"] = "REPL",
-    ["<localleader>t"] = "REPL",
-    ["<localleader>e"] = "REPL",
-}
+if not Doom.kbd.prefixes then
+    Doom.kbd.prefixes = {
+        enabled = false,
+
+        ["<leader>b"] = "Buffer",
+        ["<leader>q"] = "Buffers+close",
+        ["<leader>c"] = "Commenting",
+        ["<leader>i"] = "Insert",
+        ["<leader><space>"] = "Misc",
+        ["<leader>l"] = "LSP",
+        ["<leader>t"] = "Tabs",
+        ["<leader>o"] = "Neorg",
+        ["<leader>h"] = "Help+Telescope",
+        ["<leader>f"] = "Files",
+        ["<leader>p"] = "Project",
+        ["<leader>d"] = "Debug",
+        ["<leader>&"] = "Snippets",
+        ["<leader>x"] = "Misc",
+        ["<leader>m"] = "Filetype Actions",
+        ["<leader>s"] = "Session",
+        ["<leader>g"] = "Git",
+        ["<localleader>,"] = "REPL",
+        ["<localleader>t"] = "REPL",
+        ["<localleader>e"] = "REPL",
+    }
+end
+
+Kbd.prefixes = Doom.kbd.prefixes
 
 -- Disables and reenables autocmds and keybindings
 function Kbd:replace(f, doc)
@@ -69,8 +77,16 @@ function Kbd:replace(f, doc)
     end
 end
 
-function Kbd:register(keys, doc)
-    Wk.register({[keys] = doc})
+local function wk_register(keys, doc)
+    if keys:match('<leader>') then
+        keys = keys:gsub('<leader>', '')
+        Wk.register({[keys] = doc}, {prefix='<leader>'})
+    elseif keys:match('<localleader>') then
+        keys = keys:gsub('<localleader>', '')
+        Wk.register({[keys] = doc}, {prefix='<localleader>'})
+    elseif not keys:match('enabled') then
+        Wk.register({[keys] = doc})
+    end
 end
 
 -- opts required for au
@@ -80,7 +96,14 @@ function Kbd:__init(event, pat, modes, attribs, keys, f, doc, opts)
 
     self.mapped = false
 
-    assert(event or pat and not pat, 'Pattern not provided for event supplied')
+    if event then
+        assert(pat)
+    end
+
+    if pat then
+        assert(event)
+    end
+
     assert(keys, 'Keys have not been supplied')
     assert(f, 'No command for keybinding has been supplied')
     assert(doc, 'No documentation for current keybinding has been supplied')
@@ -133,13 +156,16 @@ end
 function Kbd:enable()
     local function _apply()
         for _, m in ipairs(self.modes) do
+            if #self.cmd > 0 then 
+                self.cmd = ':' .. self.cmd .. '<CR>'
+            end
 
             self._binder(m, self.keys, self.cmd, self.attribs)
             self.status[m] = self.status[m] or {}
             self.status[m][self.keys] = self
         end
 
-        self:register(self.keys, self.doc)
+        wk_register(self.keys, self.doc)
         self.mapped = true
     end
 
@@ -155,8 +181,6 @@ function Kbd:enable()
         end, self.opts)
 
         self.au:enable()
-
-        inspect(self.au)
     end
 end
 
@@ -214,6 +238,14 @@ function Kbd:disable()
 
     if self.au then
         self.au:disable()
+    end
+end
+
+if not Doom.kbd.prefixes.enabled then
+    Doom.kbd.prefixes.enabled = true
+
+    for keys, doc in pairs(Doom.kbd.prefixes) do 
+        wk_register(keys, doc)
     end
 end
 

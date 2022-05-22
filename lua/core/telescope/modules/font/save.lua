@@ -1,4 +1,4 @@
-local Utils = require('utils')
+local tutils = require('modules.utils.table')
 local TPickers = require('telescope.pickers')
 local TFinders = require('telescope.finders')
 local TConf = require('telescope.config').values
@@ -7,6 +7,8 @@ local TActionState = require('telescope.actions.state')
 local TIvy = require('telescope.themes').get_ivy()
 local Rx = require('rex_pcre2')
 local TFontSwitcher = {}
+
+if not Doom.telescope then Doom.telescope = {} end
 
 if not Doom.telescope.modules then
     Doom.telescope.modules = {
@@ -20,7 +22,7 @@ TFontSwitcher.exclude = Doom.telescope.modules.font.exclude
 
 function TFontSwitcher.get_fonts(filter_regex)
     local fonts = vim.fn.system('fc-match -a')
-    fonts = Utils.split(fonts, "[\n\r]+")
+    fonts = vim.split(fonts, "[\n\r]+")
 
     local fonts_found = {}
 
@@ -38,12 +40,15 @@ function TFontSwitcher.get_fonts(filter_regex)
         end
     end
 
-    return Utils.keys(fonts_found)
+    return tutils.keys(fonts_found)
 end
 
 function TFontSwitcher.set_font(font)
     local old_font, height = string.match(vim.go.guifont, '([^:]+)([^$]+)')
-    vim.go.guifont = font .. height
+
+    if old_font then
+        vim.go.guifont = font .. height
+    end
 end
 
 function TFontSwitcher.switch_fonts(opts)

@@ -1,9 +1,6 @@
 local logger = require('logging.file')
 local path = require('path')
 
-if not _G.Doom.log then _G.Doom.log = {} end
-if not _G.Doom.log.path then _G.Doom.log.path = with_data_path('doom-evim.log') end
-
 if not Doom.log.logger then
     Doom.log.logger = logger(Doom.log.path, '%d-%m-%Y-%H-%M-%S', "[%date] [%level] %message\n")
 end

@@ -1,5 +1,5 @@
 local class = require('classy')
-local iter = require('rocks.fun')
+local iter = require('fun')
 local tu = require('core.utils.table')
 local tscope = require('core.telescope')
 local floating = class('doom-buffer-floating')

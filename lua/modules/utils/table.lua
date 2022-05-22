@@ -1,10 +1,51 @@
-local iter = require('rocks.fun')
+local iter = require('fun')
 local utils = require('modules.utils')
 local tu = {}
 
+tu.to_dict = function(arr)
+    local t = {}
+
+    for _, v in ipairs(arr) do 
+        t[v] = true
+    end
+
+    return t
+end
+
+tu.partition = function (arr, n)
+    n = n or 2
+    local len = #arr
+
+    if n == 0 then return false end
+    if n == 1 or n < 1 or n >= len then return arr end
+
+    local q = math.floor(len / n)
+    local r = len - (q * n)
+    local t = {}
+
+    local last_index  
+    for i=1, len, n do
+        t[#t+1] = {}
+        for j=i, i+n-1 do
+            table.insert(t[#t], arr[j])
+            last_index = j
+        end
+    end
+
+    if len - last_index > 0 then
+        for i=last_index+1, len do
+            if arr[i] then
+                table.insert(t[#t+1], arr[i])
+            end
+        end
+    end
+
+    return t
+end
+
 tu.push = function (arr, ...)
     for _, i in ipairs({...}) do
-        table.insert(arr, i)
+        arr[#arr+1] = i
     end
 
     return arr
@@ -14,7 +55,7 @@ tu.pop = function (arr, n)
     local tail = {}
 
     for i=#arr,#arr-n+1, -1 do
-        table.insert(tail, arr[i])
+        tail[#tail+1] = arr[i]
         arr[i] = nil
     end
 
@@ -25,10 +66,12 @@ tu.extend = function(dst, ...)
     assert(type(dst) == 'table')
 
     for _, arr in ipairs({...}) do
-        arr = utils.to_list(arr)
-
-        for i=1, #arr do
-            table.insert(dst, arr[i])
+        if not utils.table_p(arr) then
+            dst[#dst+1] = arr
+        else
+            for i=1, #arr do
+                dst[#dst+1] = arr[i]
+            end
         end
     end
 
@@ -45,12 +88,22 @@ tu.unshift = function (arr, ...)
     return arr
 end
 
+tu.lextend = function (arr, ...)
+    for _, a in ipairs(...) do
+        for _, i in pairs(a) do
+            table.insert(a, 1, i)
+        end
+    end
+
+    return arr
+end
+
 tu.shift = function(arr, n)
     local head = {}
 
     for i=1, n do
         if arr[i] then
-            table.insert(head, arr[i])
+            head[#head+1] = arr[i]
             table.remove(arr, 1)
         end
     end
@@ -86,7 +139,7 @@ tu.keys = function (dict)
     local ks = {}
 
     for key, _ in pairs(dict) do
-        table.insert(ks, key)
+        ks[#ks+1] = key
     end
 
     return ks
@@ -96,7 +149,7 @@ tu.vals = function (dict)
     local vs = {}
 
     for _, value in pairs(dict) do
-        table.insert(vs, value)
+        vs[#vs+1] = value
     end
 
     return vs
@@ -108,7 +161,7 @@ tu.slice = function (arr, start, finish)
 
     local t = {}
     for i=start,finish do
-        table.insert(t, arr[i])
+        t[#t+1] = arr[i]
     end
 
     return t
@@ -147,9 +200,7 @@ tu.nth = function (k, ...)
     local params = {}
 
     for _, i in ipairs({...}) do
-        if i[k] then
-            table.insert(params, i[k])
-        end
+        params[#params+1] = i[k] or false
     end
 
     return params
@@ -208,14 +259,20 @@ tu.equals = function(dicta, dictb, depth, f)
 
             if cached[item_a] ~= nil and cached[item_a] == false then return false end
             if not item_b then return false end
-            if type(item_a) ~= type(item_b) then return false end
 
-            if not utils.table_p(item_a) and not utils.table_p(item_b) then 
-                if item_a ~= item_b then
-                    return false 
-                end
+            if f then
+                local out = f(item_a, item_b)
+                if not out then return false end
             else
-                table.insert(later, i)
+                if type(item_a) ~= type(item_b) then return false end
+
+                if not utils.table_p(item_a) and not utils.table_p(item_b) then 
+                    if item_a ~= item_b then
+                        return false 
+                    end
+                else
+                    later[#later+1] = i
+                end
             end
         end
 
@@ -237,7 +294,7 @@ tu.zip = function(...)
     local max_len = {}
 
     for _, a in ipairs(arrs) do
-        table.insert(max_len, #a)
+        max_len[#max_len] = #a
     end
     max_len = math.min(unpack(max_len))
 
@@ -249,15 +306,16 @@ tu.zip = function(...)
         end
 
         state = state + 1
-        return tu.nth(state - 1, unpack(arrs)), arrs, state
-    end
+        local out = tu.nth(state - 1, unpack(arrs)) or false
+        return state, out
+    end, arrs, state
 end
 
 tu.items = function(dict)
     local vs = {}
 
     for key, value in pairs(dict) do
-        tu.push(vs, {key, value})
+        vs[#vs+1] = {key, value}
     end
 
     return vs
@@ -266,22 +324,31 @@ end
 -- With side effects
 tu.assoc = function (dict, ks, create)
     ks = utils.to_list(ks)
+    local n = #ks
     local t = dict
     local last_key = false
+    local out = {}
 
-    for _, key in ipairs(ks) do
-        if not t[key] and create then
-            t[key] = {}
+    for index, key in ipairs(ks) do
+        local v = t[key]
+
+        if not v then
+            if create then
+                t[key] = {} 
+            else
+                return false, last_key, t
+            end
         end
-
-        last_key = key
 
         if not utils.table_p(t[key]) then
-            return t[key], last_key, t
+            if index ~= n then 
+                return false, last_key, t
+            else
+                return v, last_key, t
+            end
+        else
+            t = t[key]
         end
-
-        -- Is the last table found
-        t = t[key]
     end
 end
 
@@ -311,16 +378,33 @@ tu.update = function (dict, ks, sub)
     return dict
 end
 
-tu.get = function(arr, ks)
+
+-- If table is passed then it will be sent to tu.assoc
+tu.get = function(arr, ...)
+    local ks = {...}
     local vs = {}
+    local failed = false
 
     for _, i in ipairs(ks) do
-        if arr[i] then
-            table.insert(vs, arr[i])
+        if utils.table_p(i) then
+            local out = tu.assoc(arr, i) or false
+            vs[#vs+1] = out
+        elseif arr[i] then
+            vs[#vs+1] = arr[i]
+        else
+            failed = true
         end
     end
 
-    return vs
+    if failed then
+        return false
+    elseif #vs == 1 then
+        return vs[1]
+    elseif #vs == 0 then
+        return false
+    else
+        return vs
+    end
 end
 
 tu.find = function(t, i)
@@ -336,7 +420,7 @@ tu.findall = function(t, i)
 
     for k, v in pairs(t) do
         if i == v then 
-            tu.push(found, k)
+            found[#found+1] = k
         end
     end
 
@@ -344,12 +428,107 @@ tu.findall = function(t, i)
 end
 
 -- Misc operations
-tu.globalize = function ()
-    for k, f in pairs(tu) do 
-        if not _G[k] and not k:match('globalize') and type(f) == 'function' then
-            _G[k] = f
-        end
+tu.globalize = function (ks)
+    utils.globalize(tu, ks)
+end
+
+tu.ifilter = function (f, ...)
+    local arrs = {...}
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        max_len[#max_len+1] = a
     end
+    max_len = math.min(unpack(max_len))
+
+    local index = 1
+    return function ()
+        if index > max_len then return end
+        index = index + 1
+        local out = f(unpack(tu.nth(index-1, unpack(arrs)))) or false
+        if out then out = true end
+        return index, out
+    end, arrs, index
+end
+
+tu.imap = function (f, ...)
+    local arrs = {...}
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        max_len[#max_len+1] = #a
+    end
+    max_len = math.min(unpack(max_len))
+
+    local index = 1
+    return function ()
+        if index > max_len then return end
+        index = index + 1
+        local out = f(unpack(tu.nth(index-1, unpack(arrs)))) or false
+        return index, out
+    end, arrs, index
+end
+
+tu.map = function (f, ...)
+    local out = {}
+    local arrs = {...}
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        max_len[#max_len+1] = #a
+    end
+    max_len = math.min(unpack(max_len))
+
+    for i=1, max_len do
+        local v = tu.nth(i, ...) or false
+        tu.extend(out, v)
+    end
+
+    return out
+end
+
+tu.each = function (f, ...)
+    local arrs = {...}
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        max_len[#max_len+1] = #a
+    end
+    max_len = math.min(unpack(max_len))
+
+    for i=1, max_len do
+        local vs = tu.nth(i, ...)
+        f(unpack(vs))
+    end
+end
+
+tu.reduce = function (f, arr, init)
+    init = init or false
+
+    for _, v in ipairs(arr) do 
+        init = f(v, init)
+    end
+
+    return init
+end
+
+tu.filter = function (f, ...)
+    local out = {}
+    local arrs = {...}
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        max_len[#max_len+1] = #a
+    end
+    max_len = math.min(unpack(max_len))
+
+    for i=1, max_len do
+        local v = tu.nth(i, ...) or false
+        local _o = f(unpack(v)) or false
+        tu.extend(out, _o)
+    end
+
+    return out
 end
 
 -- Iterator operations
@@ -401,7 +580,89 @@ tu.vec = function (index, n, gen, param, state)
         times = times + 1
     until n > 0 and times == n
 
-    return acc, gen, param, state
+    return acc
+end
+
+tu.defaultdict = function (default)
+    local out 
+
+    if utils.callable(default) then
+        out = default()
+    else
+        out = default
+    end
+
+    local t = setmetatable({}, {
+        __index = function(t, k) 
+            local v = rawget(t, k)
+
+            if utils.nil_p(v) then 
+                return vim.deepcopy(out)
+            end
+
+            return v
+        end
+    })
+
+    return t
+end
+
+tu.union = function(t1, t2)
+    local a = tu.to_dict(t1, true)
+    local b = tu.to_dict(t2, true)
+
+    for k, _ in pairs(b) do
+        if not a[k] then
+            a[k] = true
+        end
+    end
+
+    return tu.keys(a)
+end
+
+tu.intersection = function(t1, t2)
+    local a = tu.to_dict(t1, true)
+    local b = tu.to_dict(t2, true)
+
+    for k, _ in pairs(a) do
+        if not b[k] then
+            a[k] = nil
+        end
+    end
+
+    return tu.keys(a)
+end
+
+tu.difference = function(t1, t2)
+    local a = tu.to_dict(t1, true)
+    local b = tu.to_dict(t2, true)
+
+    for k, _ in pairs(a) do
+        if b[k] then
+            a[k] = nil
+        end
+    end
+
+    return tu.keys(a)
+end
+
+tu.subset_p = function(t1, t2)
+    local found = 0
+    local t1_len = #t1
+    t1 = tu.to_dict(t1)
+    t2 = tu.to_dict(t2)
+
+    for k, v in pairs(t2) do
+        if t1[k] then
+            found = found + 1
+        end
+    end
+
+    if found == t1_len then return true else return false end
+end
+
+tu.superset_p = function(t1, t2)
+    return tu.subset_p(t2, t1)
 end
 
 return tu

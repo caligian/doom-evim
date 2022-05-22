@@ -2,12 +2,10 @@ local Class = require('classy')
 local Path = require('path')
 local Buf = require('core.buffers')
 local Notify = require('core.notify')
-local utils = require('modules.utils')
-local tutils = require('modules.utils.table')
 local JobException = require('core.async.exceptions')
 local Job = Class('doom-async-job')
 
-Job.status = {}
+Job.status = Doom.async.job.status
 
 local job_opts_template = {
     -- Any jobstart() stuff +
@@ -163,7 +161,7 @@ function Job:show_output(opts)
         local current_buf = Buf(vim.fn.expand('%'))
 
         if opts.show.stdout and self.stdout and #self.stdout > 0 then
-            local buf = Buf('_async_command_stdout_' .. #(tutils.keys(current_buf.status)))
+            local buf = Buf('_async_command_stdout_' .. #(tkeys(current_buf.status)))
 
             current_buf:split(buf, opts.show.direction or 'sp', {
                 on_open = function (buf_obj)
@@ -174,7 +172,7 @@ function Job:show_output(opts)
         end
 
         if opts.show.stderr and self.stderr and #self.stderr > 0 then
-            local bufname = '_async_command_stdout_' .. #(tutils.keys(current_buf.status))
+            local bufname = '_async_command_stdout_' .. #(tkeys(current_buf.status))
             current_buf:split(bufname, opts.show.direction or 'sp', {
                 on_open = function (buf_obj)
                     buf_obj.write:lines(self.stderr, {row={from=0}})
@@ -255,7 +253,7 @@ function Job:open(opts)
             self.stdout = {}
         end
 
-        for _, value in ipairs(utils.to_list(data)) do
+        for _, value in ipairs(to_list(data)) do
             if #value > 0 then
                 table.insert(self.stdout, value)
             end
@@ -267,7 +265,7 @@ function Job:open(opts)
             self.stderr = {}
         end
 
-        for _, value in ipairs(utils.to_list(data)) do
+        for _, value in ipairs(to_list(data)) do
             if #value > 0 then
                 table.insert(self.stderr, value)
             end
@@ -315,5 +313,7 @@ function Job:open(opts)
         end
     end
 end
+
+Job.start = Job.open
 
 return Job

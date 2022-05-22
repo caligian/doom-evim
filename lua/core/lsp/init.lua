@@ -36,27 +36,13 @@ function Lsp.setup_lua()
     })
 end
 
--- How to add a new server?
--- Doom.langs.<lang> = {
-    -- server = string or {
-        -- <server>,
-        -- config = {
-            -- on_attach = function,
-            -- capabilities = dict
-            -- }
-        -- },
-        --
-        -- If manual is provided, manual will simply be called similar to the case of sumneko_lua
-        -- manual = f()
-    -- }
-
 function Lsp.setup_servers()
     local cmp_nvim_lsp = require('cmp_nvim_lsp')
     local nvim_lsp = require('lspconfig')
 
-    map(function (lang)
+    each(function (lang)
         local conf = Doom.langs[lang]
-        local server = conf.server
+        local server = conf.lsp
 
         if server then
             conf = server

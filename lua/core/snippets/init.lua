@@ -1,11 +1,11 @@
-local Snippet = {}
-local Str = require('aniseed.string')
-local Utils = require('doom-utils')
-local BufUtils = require('doom-buffer-utils')
-local Core = require('aniseed.core')
-local Fs = require('path.fs')
-local Path = require('path')
-local Kbd = require('doom-kbd')
+local buffer = require('core.buffer')
+local fs = require('path.fs')
+local path = require('path')
+local kbd = require('core.kbd')
+local snippet = {}
+
+snippet.path = Doom.snippet.path
+local _path 
 
 local savePath = Path(vim.fn.stdpath('data'), 'doom-snippets')
 

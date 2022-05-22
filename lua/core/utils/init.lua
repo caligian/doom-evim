@@ -8,6 +8,41 @@ utils.number_p = function (i)
     return type(i) == 'number'
 end
 
+utils.num_p  = utils.number_p
+
+utils.dict_p = function(o)
+    if not type(o) == 'table' then
+        return false
+    else
+        local mt = getmetatable(o)
+        if mt and mt.__name == 'doom-dict' then
+            return true
+        else
+            return false
+        end
+    end
+end
+
+utils.array_p = function(o)
+    if not type(o) == 'table' then
+        return false
+    else
+        local mt = getmetatable(o)
+        if mt and mt.__name == 'doom-array' then
+            return true
+        else
+            return false
+        end
+    end
+end
+
+utils.array_or_dict_p = function(a)
+    if utils.array_p(a) then return true
+    elseif utils.dict_p(a) then return true 
+    else return false
+    end
+end
+
 utils.num_p = function(i)
     return utils.number_p(i)
 end
@@ -33,6 +68,26 @@ utils.callable = function (f)
     if mt and mt.__call then
         return true
     end
+end
+
+utils.get_array_or_dict_item = function(o)
+    assert(type(o) == 'table')
+    if utils.array_or_dict_p(o) then
+        return o._items
+    else
+        return o
+    end
+end
+
+utils.get_array_or_dict_items = function(...)
+    local args = {...}
+    for index, value in ipairs(args) do
+        if utils.array_or_dict_p(value) then
+            args[index] = value._items
+        end
+    end
+
+    return args
 end
 
 utils.str_p = function (s)
@@ -61,15 +116,10 @@ utils.dump = function (...)
     local dumped = {}
 
     for _, value in ipairs({...}) do
-        table.insert(dumped, vim.inspect(value))
+        dumped[#dumped+1] = vim.inspect(value)
     end
 
     return unpack(dumped)
-end
-
-utils.sprintf = function(fmt, ...)
-    assert(#({...}) > 0)
-    return string.format(fmt, utils.dump(...))
 end
 
 utils.printf = function(fmt, ...)
@@ -84,288 +134,12 @@ utils.to_stderr = function(fmt, ...)
     vim.api.nvim_err_writeln(utils.sprintf(fmt, ...))
 end
 
-utils.slice = function (arr, start, finish)
-    finish = finish or #arr
-    return vim.list_slice(arr, start, finish)
-end
+--[[
+String utils
+--]]
 
-utils.butlast = function (arr)
-    return utils.slice(arr, 1, #arr-1)
-end
-
-utils.rest = function (arr)
-    return utils.slice(arr, 2, #arr)
-end
-
-utils.first = function (arr)
-    return arr[1]
-end
-
-utils.last = function (arr)
-    return arr[#arr]
-end
-
-utils.head = function(arr, n)
-    n = n or 1
-    return slice(arr, 1, n)
-end
-
-utils.tail = function(arr, n)
-    n = n or 1
-    n = n - 1
-    local len = #arr
-    return slice(arr, len - n, len)
-end
-
-utils.identity = function (i)
-    return i
-end
-
-utils.max = function (t)
-    return math.max(unpack(t))
-end
-
-utils.min = function (t)
-    return math.min(unpack(t))
-end
-
-utils.push = table.insert
-
-utils.pop = function (arr)
-    arr[#arr-1] = nil
-    return utils.last(arr)
-end
-
-utils.extend = function (dst, src, src_start, src_finish)
-    if type(src) == 'table' then
-        src_start = src_start or 1
-        src_finish = src_finish or #src
-
-        for i=src_start, src_finish do 
-            table.insert(dst, src[i])
-        end
-    else
-        table.insert(dst, src)
-    end
-
-    return dst
-end
-
--- Does not modify the table. Keep in mind.
-utils.unshift = function (arr, ...)
-    return utils.extend({...}, arr)
-end
-
--- Does not modify the table. Keep in mind.
-utils.shift = function(arr)
-    local t = {}
-
-    for i=2,#arr do
-        utils.push(t, arr[i])
-    end
-
-    return arr[1], t
-end
-
---
--- Dict ops
---
-utils.keys = function (dict)
-    local ks = {}
-
-    for key, _ in pairs(dict) do
-        table.insert(ks, key)
-    end
-
-    return ks
-end
-
-utils.vals = function (dict)
-    local vs = {}
-
-    for _, value in pairs(dict) do
-        table.insert(vs, value)
-    end
-
-    return vs
-end
-
-utils.items = function(dict)
-    local vs = {}
-
-    for key, value in pairs(dict) do
-        utils.push(vs, {key, value})
-    end
-
-    return vs
-end
-
-utils.assoc = function (dict, ks, create)
-    ks = utils.to_list(ks)
-    local t = dict
-    local last_key = false
-
-    for _, key in ipairs(ks) do
-        if not t[key] and create then
-            t[key] = {}
-        end
-
-        last_key = key
-
-        if not utils.table_p(t[key]) then
-            return t[key], last_key, t
-        end
-
-        -- Is the last table found
-        t = t[key]
-    end
-end
-
-utils.merge = function (a, b, merge_method)
-    merge_method = merge_method or 'force'
-    return vim.tbl_deep_extend(merge_method, a, b)
-end
-
-utils.update = function (dict, ks, sub)
-    ks = utils.to_list(ks)
-    local n = #ks
-    local k = utils.first(ks)
-
-    if n == 1 then
-        if not dict[k] then
-            return false
-        elseif utils.callable(sub) then
-            dict[k] = sub(dict[k])
-        else
-            dict[k] = sub
-        end
-    else
-        local _, last_key, prev_dict = utils.assoc(dict, ks)
-
-        if utils.callable(sub) then
-            prev_dict[last_key] = sub(prev_dict[last_key])
-        else
-            prev_dict[last_key] = sub
-        end
-	end
-
-    return dict
-end
-
-utils.get = function(arr, ks)
-    local _get = function(k)
-        if not arr[k] then return
-        else return arr[k]
-        end
-    end
-
-    return iter.map(_get, ks)
-end
-
-utils.tequals = function (arra, arrb, depth, collapse)
-    arra = class.of(arra) == array and arra._items or arra
-    arrb = class.of(arrb) == array and arrb._items or arrb
-    arra = vim.deepcopy(arra)
-    arrb = vim.deepcopy(arrb)
-    collapse = collapse or false
-
-    if collapse and #arra ~= #arrb then return false end
-
-    depth = depth or 5
-
-    local _eq 
-    local _compare
-
-    function _compare(a, b, k, d)
-        local outa = a[k]
-        local outb = b[k]
-
-        if not outb then 
-            a[k] = false
-            return a
-        end
-
-        local ta = type(outa)
-        local tb = type(outb)
-
-        if ta ~= tb then 
-            a[k] = false
-            return a
-        end
-
-        if ta ~= 'table' and tb ~= 'table' then
-            a[k] = outa == outb
-            return a
-        end
-
-        local mta = getmetatable(outa)
-        local mtb = getmetatable(outb)
-
-        if mta and mtb and mta.__eq and mtb.__eq then
-            a[k] = outa == outb
-            return a
-        else
-            return _eq(a[k], b[k], d+1)
-        end
-    end
-
-    function _eq(a, b, d)
-        d = d or 0 
-
-        if d >= depth then
-            return a
-        end
-
-        if collapse and #a ~= #b then
-            return false
-        end
-
-        local later = {}
-        for k, v in pairs(a) do
-            if type(a[k]) ~= type(b[k]) then
-                a[k] = false
-                if collapse then return false end
-            elseif not utils.table_p(a[k]) and not utils.table_p(b[k]) then
-                a[k] = a[k] == b[k]
-                if collapse and not a[k] then return false end
-            else
-                table.insert(later, k)
-            end
-        end
-
-        for _, k in ipairs(later) do
-            a[k] = _compare(a, b, k, d)
-        end
-
-        return a
-    end
-
-    return _eq(arra, arrb)
-end
-
---	
--- String ops
---
-utils.split = vim.split
-
-utils.find = function(t, i)
-    for k, v in pairs(t) do
-        if i == v then 
-            return k
-        end
-    end
-end
-
-utils.findall = function(t, i)
-    local found = {}
-
-    for k, v in pairs(t) do
-        if i == v then 
-            utils.push(found, k)
-        end
-    end
-
-    return found
+utils.sprintf = function(fmt, ...)
+    return string.format(fmt, utils.dump(...))
 end
 
 -- Works like piped grep calls
@@ -394,13 +168,9 @@ utils.gmatch = function(s, pat)
     return string.gmatch(s, pat)
 end
 
--- Gets n instances of pattern {i}
-utils.pos = function(s, i, n)
-end
-
---
--- Function ops
---
+--[[
+Function ops
+--]]
 
 utils.vcall = vim.call
 
@@ -487,10 +257,6 @@ utils.json = {
 --
 utils.copy = vim.deepcopy
 
-utils.path = require('path')
-
-utils.fs = require('path.fs')
-
 utils.vcmd = vim.cmd
 
 utils.with_data_path = function (...)
@@ -505,14 +271,22 @@ utils.with_stdpath = function (what, ...)
     return path(vim.fn.stdpath(what), ...)
 end
 
-utils.each = function(f, arr)
-    return iter.each(f, arr)
-end
+utils.globalize = function (t, ks)
+    t = t or utils
 
-utils.globalize = function ()
-    for k, f in pairs(fun) do 
-        if not _G[k] and not k:match('globalize') and type(f) == 'function' then
-            _G[k] = f
+    if ks then 
+        for _, k in ipairs(ks) do 
+            local f = t[k]
+
+            if f and not _G[k] and not k:match('globalize') and utils.callable(f) then
+                _G[k] = f
+            end
+        end
+    else
+        for k, f in pairs(t) do 
+            if not _G[k] and not k:match('globalize') and utils.callable(f) then
+                _G[k] = f
+            end
         end
     end
 end

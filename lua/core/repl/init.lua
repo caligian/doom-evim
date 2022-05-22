@@ -4,28 +4,7 @@ local Job = require('core.async.job')
 local Buf = require('core.buffers')
 local REPL = Class('doom-repl')
 
-if not Doom.Repl then
-    Doom.Repl = {
-        status = {},
-
-        repl = {
-            lua = 'lua5.1',
-            ruby = 'irb',
-            python = 'python3',
-            javascript = 'node',
-            sh = 'bash',
-        },
-
-        debugger = {
-            python = 'python3 -m pdb',
-            sh = 'bash -x',
-        },
-    }
-end
-
-REPL.status = Doom.Repl.status
-REPL.repl = Doom.Repl.repl
-REPL.debugger = Doom.Repl.debugger
+REPL.status = Doom.repl.status
 
 function REPL:open(opts)
     opts = opts or self._opts or {}
@@ -61,11 +40,11 @@ function REPL:__init(opts)
     ft = opts.ft or vim.bo.filetype
 
     local cmd = ''
-    if opts.debugger then
-        cmd = opts.cmd or REPL.debugger[ft]
+    if opts.debug then
+        cmd = opts.debug or get(Doom.langs, {ft, 'debug'})
         cmd = cmd .. ' ' .. vim.fn.expand('%:p')
     else
-        cmd = opts.cmd or REPL.repl[ft]
+        cmd = opts.cmd or get(Doom.langs, {ft, 'repl'})
     end
 
     assert(cmd, 'Need a command to start an REPL')
@@ -149,5 +128,8 @@ function REPL.force_killall()
         end
     end
 end
+
+local repl = REPL()
+repl:open()
 
 return REPL

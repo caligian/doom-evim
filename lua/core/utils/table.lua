@@ -1,204 +1,121 @@
 local iter = require('fun')
-local utils = dofile('init.lua')
+local utils = require('modules.utils')
 local tu = {}
 
-tu.next = function(gen, param, state)
-    local out = {gen(param, state)}
-    if out then 
-        return out
-    else 
-        return false
-    end
-end
+local _geti = utils.get_array_or_dict_item
+local _getis = utils.get_array_or_dict_items
 
--- Compatible with luafun iterables and general iterables
--- Providing -1 in place of {times} will lead to all the elements being extracted. Use with caution when trying to use infinite gen
-tu.vec = function(index, times, gen, param, state)
-    assert(utils.callable(gen), 'Generator should be callable')
-    param = param or utils.table_p(gen) and gen.param
-    index = utils.to_list(index or 1)
-    times = times or -1
-    local acc = {}
+tu.partition = function (arr, n)
+    local items = _geti(arr)
 
-    local _collect = function(g, p, s)
-        local out = {g(p,s)}
+    n = n or 2
+    local len = #items
 
-        utils.inspect(out)
+    if n == 0 then return false end
+    if n == 1 or n < 1 or n >= len then return items end
 
-        if state then
-            state = out[1]
-            out = tu.rest(out)
-        end
-
-        if #out == 0 then return false end
-
-        if #out == 1 then 
-            tu.push(acc, out[1])
-            return true
-        end
-
-        if #index == 1 then
-            index = index[1]
-
-            if index < 0 then 
-                tu.push(acc, out)
-            elseif out[index] then
-                tu.push(acc, out[index])
-            end
-        else
-            local t = {}
-
-            for _, i in ipairs(index) do 
-                if out[i] then 
-                    tu.push(t, out[i])
-                end
-            end
-
-            if #t == 1 then 
-                tu.push(acc, t[1])
-            else
-                tu.push(acc, t)
-            end
-        end
-
-        return true
-    end
-
-    local ctr = 1
-    repeat
-        if not _collect(gen, param, state) then 
-            break 
-        end
-
-        ctr = ctr + 1
-    until times > 0 and ctr > times
-
-    return acc, gen, param, state
-end
-
-tu.keys = function (dict)
-    local ks = {}
-
-    for key, _ in pairs(dict) do
-        table.insert(ks, key)
-    end
-
-    return ks
-end
-
-tu.vals = function (dict)
-    local vs = {}
-
-    for _, value in pairs(dict) do
-        table.insert(vs, value)
-    end
-
-    return vs
-end
-
-tu.slice = function (arr, start, finish)
-    assert(start > 0)
-    finish = finish or #arr
-
+    local q = math.floor(len / n)
+    local r = len - (q * n)
     local t = {}
-    for i=start,finish do
-        table.insert(t, arr[i])
+
+    local last_index  
+    for i=1, len, n do
+        t[#t+1] = {}
+        for j=i, i+n-1 do
+            table.insert(t[#t], items[j])
+            last_index = j
+        end
+    end
+
+    if len - last_index > 0 then
+        for i=last_index+1, len do
+            if items[i] then
+                table.insert(t[#t+1], items[i])
+            end
+        end
     end
 
     return t
 end
 
-tu.butlast = function (arr)
-    return tu.slice(arr, 1, #arr-1)
-end
-
-tu.rest = function (arr)
-    return tu.slice(arr, 2, #arr)
-end
-
-tu.first = function (arr)
-    return iter.head(arr)
-end
-
-tu.last = function (arr)
-    return iter.tail(arr)
-end
-
-tu.head = function(arr, n)
-    n = n or 1
-
-    local h = {}
-    for i=1, n do
-        local out = iter.head(arr)
-        if not out then return h, arr end
-        table.insert(h, out)
-    end
-
-    return h, arr
-end
-
-tu.identity = function (i)
-    return i
-end
-
-tu.max = function (t)
-    return math.max(unpack(t))
-end
-
-tu.min = function (t)
-    return math.min(unpack(t))
-end
-
 tu.push = function (arr, ...)
-    for _, i in ipairs({...}) do
-        table.insert(arr, i)
+    items = _geti(arr)
+    local args = _getis(...)
+
+    for _, i in ipairs(args) do
+        items[#items+1] = i
     end
 
     return arr
 end
 
 tu.pop = function (arr, n)
+    items = _geti(arr)
     local tail = {}
 
-    for i=#arr,#arr-n+1, -1 do
-        table.insert(tail, arr[i])
-        arr[i] = nil
+    for i=#items,#items-n+1, -1 do
+        tail[#tail+1] = items[i]
+        items[i] = nil
     end
 
     return tail, arr
 end
 
 tu.extend = function(dst, ...)
-    assert(type(dst) == 'table')
+    items = _geti(dst)
+    local args = _getis(...)
 
-    for _, arr in ipairs({...}) do
-        arr = utils.to_list(arr)
-
-        for i=1, #arr do
-            table.insert(dst, arr[i])
+    for _, arr in ipairs(args) do
+        if not utils.table_p(arr) then
+            items[#items+1] = arr
+        else
+            for i=1, #arr do
+                items[#items+1] = arr[i]
+            end
         end
     end
 
     return dst
 end
 
+-- Everything is alright till here. 
+-- Continue checking from down here.
 tu.unshift = function (arr, ...)
-    local args = {...}
+    local items = _geti(arr)
+    local args = _getis(...)
 
     for i=1,#args do
-        table.insert(arr, 1, args[i])
+        table.insert(items, 1, args[i])
+    end
+
+    return arr
+end
+
+tu.lextend = function (arr, ...)
+    local items = _geti(arr)
+    local args = _getis({...})
+
+    for _, a in ipairs(args) do
+        if utils.table_p(a) then
+            for _, v in ipairs(a) do
+                table.insert(items, 1, v)
+            end
+        else
+            table.insert(items, 1, a)
+        end
     end
 
     return arr
 end
 
 tu.shift = function(arr, n)
+    local items = _geti(arr)
     local head = {}
 
     for i=1, n do
-        if arr[i] then
-            table.insert(head, arr[i])
-            table.remove(arr, 1)
+        if items[i] then
+            head[#head+1] = items[i]
+            table.remove(items, 1)
         end
     end
 
@@ -208,34 +125,105 @@ end
 tu.splice = function(arr, from, len, ...)
     assert(from > 0 and from < #arr)
     assert(len and len > 0)
+    local items = _geti(arr)
+    local args = _getis(...)
 
-    local args = {...}
     len = len or 0
 
     if len == 0 then
         for i in ipairs(args) do
-            table.insert(arr, from, i)
+            table.insert(items, from, i)
         end
     elseif len > 0 then
         for i=1,len do
-            table.remove(arr, from)
+            table.remove(items, from)
         end
 
         for i=#args, 1, -1 do
-            table.insert(arr, from, args[i])
+            table.insert(items, from, args[i])
         end
     end
 
     return arr
 end
 
+tu.keys = function (dict)
+    dict = _geti(dict)
+    local ks = {}
+
+    for key, _ in pairs(dict) do
+        ks[#ks+1] = key
+    end
+
+    return ks
+end
+
+tu.vals = function (dict)
+    dict = _geti(dict)
+    local vs = {}
+
+    for _, value in pairs(dict) do
+        vs[#vs+1] = value
+    end
+
+    return vs
+end
+
+tu.slice = function (arr, start, finish)
+    assert(start > 0)
+    arr = _geti(arr)
+    finish = finish or #arr
+
+    local t = {}
+    for i=start,finish do
+        t[#t+1] = arr[i]
+    end
+
+    return t
+end
+
+tu.butlast = function (arr)
+    arr = _geti(arr)
+    return tu.slice(arr, 1, #arr-1)
+end
+
+tu.rest = function (arr)
+    arr = _geti(arr)
+    return tu.slice(arr, 2, #arr)
+end
+
+tu.first = function (arr)
+    arr = _geti(arr)
+    return arr[1]
+end
+
+tu.last = function (arr)
+    arr = _geti(arr)
+    return arr[#arr]
+end
+
+tu.identity = function (i)
+    return i
+end
+
+tu.max = function (t)
+    t = _geti(t)
+    return math.max(unpack(t))
+end
+
+tu.min = function (t)
+    t = _geti(t)
+    return math.min(unpack(t))
+end
+
 -- This will call all the iterators! 
 tu.nth = function (k, ...)
+    local args = _getis(...)
     local params = {}
 
-    for _, i in ipairs({...}) do
+    for _, i in ipairs(args) do
         if i[k] then
-            table.insert(params, i[k])
+            params[#params+1] = i[k]
         end
     end
 
@@ -243,6 +231,9 @@ tu.nth = function (k, ...)
 end
 
 tu.merge = function(dicta, dictb, depth, f)
+    local _dicta = _geti(dicta)
+    local _dictb = _geti(dictb)
+
     depth = depth or -1
     local cached = {}
 
@@ -261,7 +252,7 @@ tu.merge = function(dicta, dictb, depth, f)
             cached[item] = item
 
             if utils.table_p(a[k]) and utils.table_p(b[k]) then
-                table.insert(later, k)
+                later[#later+1] = k
             else
                 if f then item = f(a[k], item) end
                 a[k] = item
@@ -269,18 +260,20 @@ tu.merge = function(dicta, dictb, depth, f)
             end
 
             for _, k in ipairs(later) do
-                _replace_level(a[k], b[k], utils.keys(b[k]), d+1)
+                _replace_level(a[k], b[k], keys(b[k]), d+1)
             end
         end
     end
 
-    _replace_level(dicta, dictb, utils.keys(dictb), 0)
+    _replace_level(_dicta, _dictb, keys(_dictb), 0)
     return dicta
 end
 
 -- This tests for absolute equality. Any failed attempt will lead to the whole table
 -- being treated as false
 tu.equals = function(dicta, dictb, depth, f)
+    local _dicta = _geti(dicta)
+    local _dictb = _geti(dictb)
     local t = false
     depth = depth or -1
     local cached = {}
@@ -295,14 +288,20 @@ tu.equals = function(dicta, dictb, depth, f)
 
             if cached[item_a] ~= nil and cached[item_a] == false then return false end
             if not item_b then return false end
-            if type(item_a) ~= type(item_b) then return false end
 
-            if not utils.table_p(item_a) and not utils.table_p(item_b) then 
-                if item_a ~= item_b then
-                    return false 
-                end
+            if f then
+                local out = f(item_a, item_b)
+                if not out then return false end
             else
-                table.insert(later, i)
+                if type(item_a) ~= type(item_b) then return false end
+
+                if not utils.table_p(item_a) and not utils.table_p(item_b) then 
+                    if item_a ~= item_b then
+                        return false 
+                    end
+                else
+                    later[#later+1] = i
+                end
             end
         end
 
@@ -315,11 +314,12 @@ tu.equals = function(dicta, dictb, depth, f)
         return true
     end
 
-    return _cmp(dicta, dictb, utils.keys(dicta), 0)
+    return _cmp(_dicta, _dictb, keys(_dicta), 0)
 end
 
+-- Generator
 tu.zip = function(...)
-    local arrs = {...}
+    local arrs = _getis(...)
     local max_len = {}
 
     for _, a in ipairs(arrs) do
@@ -340,6 +340,7 @@ tu.zip = function(...)
 end
 
 tu.items = function(dict)
+    dict = _geti(dict)
     local vs = {}
 
     for key, value in pairs(dict) do
@@ -351,7 +352,8 @@ end
 
 -- With side effects
 tu.assoc = function (dict, ks, create)
-    ks = tu.to_list(ks)
+    dict = _geti(dict)
+    ks = utils.to_list(ks)
     local t = dict
     local last_key = false
 
@@ -372,7 +374,8 @@ tu.assoc = function (dict, ks, create)
 end
 
 tu.update = function (dict, ks, sub)
-    ks = tu.to_list(ks)
+    local _dict = _geti(dict)
+    ks = utils.to_list(ks)
     local n = #ks
     local k = tu.first(ks)
 
@@ -380,12 +383,12 @@ tu.update = function (dict, ks, sub)
         if not dict[k] then
             return false
         elseif utils.callable(sub) then
-            dict[k] = sub(dict[k])
+            _dict[k] = sub(_dict[k])
         else
-            dict[k] = sub
+            _dict[k] = sub
         end
     else
-        local _, last_key, prev_dict = tu.assoc(dict, ks)
+        local _, last_key, prev_dict = tu.assoc(_dict, ks)
 
         if utils.callable(sub) then
             prev_dict[last_key] = sub(prev_dict[last_key])
@@ -397,17 +400,24 @@ tu.update = function (dict, ks, sub)
     return dict
 end
 
-tu.get = function(arr, ks)
-    local _get = function(k)
-        if not arr[k] then return
-        else return arr[k]
+tu.get = function(arr, ...)
+    arr = _geti(arr)
+    local args = _getis(...)
+    local vs = {}
+
+    for _, a in ipairs(args) do
+        if utils.table_p(a) then
+            vs[#vs+1] = tu.assoc(arr, a)
+        else
+            vs[#vs+1] = a
         end
     end
 
-    return iter.map(_get, ks)
+    return vs
 end
 
 tu.find = function(t, i)
+    t = _geti(t)
     for k, v in pairs(t) do
         if i == v then 
             return k
@@ -416,6 +426,7 @@ tu.find = function(t, i)
 end
 
 tu.findall = function(t, i)
+    t = _geti(t)
     local found = {}
 
     for k, v in pairs(t) do
@@ -427,45 +438,146 @@ tu.findall = function(t, i)
     return found
 end
 
-tu.add_function = function(f, name, force)
-    if force then
-        _G[name] = f
-    elseif not _G[name] then
-        _G[name] = f
-    end 
-
-    return f
+-- Misc operations
+tu.globalize = function (ks)
+    utils.globalize(tu, ks)
 end
 
-tu.globalize = function ()
-    for k, f in pairs(fun) do 
-        if not _G[k] and not k:match('globalize') and type(f) == 'function' then
-            _G[k] = f
-        end
+tu.imap = function (f, ...)
+    local arrs = _getis(...)
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        table.insert(max_len, #a)
     end
+    max_len = math.min(unpack(max_len))
+
+    local index = 1
+    return function ()
+        if index > max_len then return end
+        index = index + 1
+        local out = f(unpack(tu.nth(index-1, unpack(arrs))))
+        return out
+    end, arrs, index
 end
 
-tu.imap = function(f, index, gen, param, state)
-    index = index or {1}
+tu.ifilter = function (f, ...)
+    local arrs = _getis(...)
+    local max_len = {}
 
-    return function()
-        local out = {tu.vec(index, 1, gen, param, state)}
+    for _, a in ipairs(arrs) do
+        table.insert(max_len, #a)
+    end
+    max_len = math.min(unpack(max_len))
 
-        if #out == 4 then 
-            out, gen, param, state = unpack(out)
-        end
+    local index = 1
+    return function ()
+        if index > max_len then return end
+        index = index + 1
+        local out = f(unpack(tu.nth(index-1, unpack(arrs))))
+        if out then return true else return false end
+    end, arrs, index
+end
 
-        -- state is nil. This is for iter.iter bullshit
-        if #out == 3 then
+tu.map = function (f, ...)
+    local out = {}
+    local arrs = _getis(...)
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        tu.push(max_len, #a)
+    end
+
+    max_len = math.min(unpack(max_len))
+
+    for i=1, max_len do
+        local v = tu.nth(i, ...) or false
+        tu.extend(out, f(unpack(v)))
+    end
+
+    return out
+end
+
+tu.reduce = function (f, arr, init)
+    arr = _geti(arr)
+    init = init or false
+
+    for _, v in ipairs(arr) do 
+        init = f(v, init)
+    end
+
+    return init
+end
+
+tu.filter = function (f, ...)
+    local out = {}
+    local arrs = _getis(...)
+    local max_len = {}
+
+    for _, a in ipairs(arrs) do
+        tu.push(max_len, #a)
+    end
+    max_len = math.min(unpack(max_len))
+
+    for i=1, max_len do
+        local v = tu.nth(i, ...) or false
+        local _o = f(unpack(v)) or false
+        tu.extend(out, _o)
+    end
+
+    return out
+end
+
+-- Iterator operations
+tu.vec = function (index, n, gen, param, state)
+    index = index or -1
+    n = n or -1
+
+    local acc = {}
+
+    local _add = function(g, p, s)
+        local out = {g(p, s)}
+
+        if #out == 0 then 
             return
         end
 
-        if #out == 1 then
-            return f(unpack(utils.to_list(out[1])))
+        if #out > 1 and s then
+            s = tu.first(out)
+            out = slice(out, 2)
         end
-    end, param, state
-end
 
-tu.vec(1, 2, tu.imap(tu.identity, 1, iter.iter({1,2,3,4})))
+        if #out == 1 then
+            out = tu.first(out)
+        end
+
+        if not utils.table_p(index) then
+            if index == -1 then
+                tu.push(acc, out)
+            else
+                tu.push(acc, out[index] or false)
+            end
+        else
+            for _, i in ipairs(index) do
+                tu.push(acc, out[i])
+            end
+        end
+
+        return true, s
+    end
+
+    local success
+    local new_state
+    local times = 0
+
+    repeat
+        success, new_state = _add(gen, param, state) 
+        if not success then return acc end
+        state = new_state ~= nil and new_state or state
+        times = times + 1
+    until n > 0 and times == n
+
+    return acc, gen, param, state
+end
 
 return tu
