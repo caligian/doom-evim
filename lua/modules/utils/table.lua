@@ -1,4 +1,4 @@
-local iter = require('fun')
+local iter = require('modules.fun')
 local utils = require('modules.utils')
 local tu = {}
 

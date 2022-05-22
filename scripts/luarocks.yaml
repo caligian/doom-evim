@@ -1,5 +1,4 @@
 - lrexlib-pcre2
 - yaml
-- array
-- path
+- lpath
 - logging

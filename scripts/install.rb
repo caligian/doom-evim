@@ -17,7 +17,10 @@ YAML.load_file('plugins.yaml').each { |plug, args|
   url = 'https://github.com/' + plug.sub(%r(^/), '')
   name = plug.match(%r{(?<=/)([^$]+)})
   dst = File.join(plugins_dst, name.to_s)
-  `git clone #{cmd_args} #{url} #{dst}`
+
+  if not Dir.exist?(dst) then
+    `git clone #{cmd_args} #{url} #{dst}`
+  end
 
   cwd = Dir.pwd()
   if commit then
