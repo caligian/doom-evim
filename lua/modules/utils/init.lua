@@ -100,6 +100,7 @@ utils.dump = function (...)
         dumped[#dumped+1] = vim.inspect(value)
     end
 
+    dumped = #dumped == 1 and first(dumped) or dumped
     return dumped
 end
 
@@ -249,7 +250,7 @@ utils.with_config_lua_path = function(...)
 end
 
 utils.with_user_config_path = function(...)
-    return path(os.getenv('HOME'), '.vdoom.d', 'user')
+    return path(os.getenv('HOME'), '.vdoom.d', 'lua')
 end
 
 utils.with_stdpath = function (what, ...)

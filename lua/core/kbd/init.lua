@@ -1,14 +1,8 @@
 local Class = require('classy')
 local Buf = require('core.buffers')
 local Au = require('core.au')
-local Wk = require('which-key')
+local Wk = false
 local Kbd = Class('doom-kbd')
-
-if not Doom.kbd then
-    Doom.kbd = {}
-end
-
-if not Doom.kbd.status then Doom.kbd.status = {} end
 
 Kbd.status = Doom.kbd.status
 
@@ -77,6 +71,12 @@ function Kbd:replace(f, doc)
 end
 
 local function wk_register(keys, doc)
+    if not packer_plugins['which-key.nvim'] then
+        return 
+    else
+        Wk = require('which-key')
+    end
+
     if keys:match('<leader>') then
         keys = keys:gsub('<leader>', '')
         Wk.register({[keys] = doc}, {prefix='<leader>'})
@@ -95,7 +95,7 @@ function Kbd:__init(event, pat, modes, attribs, keys, f, doc, opts)
 
     self.mapped = false
 
-    if event then
+   if event then
         assert(pat)
     end
 
@@ -107,22 +107,17 @@ function Kbd:__init(event, pat, modes, attribs, keys, f, doc, opts)
     assert(f, 'No command for keybinding has been supplied')
     assert(doc, 'No documentation for current keybinding has been supplied')
 
-    local split_at_comma = function (s)
-        return vim.split(s, "%s*,%s*")
-    end
-
-    if not modes then
-        self.modes = {'n'}
-    else
-        self.modes = split_at_comma(trim(modes))
-    end
+    if not self.modes then self.modes = {'n'} end
+    self.modes = to_list(self.modes)
 
     self.attribs = {}
     if not attribs then
         self.attribs = {silent=true}
     else
-        for _, i in ipairs(split_at_comma(attribs)) do
-           self.attribs[i] = true
+        self.attribs = to_list(self.attribs)
+        for idx, v in ipairs(self.attribs) do
+           self.attribs[v] = true
+           self.attribs[idx] = nil
         end
     end
 
@@ -155,10 +150,6 @@ end
 function Kbd:enable()
     local function _apply()
         for _, m in ipairs(self.modes) do
-            if #self.cmd > 0 then 
-                self.cmd = ':' .. self.cmd .. '<CR>'
-            end
-
             self._binder(m, self.keys, self.cmd, self.attribs)
             self.status[m] = self.status[m] or {}
             self.status[m][self.keys] = self

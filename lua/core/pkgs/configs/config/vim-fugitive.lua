@@ -1,38 +1,8 @@
-local Kbd = require('core.doom-kbd')
+local kbd = require('core.kbd')
 
-Kbd.new({
-    leader = 'l',
-    keys = 'gg',
-    exec = ":Git<CR>",
-    help = 'Open Fugitive',
-},
-{
-    leader = 'l',
-    keys = 'ga',
-    exec = ':Git add %<CR>',
-    help = 'Add and stage current file',
-},
-{
-    leader = 'l',
-    keys = 'gc',
-    exec = ':Git commit %<CR>',
-    help = 'Commit changes',
-},
-{
-    leader = 'l',
-    keys = 'gi',
-    exec = ':Git init<CR>',
-    help = 'Initialize git in cwd',
-},
-{
-    leader = 'l',
-    keys = 'gp',
-    exec = ':Git push<CR>',
-    help = 'Push commits',
-},
-{
-    leader = 'l',
-    keys = 'gm',
-    exec = ':Git merge<CR>',
-    help = 'Merge from remote',
-})
+kbd(false, false, 'n', false, '<leader>gg', ':Git<CR>', 'Open Fugitive'):enable()
+kbd(false, false, 'n', false, '<leader>gs', ':Git stage<CR>', 'Stage current file'):enable()
+kbd(false, false, 'n', false, '<leader>gp', ':Git push<CR>', 'Push changes to remote'):enable()
+kbd(false, false, 'n', false, '<leader>ga', ':Git add<CR>', 'Git init in dir'):enable()
+kbd(false, false, 'n', false, '<leader>gc', ':Git commit<CR>', 'Commit changes'):enable()
+kbd(false, false, 'n', false, '<leader>gP', ':Git pull<CR>', 'Pull changes'):enable()

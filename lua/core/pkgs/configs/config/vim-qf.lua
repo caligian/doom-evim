@@ -1,10 +1,5 @@
-local Kbd = require('core.doom-kbd')
+local kbd = require('core.kbd')
 
-Kbd.new({
-    keys = '<leader>qf',
-    noremap = false,
-    help = 'Toggle qflist',
-    exec = '<Plug>(qf_qf_toggle)'
-})
+kbd(false, false, 'n', false, '<leader>qf', '<Plug>(qf_qf_toggle)', 'Toggle qflist'):enable()
 
 vim.g.qf_mapping_ack_style = 1

@@ -42,8 +42,9 @@ local home = os.getenv('HOME')
 package.path = package.path .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.lua'
 package.path = package.path .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?/init.lua'
 package.path = package.path .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?/?.lua'
-package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/user/init.lua'
-package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/user/?/?.lua'
+package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?.lua'
+package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/?.lua'
+package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/init.lua'
 
 -- cpaths
 package.cpath = package.cpath .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.so'

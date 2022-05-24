@@ -481,7 +481,7 @@ tu.map = function (f, ...)
 
     for i=1, max_len do
         local v = tu.nth(i, ...) or false
-        tu.extend(out, v)
+        tu.extend(out, f(unpack(v)))
     end
 
     return out

@@ -1,177 +1,72 @@
-local class = require('classy')
 local path = require('path')
+local packer = require('packer')
 local fs = require('path.fs')
-local pkgs = class('doom-package')
+local pkgs = {}
 
-function pkgs:__init()
-    local packer = false
+function pkgs.get_packer_form(plug)
+    local t = {}
+    local fn = plug:gsub('%.', '_')
+    local base = with_config_path('lua', 'core', 'pkgs', 'configs') 
+    local has_conf = path.exists(path(base, 'config', fn .. '.lua'))
+    local has_run = path.exists(path(base, 'run', fn .. '.lua'))
+    local has_setup = path.exists(path(base, 'setup', fn .. '.lua'))
+    local base_require = 'core.pkgs.configs'
 
-    local try_require = function() return pcall(function() packer = require('packer') end) end
-
-    if not try_require() then
-        local dst = with_packer_path('start', 'packer.nvim')
-        vim.fn.system('git clone https://github.com/wbthomason/packer.nvim ' .. dst)
+    if has_conf then 
+        t.config = function()
+            pcall(require, string.format('%s.config.%s', base_require, fn))
+        end
+    end
+    if has_run then 
+        t.run = function()
+            pcall(require, string.format('%s.run.%s', base_require, fn))
+        end
+    end
+    if has_setup then 
+        t.setup = function()
+            pcall(require,string.format('%s.setup.%s', base_require, fn))
+        end
     end
 
-    assert(try_require(), 'Cannot require packer. Please manually clone packer.nvim to stdpath("data")/site/pack/packer/start')
-
-    self.packer = packer
-    self.sys_default_pkg_path = with_config_path('lua', 'core', 'pkgs', 'default.lua')
-    self.sys_essential_pkg_path = with_config_path('lua', 'core', 'pkgs', 'essential.lua')
-    self.user_pkg_path = path(os.getenv('HOME'), '.vdoom.d', 'user', 'pkgs.lua')
+    return t
 end
 
-function pkgs:init_essential_packages()
-    for _, i in ipairs({
-        "folke/which-key.nvim";
-        "hrsh7th/nvim-cmp";
-        "nvim-telescope/telescope.nvim";
-        "lualine"
-    }) do
-        local basename = vim.split(i, "/")
-        basename = basename[#basename]
-        basename = basename:gsub('%.', '_')
-        require(sprintf('configs.stat.%s', basename))
+function pkgs.compile_packer_forms()
+    local packages = require('core.pkgs.plugins')
+    local user_overrides = {}
+    local user_overrides_path = path(os.getenv('HOME'), '.vdoom.d', 'lua', 'user', 'pkgs', 'plugins.lua')
+
+    if path.exists(user_overrides_path) then
+        user_overrides = require('user.pkgs.plugins')
     end
+
+    merge(packages, user_overrides)
+
+    each(function(plug)
+        merge(packages[plug], pkgs.get_packer_form(plug))
+    end, keys(packages))
+
+    return packages
 end
 
-function pkgs:init_packer()
+function pkgs.load_all(force_recompile)
     vim.cmd('packadd packer.nvim')
-
-    self.packer.init({
-        git = {
-            clone_timeout = 300,
-            subcommands = {
-                install = 'clone --depth %i --progress',
-            },
-        },
-        profile = {
-            enable = true,
-        },
-    })
-end
-
-local function load_pkg_path(p)
-    if not path.exists(p) then
-        return false
-    else 
-        return dofile(p)
-    end
-end
-
-function pkgs:load_packages(user_pkg_path)
-    user_pkg_path = user_pkg_path or self.user_pkg_path
-    self.user_pkg = load_pkg_path(user_pkg_path)
-    self.sys_default_pkg = load_pkg_path(self.sys_default_pkg_path)
-
-    if self.user_pkg then
-        self.all_pkg = merge(self.sys_default_pkg, self.user_pkg)
-    else
-        self.all_pkg = self.sys_default_pkg
-    end
-
-    return self.all_pkg
-end
-
--- Ensure that you convert all dots to _ while making your configs files
-local function require_config(user_or_sys, _type, pkg)
-    assert(pkg)
-    user_or_sys = user_or_sys or 'user'
-    local require_path = false
-    local home = os.getenv('HOME')
-    pkg = pkg:gsub("%.", '_')
-
-    if user_or_sys == 'user' then
-        require_path = path(home, '.vdoom.d', 'user', 'configs', _type, pkg .. '.lua')
-    else
-        require_path = with_config_path('lua', 'configs', _type, pkg .. '.lua')
-    end
-
-    if not path.exists(require_path) then return false end
-
-    if user_or_sys == 'user' then
-        require_path = sprintf('user.configs.%s.%s', _type, pkg)
-    else
-        require_path = sprintf('configs.%s.%s', _type, pkg)
-    end
-
-    if _type == 'stat' then 
-        require(require_path)
-    else
-        return function()
-            require(require_path)
-        end
-    end
-end
-
-function pkgs:load_configs()
-    if not self.all_pkg then self:load_packages() end
-
-    local _add_conf = function(pkg_t, _type, conf)
-        if _type == 'pre' then
-            pkg_t.setup = conf
-        elseif _type == 'post' then
-            pkg_t.config = conf
-        elseif _type == 'post-install' then
-            pkg_t.run = conf
-        end
-    end
-
-    for k, v in pairs(self.all_pkg) do
-        if not type(v) == 'table' then
-            v = {v}
-        end
-
-        -- sys stuff
-        local sys_pre_conf = require_config('sys', 'pre', k)
-        local sys_post_conf = require_config('sys', 'post', k)
-        local sys_post_install_conf = require_config('sys', 'post-install', k)
-        require_config('sys', 'stat', k)
-
-        if sys_pre_conf then
-            _add_conf(v, 'pre', sys_pre_conf)
-        end
-
-        if sys_post_install_conf then
-            _add_conf(v, 'post_install', sys_post_install_conf)
-        end
-
-        if sys_post_conf then
-            _add_conf(v, 'post', sys_post_conf)
-        end
-
-        -- user stuff
-        local user_pre_conf = require_config('user', 'pre', k)
-        local user_post_conf = require_config('user', 'post', k)
-        local user_post_install_conf = require_config('user', 'post-install', k)
-        require_config('user', 'stat', k)
-
-        if user_pre_conf then
-            _add_conf(v, 'pre', user_pre_conf)
-        end
-
-        if user_post_install_conf then
-            _add_conf(v, 'post_install', user_post_install_conf)
-        end
-
-        if user_post_conf then
-            _add_conf(v, 'post', user_post_conf)
-        end
-    end
-
-    return self.all_pkg
-end
-
-function pkgs:startup_packer()
-    if not self.all_pkg then self:load_configs() end
-
-    self.packer.startup(function()
-        for k, v in pairs(self.all_pkg) do
-            self.packer.use(v)
+    Doom.pkgs.packages = pkgs.compile_packer_forms()
+    Doom.pkgs.packer = packer
+    Doom.pkgs.packer.startup(function(use)
+        for k, v in pairs(Doom.pkgs.packages) do
+            inspect(v)
+            use(v)
         end
     end)
 
-    return self.packer
+    if not with_config_path('plugins', 'packer_compiled.lua') then
+        Doom.pkgs.packer.compile()
+    end
+
+    if force_recompile then
+        Doom.pkgs.packer.compile()
+    end
 end
 
 return pkgs

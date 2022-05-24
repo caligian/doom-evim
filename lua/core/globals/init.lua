@@ -81,5 +81,6 @@ _G.Doom = {
 
     repl = { status = {} },
 
+    pkgs = {},
 
 }

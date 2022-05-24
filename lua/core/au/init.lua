@@ -1,133 +1,127 @@
-local Class = require('classy')
-local Au = Class('doom-augroup')
+local class = require('classy')
+local au = class('doom-augroup')
 
-Au.status = Doom.au.status
-Au.refs = Doom.au.refs
+au.status = Doom.au.status
+au.refs = Doom.au.refs
 
-function Au.func2str(f)
+function au.func2ref(f)
     if type(f) == 'string' then
         return f
     elseif type(f) == 'function' then
-        local idx = #(keys(Au.status))
-        return string.format('lua Doom.au.refs[%d]()', idx+1)
+        local idx = #au.refs + 1
+        return string.format('lua Doom.au.refs[%d]()', idx)
     end
 end
 
-function Au:__init(name, doc)
+function au:__init(name, doc)
     self.name = name
+    self.doc = doc
+    self.autocmds = {}
 
     if not self.name then
-        self.name = '_doom_group_' .. #self.refs + 1
+        self.name = sprintf('doom_group_%d', len(au.status) + 1)
     end
-
-    if doc then
-        self.doc = doc
-    end
-
-    -- Indexed in the form: `pat::event`
-    self.autocmds = {}
 end
 
--- if once=true then this autocmd will not be saved.
-function Au:add(event, pat, f, opts)
+--[[
+Add an autocmd to augroup
+@tparam[opt='BufEnter'] event string Event name
+@tparam pat string Pattern to match
+@tparam f function|string Callback
+@tparam opts table
+@table opts
+@field once[opt=false] Run the autocmd only once
+@field nested[opt=false] Autocmd has other autocmd definitions embedded in it.
+
+@treturns table Containing autocmd strings
+--]]
+function au:add(event, pat, f, opts)
     opts = opts or {}
     event = event or 'BufEnter'
+    local _f = au.func2ref(f); push(au.refs, f)
+    pat = to_list(pat)
+    event = to_list(event)
 
-    assert(pat)
-
-    table.insert(Doom.au.refs, f)
-    f = self.func2str(f)
-
-    pat = vim.split(pat, '%s*,%s*')
-    event = vim.split(event, '%s*,%s*')
-
-    for _, i in ipairs(pat) do
-        for _, j in ipairs(event) do
-            if opts.once then
-                f = '++once ' .. f
-            end
-
-            if opts.nested then
-                f = '++nested ' .. f
-            end
-
-            local cmd = string.format('autocmd %s %s %s %s', self.name, j, i, f)
-            local save_as = i .. '::' .. j
-            self.autocmds[save_as] = cmd
-        end
+    if opts.once then
+        _f = sprintf('++once %d', _f)
     end
+
+    if opts.nested then
+        _f = sprintf('++nested %d', _f)
+    end
+
+    map(function(_e) 
+        map(function(_p)
+            local aucmd = sprintf('autocmd %s %s %s %s', self.name, _e, _p, _f)
+            local au_name = sprintf('%s::%s', _p, _e)
+            self.autocmds[au_name] = {aucmd, enabled=false}
+        end, pat)
+    end, event)
+
+    return self.autocmds
 end
 
-function Au:exists()
-    if not self.status[self.name] then
-        return false
-    else
-        return true
-    end
-end
-
-function Au:disable(opts)
-    if not self:exists() then
-        error {
-            enabled = false,
-            reason = 'Augroup has not been made. Please run enable(...)',
-            au = self,
-        }
-    end
-
-    opts = opts or {}
-    local cmd = 'autocmd! ' .. self.name .. ' '
-
-    if opts.pat and opts.event then
-        local k = opts.pat .. '::' .. opts.event
-
-        if opts.autocmds[k] then
-            opts.autocmds[k] = nil
-        end
-
-        vim.cmd(cmd ..  opts.event .. ' ' .. opts.pat)
-    elseif opts.pat then
-        vim.cmd(cmd .. '* ' .. opts.pat)
-    elseif opts.event then
-        vim.cmd(cmd .. opts.event .. ' ' .. opts.pat)
-    else
-        vim.cmd(cmd)
-    end
-
-    self.enabled = true
-end
-
-function Au:enable(opts)
-    opts = opts or {}
-
+function au:enable(regex_or_pat, event)
     if not self.status[self.name] then
         vim.cmd("augroup " .. self.name .. "\n    autocmd!\naugroup END")
         self.status[self.name] = self
     end
 
-    if opts.regex then
-        for k, v in pairs(self.autocmds) do
-            -- This will match against aupat::auevent in self.autocmds
-            if k:match(opts.regex) then
-                vim.cmd(v)
+    if not regex_or_pat and not event then
+        for _, value in pairs(self.autocmds) do
+            if not value.enabled then
+                vim.cmd(first(value))
+                value.enabled = true
             end
         end
-    elseif opts.pat and opts.event then
-        local au = opts.pat .. '::' .. opts.event
-        
-        if self.autocmds[au] then
-            vim.cmd(self.autocmds[au])
+    elseif not event then
+        for k, v in pairs(self.autocmds) do
+            -- This will match against aupat::auevent in self.autocmds
+            if k:match(regex_or_pat) then
+                if not v.enabled then
+                    vim.cmd(v)
+                    v.enabled = true
+                end
+            end
         end
     else
-        for _, value in pairs(self.autocmds) do
-            vim.cmd(value)
+        local au = regex_or_pat .. '::' .. event
+        if self.autocmds[au] and not self.autocmds[au].enabled then
+            vim.cmd(self.autocmds[au])
+            self.autocmds[au].enabled = true
         end
     end
 end
 
-function Au:delete(opts)
-    pcall(self.disable, self, opts)
-    self.status[self.pat .. '::' .. self.event] = nil
+function au:disable(pat, event)
+    if pat and event then
+        local k = sprintf('pat::event', pat, event)
+
+        if self.autocmds[k] and self.autocmds[k].enabled then
+            self.autocmds[k].enabled = false
+        end
+
+        vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
+    elseif pat then
+        for aupat, value in pairs(self.autocmds) do
+            if aupat:match(pat) then
+                value.enabled = false
+            end
+        end
+        vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
+    elseif event then
+        for auevent, value in pairs(self.autocmds) do
+            if auevent:match(event) then
+                value.enabled = false
+            end
+        end
+        vim.cmd(sprintf('autocmd! %s %s', self.name, event))
+    else
+        for auevent, value in pairs(self.autocmds) do
+            value.enabled = false
+        end
+        vim.cmd(sprintf('autocmd! %s', self.name))
+    end
 end
 
-return Au
+return au
