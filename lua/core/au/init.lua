@@ -99,16 +99,15 @@ function au:disable(pat, event)
 
         if self.autocmds[k] and self.autocmds[k].enabled then
             self.autocmds[k].enabled = false
+            vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
         end
-
-        vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
     elseif pat then
         for aupat, value in pairs(self.autocmds) do
-            if aupat:match(pat) then
+            if aupat:match(pat) and value.enabled then
                 value.enabled = false
+                vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
             end
         end
-        vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
     elseif event then
         for auevent, value in pairs(self.autocmds) do
             if auevent:match(event) then
