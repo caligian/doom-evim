@@ -69,6 +69,8 @@ utils.callable = function (f)
     end
 end
 
+utils.callable_p = utils.callable
+
 utils.str_p = function (s)
     return type(s) == 'string'
 end

@@ -225,15 +225,12 @@ function buffer:write(pos, s)
     end
 end
 
-function buffer:write_line(n, start_col, end_col, s)
-    self:write({start_row=n, end_row=n+1, start_col=start_col, end_col=end_col}, s)
+function buffer:write_line(row, start_col, end_col, s)
+    self:write({start_row=row, end_row=row+1, start_col=start_col, end_col=end_col}, s)
 end
 
-----
-----
-local b = buffer('%')
-b:write_line(231, 0, 1, {})
-
+function buffer:insert(row, col, s)
+end
 
 function buffer:getcurpos()
     local winnr = self:to_win()

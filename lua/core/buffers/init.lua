@@ -1,4 +1,4 @@
-local Class = require('classy')
+%%cal Class = require('classy')
 local Au = require('core.au')
 local BufString = require('core.buffers.string')
 local BufFloat = require('core.buffers.floating')

@@ -1,10 +1,9 @@
-local Class = require('classy')
-local Buf = require('core.buffers')
-local Au = require('core.au')
-local Wk = false
-local Kbd = Class('doom-kbd')
+local class = require('classy')
+local au = require('core.au')
+local wk = false
+local kbd = class('doom-kbd')
 
-Kbd.status = Doom.kbd.status
+kbd.status = Doom.kbd.status
 
 if not Doom.kbd.prefixes then
     Doom.kbd.prefixes = {
@@ -33,210 +32,94 @@ if not Doom.kbd.prefixes then
     }
 end
 
-Kbd.prefixes = Doom.kbd.prefixes
-
--- Disables and reenables autocmds and keybindings
-function Kbd:replace(f, doc)
-    assert(f)
-    assert(doc)
-
-    self.cmd = f
-    self.doc = doc
-    self:enable()
-
-    if self.connected then
-        for _, bufnr in ipairs(self.connected) do
-            local buf = Buf(bufnr)
-
-            buf:exec(function ()
-                for _, m in ipairs(self.modes) do
-                    vim.cmd(m .. 'unmap ' .. self.keys)
-                end
-            end)
-        end
-    end
-
-    
-    if self.au then
-        self.au:delete()
-        self.au = Au()
-
-        -- To remove keybindings from buffers, exec ummap on each buffer.
-        -- Record the buffer while self:enable()
-        -- simply tabnew into those buffers and unmap them, However, ensure that those buffers exist.
-        -- 
-        self.au:add(self.event, self.pat, self.cmd)
-        self.au:enable()
-    end
-end
+kbd.prefixes = Doom.kbd.prefixes
+kbd.global_bind = vim.api.nvim_set_keymap
+kbd.local_bind = vim.api.nvim_buf_set_keymap
+kbd.global_unbind = vim.api.nvim_del_keymap
+kbd.local_unbind = vim.api.nvim_buf_del_keymap
+kbd.bind = kbd.global_bind
+kbd.lbind = kbd.local_bind
+kbd.lunbind = kbd.local_unbind
+kbd.unbind = kbd.global_unbind
 
 local function wk_register(keys, doc)
     if not packer_plugins['which-key.nvim'] then
         return 
     else
-        Wk = require('which-key')
+        wk = require('which-key')
     end
 
     if keys:match('<leader>') then
         keys = keys:gsub('<leader>', '')
-        Wk.register({[keys] = doc}, {prefix='<leader>'})
+        wk.register({[keys] = doc}, {prefix='<leader>'})
     elseif keys:match('<localleader>') then
         keys = keys:gsub('<localleader>', '')
-        Wk.register({[keys] = doc}, {prefix='<localleader>'})
+        wk.register({[keys] = doc}, {prefix='<localleader>'})
     elseif not keys:match('enabled') then
-        Wk.register({[keys] = doc})
+        wk.register({[keys] = doc})
     end
 end
 
--- opts required for au
-function Kbd:__init(event, pat, modes, attribs, keys, f, doc, opts)
-    opts = opts or {}
-    self._binder = vim.api.nvim_set_keymap
+local bindstr = function(modes, keys, f, attribs)
+    attribs = attribs or {'silent', 'nowait'}
+    attribs = join(map(function(a) return sprintf('<%s>', a) end, attribs, " "))
+    local noremap
+    attribs, noremap = attribs:gsub('noremap', '')
+    local cmds = {}
+    local _f = f
 
-    self.mapped = false
-
-   if event then
-        assert(pat)
-    end
-
-    if pat then
-        assert(event)
-    end
-
-    assert(keys, 'Keys have not been supplied')
-    assert(f, 'No command for keybinding has been supplied')
-    assert(doc, 'No documentation for current keybinding has been supplied')
-
-    if not self.modes then self.modes = {'n'} end
-    self.modes = to_list(self.modes)
-
-    self.attribs = {}
-    if not attribs then
-        self.attribs = {silent=true}
-    else
-        self.attribs = to_list(self.attribs)
-        for idx, v in ipairs(self.attribs) do
-           self.attribs[v] = true
-           self.attribs[idx] = nil
-        end
-    end
-
-    if self.attribs.buffer then
-        self._binder = function (...)
-            local buffer = vim.fn.bufnr()
-            vim.api.nvim_buf_set_keymap(buffer, ...)
-            self.connected = {}
-            push(self.connected, buffer)
+    each(function(m)
+        if callable(f) then
+            _f = ':' .. au.func2ref(f) .. '<CR>'
+            push(Doom.au.refs, f)
         end
 
-        self.attribs.buffer = nil
-    end
+        if noremap ~= 0 then
+            local s = sprintf('%snoremap %s %s', m, keys, _f)
+            push(cmds, s)
+        else
+            local s = sprintf('%smap %s %s', m, keys, _f)
+            push(cmds, s)
+        end
+    end, modes)
 
-    if type(f) == 'function' then
-        self.attribs.callback = f
-        f = ''
-    end
-
-    self.attribs.desc = trim(doc)
-    self.attribs.noremap = self.attribs.noremap == nil and true
-    self.keys = trim(keys)
-    self.cmd = f
-    self.event = event
-    self.pat = pat
-    self.doc = doc
-    self.opts = opts
+    return cmds
 end
 
-function Kbd:enable()
-    local function _apply()
-        for _, m in ipairs(self.modes) do
-            self._binder(m, self.keys, self.cmd, self.attribs)
-            self.status[m] = self.status[m] or {}
-            self.status[m][self.keys] = self
-        end
+local function event_bind(event, pattern, modes, keys, f, attribs)
+    assert(event or pattern)
 
-        wk_register(self.keys, self.doc)
-        self.mapped = true
-    end
+    attribs = to_list(attribs)
+    if not find(attribs, 'buffer') then push(attribs, 'buffer') end
+    event =  event or 'BufEnter'
+    pattern = pattern or '*.' .. vim.bo.filetype
 
-    if not self.event or not self.pat then
-        _apply()
-    else
-        if not self.au then
-            self.au = Au()
-        end
+    event = to_list(event)
+    pattern = to_list(pattern)
 
-        self.au:add(self.event, self.pat, function ()
-            _apply()
-        end, self.opts)
+    local au = au('doom_kbd_' .. #Doom.au.status+1, sprintf('Augroup for keybinding: [%s] %s', join(modes, ","), keys))
 
+    each(function(e)
+        each(function(p)
+            each(function(cmd)
+                au:add(e, p, sprintf('exe "%s"', cmd))
+            end, bindstr(modes, keys, f, attribs))
+        end, pattern)
+    end, event)
+
+    return au
+end
+
+local k_au = event_bind('BufEnter', '*.lua', {'n', 'v'}, '<leader>zf', function() vcmd('echo "hello world"') end, {'noremap'})
+k_au:enable()
+
+function kbd:__init(modes, keys, f, attribs, event, pattern)
+end
+
+function kbd:enable()
+    if self.au then
         self.au:enable()
-    end
-end
-
-function Kbd:delete()
-    local function _unbind()
-        for _, m in ipairs(self.modes) do
-            if self.mapped then
-                vim.cmd(m .. 'unmap ' .. self.keys)
-                self.status[m][self.keys] = nil
-            end
-        end
-
-        self.mapped = false
-    end
-
-    if self.connected then
-        for _, bufnr in ipairs(self.connected) do
-            local buf = Buf(vim.fn.bufname(bufnr))
-            buf:exec(_unbind)
-        end
-
-        self.connected = nil
     else
-        _unbind()
-    end
-
-    if self.au then
-        self.au:disable()
+        bind()
     end
 end
-
-function Kbd:disable()
-    local function _unbind()
-        for _, m in ipairs(self.modes) do
-            if self.mapped then
-                vim.cmd(m .. 'unmap ' .. self.keys)
-            end
-        end
-
-        if self.mapped then
-            self.mapped = false
-        end
-    end
-
-    if self.connected then
-        for _, bufnr in ipairs(self.connected) do
-            local buf = Buf(vim.fn.bufname(bufnr))
-            buf:exec(_unbind)
-        end
-
-        self.connected = nil
-    else
-        _unbind()
-    end
-
-    if self.au then
-        self.au:disable()
-    end
-end
-
-if not Doom.kbd.prefixes.enabled then
-    Doom.kbd.prefixes.enabled = true
-
-    for keys, doc in pairs(Doom.kbd.prefixes) do 
-        wk_register(keys, doc)
-    end
-end
-
-return Kbd

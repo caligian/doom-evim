@@ -334,7 +334,10 @@ tu.assoc = function (dict, ks, create)
 
         if not v then
             if create then
-                t[key] = {} 
+                if callable_p(create) then
+                    create = create()
+                end
+                t[key] = create
             else
                 return false, last_key, t
             end

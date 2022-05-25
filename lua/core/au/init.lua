@@ -9,7 +9,7 @@ function au.func2ref(f)
         return f
     elseif type(f) == 'function' then
         local idx = #au.refs + 1
-        return string.format('lua Doom.au.refs[%d]()', idx)
+        return sprintf('lua Doom.au.refs[%d]()', idx)
     end
 end
 
@@ -38,7 +38,10 @@ Add an autocmd to augroup
 function au:add(event, pat, f, opts)
     opts = opts or {}
     event = event or 'BufEnter'
-    local _f = au.func2ref(f); push(au.refs, f)
+    local _f = au.func2ref(f)
+    if func_p(_f) then
+        push(au.refs, f)
+    end
     pat = to_list(pat)
     event = to_list(event)
 
@@ -54,14 +57,18 @@ function au:add(event, pat, f, opts)
         map(function(_p)
             local aucmd = sprintf('autocmd %s %s %s %s', self.name, _e, _p, _f)
             local au_name = sprintf('%s::%s', _p, _e)
-            self.autocmds[au_name] = {aucmd, enabled=false}
+            local t = self.autocmds[au_name]
+
+            if not t then
+                self.autocmds[au_name] = {aucmd, enabled=false}
+            end
         end, pat)
     end, event)
 
     return self.autocmds
 end
 
-function au:enable(regex_or_pat, event)
+function au:enable(event, regex_or_pat)
     if not self.status[self.name] then
         vim.cmd("augroup " .. self.name .. "\n    autocmd!\naugroup END")
         self.status[self.name] = self
@@ -86,8 +93,9 @@ function au:enable(regex_or_pat, event)
         end
     else
         local au = regex_or_pat .. '::' .. event
+
         if self.autocmds[au] and not self.autocmds[au].enabled then
-            vim.cmd(self.autocmds[au])
+            vim.cmd(first(self.autocmds[au]))
             self.autocmds[au].enabled = true
         end
     end
@@ -99,15 +107,16 @@ function au:disable(pat, event)
 
         if self.autocmds[k] and self.autocmds[k].enabled then
             self.autocmds[k].enabled = false
-            vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
         end
+
+        vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
     elseif pat then
         for aupat, value in pairs(self.autocmds) do
             if aupat:match(pat) and value.enabled then
                 value.enabled = false
-                vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
             end
         end
+        vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
     elseif event then
         for auevent, value in pairs(self.autocmds) do
             if auevent:match(event) then
