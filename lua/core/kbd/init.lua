@@ -110,16 +110,107 @@ local function event_bind(event, pattern, modes, keys, f, attribs)
     return au
 end
 
-local k_au = event_bind('BufEnter', '*.lua', {'n', 'v'}, '<leader>zf', function() vcmd('echo "hello world"') end, {'noremap'})
-k_au:enable()
-
 function kbd:__init(modes, keys, f, attribs, event, pattern)
+    self.modes = modes
+    self.keys = keys
+    self.f = f
+    self.attribs = attribs
+    self.event = event
+    self.pattern = pattern
+    self.mapped = false
 end
 
-function kbd:enable()
+function kbd:backup_previous_rhs(m)
+    local modes = m or self.modes
+    modes = to_list(modes)
+    assoc(self, {'previous_cmds'}, {})
+
+    each(function(m)
+        local cmd = maparg(self.keys, m)
+
+        if cmd then
+            assoc(self.previous_cmds, {m}, {})
+            push(self.previous_cmds[m], prev)
+        end
+    end, modes)
+
+    return self.previous_cmds
+end
+
+function kbd:disable()
+    if not self.mapped then return false end
+
+    local _disable = function(m) 
+        self:backup_previous_rhs(m)
+
+        pcall(function() 
+            vcmd(sprintf('%sunmap! %s', m, self.keys))
+        end)
+
+        self.mapped = false
+    end
+
     if self.au then
-        self.au:enable()
+        self.au:disable()
+    end
+
+    each(_disable, modes)
+
+    return true 
+end
+
+function kbd:restore_previous_rhs()
+    if not #self.previous_cmds > 0 then return false end
+
+    self:disable()
+    self.au = nil
+    local cmd = pop(self.previous_cmds)
+
+    if cmd then
+        self.f = cmd
+        return cmd
     else
-        bind()
+        return false
     end
 end
+
+function kbd:replace(event, pattern, modes, f, attribs)
+    if event then self.event = event end
+    if pattern then self.pattern = pattern end
+    if modes then self.modes = modes end
+    if f then self.f = f end
+    if attribs then self.attribs = attribs end
+    local keys = self.keys
+
+    self:disable()
+
+    if event or pattern then
+        self.au = bind_event(event, pattern, modes, keys, f, attribs)
+        self.au:enable()
+    else
+        each(vcmd, bindstr(modes, keys, f, attribs))
+    end
+
+    self.mapped = true
+end
+
+function kbd:enable(force)
+    if self.event or self.pattern then
+        if not self.au then 
+            self.au = event_bind(event, pattern, modes, keys, f, attribs)
+        end
+
+        if force or not self.mapped then
+            self.au:enable()
+        end
+    elseif force or not self.mapped then
+        each(vcmd, bindstr(modes, keys, f, attribs))
+    end
+
+    self.mapped = true
+end
+
+local k_au = kbd({'n', 'v'}, '<leader>zf', function() vcmd('echo "hello world"') end, {'noremap'}, 'BufEnter', '*.lua')
+k_au:enable()
+
+

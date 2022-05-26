@@ -334,13 +334,18 @@ tu.assoc = function (dict, ks, create)
 
         if not v then
             if create then
-                if callable_p(create) then
-                    create = create()
+                if index == n then
+                    if utils.callable(create) then
+                        create = create()
+                    end
+
+                    t[key] = create
+                else
+                    t[key] = {}
                 end
-                t[key] = create
-            else
-                return false, last_key, t
             end
+        else
+            return false, last_key, t
         end
 
         if not utils.table_p(t[key]) then
