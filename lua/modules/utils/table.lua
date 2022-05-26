@@ -99,6 +99,7 @@ tu.lextend = function (arr, ...)
 end
 
 tu.shift = function(arr, n)
+    n = n or 1
     local head = {}
 
     for i=1, n do

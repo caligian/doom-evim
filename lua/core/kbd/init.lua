@@ -33,14 +33,6 @@ if not Doom.kbd.prefixes then
 end
 
 kbd.prefixes = Doom.kbd.prefixes
-kbd.global_bind = vim.api.nvim_set_keymap
-kbd.local_bind = vim.api.nvim_buf_set_keymap
-kbd.global_unbind = vim.api.nvim_del_keymap
-kbd.local_unbind = vim.api.nvim_buf_del_keymap
-kbd.bind = kbd.global_bind
-kbd.lbind = kbd.local_bind
-kbd.lunbind = kbd.local_unbind
-kbd.unbind = kbd.global_unbind
 
 local function wk_register(keys, doc)
     if not packer_plugins['which-key.nvim'] then
@@ -62,9 +54,15 @@ end
 
 local bindstr = function(modes, keys, f, attribs)
     attribs = attribs or {'silent', 'nowait'}
-    attribs = join(map(function(a) return sprintf('<%s>', a) end, attribs, " "))
+    attribs = to_list(attribs)
+    attribs = map(function(s)
+        return sprintf('<%s>', s)
+    end, attribs)
+    attribs = join(attribs, " ")
+
     local noremap
-    attribs, noremap = attribs:gsub('noremap', '')
+    attribs, noremap = attribs:gsub('<noremap>', '')
+    attribs = trim(attribs)
     local cmds = {}
     local _f = f
 
@@ -75,10 +73,10 @@ local bindstr = function(modes, keys, f, attribs)
         end
 
         if noremap ~= 0 then
-            local s = sprintf('%snoremap %s %s', m, keys, _f)
+            local s = sprintf('%snoremap %s %s %s', m, attribs, keys, _f)
             push(cmds, s)
         else
-            local s = sprintf('%smap %s %s', m, keys, _f)
+            local s = sprintf('%smap %s %s %s', m, attribs, keys, _f)
             push(cmds, s)
         end
     end, modes)
@@ -90,10 +88,11 @@ local function event_bind(event, pattern, modes, keys, f, attribs)
     assert(event or pattern)
 
     attribs = to_list(attribs)
-    if not find(attribs, 'buffer') then push(attribs, 'buffer') end
+    if not find(attribs, 'buffer') then 
+        push(attribs, 'buffer') 
+    end
     event =  event or 'BufEnter'
     pattern = pattern or '*.' .. vim.bo.filetype
-
     event = to_list(event)
     pattern = to_list(pattern)
 
@@ -120,28 +119,74 @@ function kbd:__init(modes, keys, f, attribs, event, pattern)
     self.mapped = false
 end
 
-function kbd:backup_previous_rhs(m)
+function kbd:backup_previous(m)
     local modes = m or self.modes
     modes = to_list(modes)
     assoc(self, {'previous_cmds'}, {})
 
-    each(function(m)
-        local cmd = maparg(self.keys, m)
+    local _get_cmd = function(m, t)
+        local _cmd = ''
 
-        if cmd then
-            assoc(self.previous_cmds, {m}, {})
-            push(self.previous_cmds[m], prev)
+        local _a = trim(join(map(function(_attrib)
+            if t[_attrib] == 1 then
+                return sprintf('<%s>', _attrib)
+            else
+                return ''
+            end
+        end, {'silent', 'nowait', 'expr', 'buffer'}), " "))
+
+        if t.noremap == 1 then
+            return sprintf('%snoremap %s %s %s', m, _a, t.lhs, t.rhs)
+        else
+            return sprintf('%smap %s %s %s', m, _a, t.lhs, t.rhs)
         end
+    end
+
+    each(function(m)
+        push(self.previous_cmds, _get_cmd(m, vim.fn.maparg(self.keys, m, false, 1)))
     end, modes)
 
     return self.previous_cmds
+end
+
+function kbd:enable(force)
+    self:backup_previous()
+
+    if self.event or self.pattern then
+        if not self.au then 
+            self.au = event_bind(self.event, self.pattern, self.modes, self.keys, self.f, self.attribs)
+        end
+
+        if force or not self.mapped then
+            self.au:enable()
+        end
+    elseif force or not self.mapped then
+        each(vcmd, bindstr(self.modes, self.keys, self.f, self.attribs))
+    end
+
+    self.mapped = true
+end
+
+function kbd:restore_previous()
+    if not self.previous_cmds then return false end
+    self:disable()
+    self.au = nil
+
+    each(function(m)
+        vcmd(self.previous_cmds[m])
+        self.previous_cmds[m] = nil
+    end, keys(self.previous_cmds))
+
+    self.previous_cmds = nil
+
+    return true
 end
 
 function kbd:disable()
     if not self.mapped then return false end
 
     local _disable = function(m) 
-        self:backup_previous_rhs(m)
+        self:backup_previous(m)
 
         pcall(function() 
             vcmd(sprintf('%sunmap! %s', m, self.keys))
@@ -154,27 +199,14 @@ function kbd:disable()
         self.au:disable()
     end
 
-    each(_disable, modes)
+    each(_disable, self.modes)
+    
+    self:restore_previous()
 
     return true 
 end
 
-function kbd:restore_previous_rhs()
-    if not #self.previous_cmds > 0 then return false end
-
-    self:disable()
-    self.au = nil
-    local cmd = pop(self.previous_cmds)
-
-    if cmd then
-        self.f = cmd
-        return cmd
-    else
-        return false
-    end
-end
-
-function kbd:replace(event, pattern, modes, f, attribs)
+function kbd:replace(modes, f, attribs, event, pattern)
     if event then self.event = event end
     if pattern then self.pattern = pattern end
     if modes then self.modes = modes end
@@ -184,33 +216,14 @@ function kbd:replace(event, pattern, modes, f, attribs)
 
     self:disable()
 
-    if event or pattern then
-        self.au = bind_event(event, pattern, modes, keys, f, attribs)
+    if self.event or self.pattern then
+        self.au = event_bind(self.event, self.pattern, self.modes, self.keys, self.f, attribs)
         self.au:enable()
     else
-        each(vcmd, bindstr(modes, keys, f, attribs))
+        each(vcmd, bindstr(self.modes, self.keys, self.f, self.attribs))
     end
 
     self.mapped = true
 end
 
-function kbd:enable(force)
-    if self.event or self.pattern then
-        if not self.au then 
-            self.au = event_bind(event, pattern, modes, keys, f, attribs)
-        end
-
-        if force or not self.mapped then
-            self.au:enable()
-        end
-    elseif force or not self.mapped then
-        each(vcmd, bindstr(modes, keys, f, attribs))
-    end
-
-    self.mapped = true
-end
-
-local k_au = kbd({'n', 'v'}, '<leader>zf', function() vcmd('echo "hello world"') end, {'noremap'}, 'BufEnter', '*.lua')
-k_au:enable()
-
-
+return kbd

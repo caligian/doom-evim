@@ -5,17 +5,9 @@ local buffer = class('doom-buffer')
 
 buffer.status = Doom.buffer.status
 
-function buffer.cleanup()
-    for key, value in pairs(self.status) do
-        if not value:exists() then
-            self.status[key] = nil
-        end
-    end
-
-    return self
-end
-
 function buffer:__init(name)
+    if str_p(name) then name = trim(name) end
+
     if num_p(name) then
         oblige(vim.fn.bufname(name) ~= '', 'Invalid bufnr provided')
         name = vim.fn.bufname(name)
@@ -23,63 +15,54 @@ function buffer:__init(name)
         name = vim.fn.expand(name)
     end
 
-    if Doom.buffer.status[self.name] then
-        return Doom.buffer.status[self.name]
-    end
-
+    local index = vim.fn.bufadd(name)
+    self.index = index
     self.name = name
-    self.index = vim.fn.bufadd(self.name)
     vim.fn.bufload(self.index)
-    self.status[self] = self
 end
 
-function buffer:exists()
-    return 1 == vim.fn.bufexists(self.index)
+function buffer.exists(bufnr)
+    return 1 == vim.fn.bufexists(bufnr)
 end
 
-function buffer:is_visible(winnr)
-    return -1 ~= vim.fn.bufwinnr(winnr or self.index)
+function buffer.is_visible(bufnr)
+    return -1 ~= vim.fn.bufwinid(buf)
 end
 
-function buffer:is_loaded()
-    self.loaded = vim.fn.bufloaded(self.index) == 1
-    return self.loaded
+function buffer.is_loaded(bufnr)
+    return vim.fn.bufloaded(bufnr) == 1
 end
 
-function buffer:setopts(opts)
+function buffer.setopts(bufnr, opts)
     for key, value in pairs(options) do
-        vim.api.nvim_buf_set_option(self.index, key, value)
+        vim.api.nvim_buf_set_option(bufnr, key, value)
     end
 end
 
-function buffer:setvars(vars)
+function buffer.setvars(bufnr, vars)
     for key, value in pairs(vars) do
-        vim.api.nvim_buf_set_var(self.index, key, value)
+        vim.api.nvim_buf_set_var(bufnr, key, value)
     end
 end
 
-function buffer:get_win()
-    return vim.fn.bufwinnr(self.index)
+function buffer.unlist(bufnr)
+    buffer.setopts(bufnr, {buflisted=false})
 end
 
-function buffer:unlist()
-    self:setopts({buflisted=false})
-end
-
-function buffer:__eq(buf)
-    if class.of(buf) == buffer then
-        return self.index == buf.index
+function buffer.equals(buf1, buf2)
+    if class.of(buf1) == class.of(buf2) then
+        return buf1.index == buf2.index
     end
 end
 
-function buffer:__ne(buf)
-    if class.of(buf) == buffer then
-        return self.index ~= buf.index
+function buffer.not_equals(buf1, buf2)
+    if class.of(buf) == class.of(buf) then
+        return buf1.index ~= buf2.index
     end
 end
 
-function buffer:get_line_count()
-    return vim.api.nvim_buf_line_count(self.index)
+function buffer.get_line_count(bufnr)
+    return vim.api.nvim_buf_line_count(bufnr)
 end
 
 function buffer.find_by_bufnr(bufnr, create)
@@ -133,40 +116,11 @@ function buffer:to_win(opts)
 
     opts.border = 'solid'
     opts.style = opts.style or 'minimal'
-    return vim.api.nvim_open_win(self.index, true, opts)
+
+    local winnr = vim.api.nvim_open_win(self.index, true, opts)
+    local winid = vim.fn.win_getid(winnr)
+    return winid
 end
-
-function buffer.focus(winnr)
-    local id = vim.fn.win_getid(winnr)
-    if id == 0 then
-        return false
-    end
-
-    vim.fn.win_gotoid(name)
-    return true
-end
-
-function buffer.hide(winnr)
-    vim.api.nvim_win_close(winnr, true)
-end
-
-function buffer:exec(f, sched, timeout, tries, inc)
-    local result = false
-    local winnr = self:to_win()
-    local tabnr = vim.fn.tabpagenr()
-
-    result = wait(timeout, tries, inc, sched, f)
-
-    local current_tabnr = vim.fn.tabpagenr()
-    if tabnr ~= current_tabnr then
-        vim.cmd(sprintf('normal %dgt', tabnr))
-    end
-
-    buffer.hide(winnr)
-
-    return result, err
-end
-
 --[[
 @table method
 @field start_row number From row N. Default: 1
@@ -201,16 +155,36 @@ function buffer:read_line(n, start_col, end_col)
     return first(self:read({start_row=n, end_row=n+1,start_col=start_col, end_col=end_col}))
 end
 
+-- [n, m, n, -1] yields a single full line
+local function _getstr(bufnr, t)
+    oblige(t.start_row, 'Starting row number not provided')
+    t.end_row = t.end_row or -1
+
+    if not t.start_col and not t.end_col then
+        return vim.api.nvim_buf_get_text(bufnr, t.start_row, 0, t.end_row, -1, {})
+    end
+
+    oblige(t.start_col, 'Starting column number not provided')
+    t.end_col = t.end_col or -1
+
+    return vim.api.nvim_buf_get_text(bufnr, t.start_row, t.start_col, t.end_row, t.end_col, {})
+end
+
+local function _writestr(bufnr, t)
+end
+
 function buffer:write(pos, s)
+    inspect(pos)
     assert(table_p(pos))
     assert(pos.start_row)
 
     if str_p(s) then s = split(s, "\n\r") end
 
     local last_line = self:get_line_count() - 1
+    if pos.start_row == '$' then pos.start_row = last_line end
     pos.end_row = pos.end_row or last_line
     if pos.end_row >= last_line then pos.end_row = last_line end
-    if pos.start_row >= pos.end_row then pos.start_row = pos.end_row end
+    if pos.start_row > pos.end_row then pos.start_row = pos.end_row end
 
     if not pos.start_col and not pos.end_col then
         vim.api.nvim_buf_set_lines(self.index, pos.start_row, pos.end_row, false, s)
@@ -226,14 +200,34 @@ function buffer:write(pos, s)
 end
 
 function buffer:write_line(row, start_col, end_col, s)
-    self:write({start_row=row, end_row=row+1, start_col=start_col, end_col=end_col}, s)
+    self:write({
+        start_row=row,
+        end_row=row+1,
+        start_col=start_col,
+        end_col=end_col,
+    }, s)
 end
 
 function buffer:insert(row, col, s)
+    self:write({
+        start_row = row,
+        end_row = row+1,
+        start_col = col,
+        end_col = col,
+    }, s)
+end
+
+function buffer:insert_line(row, s)
+    self:write({
+        start_row = row,
+        end_row = row,
+        start_col = 0,
+        end_col = 0
+    }, s)
 end
 
 function buffer:getcurpos()
-    local winnr = self:to_win()
+    local winnr = vim.fn.win_id2win(self:to_win())
     local bufnr, row, col, curswant = unpack(vim.fn.getcurpos(winnr))
     self.hide(winnr)
 
@@ -245,7 +239,7 @@ function buffer:getcurpos()
 end
 
 function buffer:getpos(expr)
-    local winnr = self:to_win()
+    local winnr = vim.fn.win_id2win(self:to_win())
     local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
     self.hide(winnr)
 
@@ -279,3 +273,6 @@ function buffer:add_hook(event, f, opts)
 
     self.au:add(event, sprintf('<buffer=%d>', self.index), f, opts)
 end
+
+-- local b = buffer('abcdefgh')
+-- b:write_line('$', 1, 1, {'hello world12'})

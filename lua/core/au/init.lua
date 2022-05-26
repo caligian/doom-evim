@@ -39,19 +39,11 @@ function au:add(event, pat, f, opts)
     opts = opts or {}
     event = event or 'BufEnter'
     local _f = au.func2ref(f)
-    if func_p(_f) then
-        push(au.refs, f)
-    end
+    if func_p(_f) then push(au.refs, f) end
     pat = to_list(pat)
     event = to_list(event)
-
-    if opts.once then
-        _f = sprintf('++once %d', _f)
-    end
-
-    if opts.nested then
-        _f = sprintf('++nested %d', _f)
-    end
+    if opts.once then _f = sprintf('++once %s', _f) end
+    if opts.nested then _f = sprintf('++nested %s', _f) end
 
     map(function(_e) 
         map(function(_p)
@@ -103,7 +95,7 @@ end
 
 function au:disable(pat, event)
     if pat and event then
-        local k = sprintf('pat::event', pat, event)
+        local k = sprintf('%s::%s', pat, event)
 
         if self.autocmds[k] and self.autocmds[k].enabled then
             self.autocmds[k].enabled = false
