@@ -1,4 +1,5 @@
 local class = require('classy')
+local kbd = require('core.kbd')
 local path = require('path')
 local augroup = require('core.au')
 local buffer = class('doom-buffer')
@@ -372,7 +373,28 @@ function buffer:add_hook(event, f, opts)
     au:add(event, sprintf('<buffer=%d>', bufnr), f, opts)
 end
 
-function buffer:to_win_prompt()
+function buffer:delete()
+    self.status[self.index] = nil
+end
+
+function buffer:set_keymap(modes, keys, f, attribs, event)
+    oblige(keys)
+    oblige(f)
+    modes = modes or 'n'
+    event = event or 'BufEnter'
+    attribs = attribs or 'buffer'
+    local doc = 'Keybinding for buffer: ' .. self.index
+    local pattern = sprintf('<buffer=%d>', self.index)
+    assoc(self, {'keymaps'}, {})
+    push(self.keymaps, kbd(modes, keys, f, attribs, doc, event, pattern))
+end
+
+-- opts for floating
+function buffer.to_win_prompt(text, opts)
+    local temp_buffer = buffer()
+    if str_p(text) then text = split(text, "\n\r") end
+    temp_buffer:write(map(function(s) return '# ' .. s end, text))
+    temp_buffer:to_win(opts)
 end
 
 return buffer

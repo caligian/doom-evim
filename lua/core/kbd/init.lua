@@ -34,25 +34,36 @@ end
 
 kbd.prefixes = Doom.kbd.prefixes
 
-local function wk_register(keys, doc)
+local function wk_register(m, keys, doc, bufnr)
+    oblige(m)
+    oblige(keys)
+    oblige(doc)
+
     if not packer_plugins['which-key.nvim'] then
         return 
     else
         wk = require('which-key')
     end
 
+    local opts = {buffer=bufnr}
+    local has_prefix = match(keys, 'leader')
+
     if keys:match('<leader>') then
         keys = keys:gsub('<leader>', '')
-        wk.register({[keys] = doc}, {prefix='<leader>'})
+        opts.prefix = '<leader>'
     elseif keys:match('<localleader>') then
         keys = keys:gsub('<localleader>', '')
-        wk.register({[keys] = doc}, {prefix='<localleader>'})
-    elseif not keys:match('enabled') then
-        wk.register({[keys] = doc})
+        opts.prefix = '<localleader>'
+    end
+
+    if has_prefix then
+        wk.register({[keys] = doc}, opts)
+    else
+        wk.register({[keys] = doc}, opts)
     end
 end
 
-local bindstr = function(modes, keys, f, attribs)
+local bindstr = function(modes, keys, f, attribs, doc)
     attribs = attribs or {'silent', 'nowait'}
     attribs = to_list(attribs)
     attribs = map(function(s)
@@ -79,12 +90,13 @@ local bindstr = function(modes, keys, f, attribs)
             local s = sprintf('%smap %s %s %s', m, attribs, keys, _f)
             push(cmds, s)
         end
+        wk_register(m, keys, doc, bufnr)
     end, modes)
 
     return cmds
 end
 
-local function event_bind(event, pattern, modes, keys, f, attribs)
+local function event_bind(event, pattern, modes, keys, f, attribs, doc)
     assert(event or pattern)
 
     attribs = to_list(attribs)
@@ -98,25 +110,44 @@ local function event_bind(event, pattern, modes, keys, f, attribs)
 
     local au = au('doom_kbd_' .. #Doom.au.status+1, sprintf('Augroup for keybinding: [%s] %s', join(modes, ","), keys))
 
+    local _bind = function(m, cmd)
+        return function()
+            local bufnr = match(pattern, '<buffer=(%d+)>')
+            bufnr = bufnr or vim.fn.bufnr()
+            wk_register(m, keys, doc, bufnr)
+            vim.cmd(cmd)
+        end
+    end
+
     each(function(e)
         each(function(p)
             each(function(cmd)
-                au:add(e, p, sprintf('exe "%s"', cmd))
-            end, bindstr(modes, keys, f, attribs))
+                -- Needs debugging here. 
+                -- Just make the necessary changes wherever bindstr is present. 
+                -- Also ensure that bindstr() returns {[mode] = cmd}
+                cmd = sprintf('exe "%s"', cmd)
+                cmd = _bind()
+                au:add(e, p, )
+            end, bindstr(modes, keys, f, attribs, doc))
         end, pattern)
     end, event)
 
     return au
 end
 
-function kbd:__init(modes, keys, f, attribs, event, pattern)
+function kbd:__init(modes, keys, f, attribs, doc, event, pattern)
     self.modes = modes
     self.keys = keys
     self.f = f
     self.attribs = attribs
     self.event = event
     self.pattern = pattern
+    self.doc = doc
     self.mapped = false
+
+    oblige(keys)
+    oblige(f)
+    oblige(doc)
 end
 
 function kbd:backup_previous(m)

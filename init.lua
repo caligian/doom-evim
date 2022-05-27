@@ -13,16 +13,18 @@ vim.o.laststatus = 2
 vim.o.mousefocus = true
 vim.o.shell = "/bin/bash"
 vim.o.backspace = "indent,eol,start"
-vim.o.number = false
+vim.o.number = true
+vim.o.cursorline = true
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
 vim.o.foldmethod = "indent"
-vim.o.guifont = 'JetBrains Mono:h13'
+vim.o.guifont = 'Cascadia Code PL:h14'
 vim.g.inccommand = 'split'
 vim.g.session_autosave = false
+vim.o.background='dark'
 vim.g.session_autoload = false
-vim.cmd [[ color everforest ]]
+vim.cmd [[ color chocolate-contrast ]]
 
 -- leader key
 vim.g.mapleader = " "
@@ -61,6 +63,7 @@ local kbd = {
     'noremap <leader>gb :Telescope git_branches',
     'noremap <leader>gS :Telescope git_status',
     'noremap <leader>gs :Git stage %',
+    'noremap <leader>gp :Git push',
     'noremap <leader>gg :Git',
     'noremap <leader>gi :Git init',
     'noremap <leader>gc :Git commit',
@@ -73,7 +76,7 @@ local kbd = {
     'noremap <leader>br :e %',
 
     'noremap <leader>tt :tabnew',
-    'noremap <leader>tq :tabclose',
+    'noremap <leader>tk :tabclose',
     'noremap <leader>tn :tabnext',
     'noremap <leader>tp :tabprev',
 
