@@ -3,7 +3,6 @@ _G.Doom = {
         theme = 'everforest',
     },
 
-
     langs = {
         python = {
             lsp = "pyright",
@@ -82,5 +81,4 @@ _G.Doom = {
     repl = { status = {} },
 
     pkgs = {},
-
 }

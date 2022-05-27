@@ -1,5 +1,5 @@
-local utils = {}
-utils.status = Doom.buffer.status
+local augroup = require('core.au')
+local utils = class('doom-buffer-utils')
 
 function utils.cleanup()
     for bufnr,_  in pairs(Doom.buffer.status) do
@@ -167,10 +167,10 @@ function utils.write_string(bufnr, pos, s)
     oblige(pos.start_row <= pos.end_row, 'Starting row cannot be bigger than Ending row')
     if str_p(s) then s = split(s, "\n\r") end
     local count = utils.get_line_count(bufnr)
-    pos.end_row = pos.end_row or count-1
-    pos.end_row = pos.end_row >= count and count - 1 or pos.end_row
-    pos.start_row = pos.start_row or count-1
-    pos.start_row = pos.start_row >= count and count - 1 or pos.start_row
+    pos.end_row = pos.end_row or count
+    pos.end_row = pos.end_row > count and count or pos.end_row
+    pos.start_row = pos.start_row or count
+    pos.start_row = pos.start_row > count and count or pos.start_row
 
     if not pos.start_col and not pos.end_col then
         vim.api.nvim_buf_set_lines(bufnr, pos.start_row, pos.end_row, true, s)
@@ -197,7 +197,7 @@ function utils.write_string(bufnr, pos, s)
                 if l - pos.start_col < 0 then
                     pos.start_col = 0
                 else
-                    pos.start_col = l - pos.start_col
+                    pos.start_col = l + pos.start_col + 1
                 end
             elseif pos.start_col > l then
                 pos.start_col = l
@@ -213,7 +213,7 @@ function utils.write_string(bufnr, pos, s)
                 if m - pos.end_col < 0 then
                     pos.end_col = 0
                 else
-                    pos.end_col = m - pos.end_col
+                    pos.end_col = m + pos.end_col + 1
                 end
             elseif pos.end_col > m then
                 pos.end_col = m
@@ -222,31 +222,55 @@ function utils.write_string(bufnr, pos, s)
             pos.end_col = m
         end
     end
-    vim.api.nvim_buf_set_text(bufnr, pos.start_row, pos.start_col, pos.end_row, pos.end_col, s)
+   vim.api.nvim_buf_set_text(bufnr, pos.start_row, pos.start_col, pos.end_row, pos.end_col, s)
+end
+
+function utils.insert_string(bufnr, pos, s)
+    prepend = prepend == nil and false
+    pos.end_row = pos.start_row
+    pos.end_col = pos.start_col
+    utils.write_string(bufnr, pos, s)
+end
+
+function utils.insert_line(bufnr, start_row, s)
+    utils.insert_string(bufnr, {start_row=start_row, start_col=-1}, s)
+end
+
+function utils.put_string(bufnr, s, prepend, _type, _follow)
+    _type = not _type and 'c' or _type
+    _follow = not _follow and true or _follow
+
+    if str_p(s) then
+        s = split(s, "\n\r")
+    end
+
+    utils.exec(bufnr, function()
+        vim.api.nvim_put(s, _type, prepend and 'P' or 'p', _follow)
+    end)
 end
 
 function utils.getcurpos(bufnr)
-    local winnr = vim.fn.win_id2win(utils.get_floating_win(bufnr))
+    local id = utils.get_floating_win(bufnr)
     local bufnr, row, col, curswant = unpack(vim.fn.getcurpos(winnr))
-    utils.focus_by_winnr(winnr)
-    utils.hide_by_winnr(winnr)
+    utils.hide_by_winid(id)
 
     return {
-        index = bufnr,
+        winid = id,
         row = row - 1,
         col = col - 1,
     }
 end
 
 function utils.getpos(bufnr, expr)
-    local winnr = vim.fn.win_id2win(utils.get_floating_win(bufnr))
+    expr = expr or '.'
+    local id = utils.get_floating_win(bufnr)
     local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
-    utils.hide_by_winnr(winnr)
+    utils.hide_by_winid(id)
 
     return {
-        bufnr = bufnr,
-        row = row - 1,
-        col = col - 1,
+        winid = id,
+        row = row-1,
+        col = col-1,
     }
 end
 
@@ -255,10 +279,11 @@ function utils.getvcurpos(bufnr)
     local till = utils.getpos(bufnr, "'>")
 
     return {
-        start_row = from.row - 1,
-        end_row = till.row - 1,
-        start_col = from.col - 1,
-        end_col = till.col - 1,
+        id = from.winid,
+        start_row = from.row,
+        end_row = till.row,
+        start_col = from.col,
+        end_col = till.col,
     }
 end
 
@@ -268,6 +293,7 @@ function utils.add_hook(bufnr, event, f, opts)
     local name = self.name .. '_' ..  bufnr
     local au = augroup(name, 'Doom buffer augroup')
     au:add(event, sprintf('<buffer=%d>', bufnr), f, opts)
-
     return au
 end
+
+return utils

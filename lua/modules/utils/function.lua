@@ -2,7 +2,7 @@ local fun = {}
 local utils = require('modules.utils')
 
 function fun.globalize(ks)
-    utils.globalize(ks)
+    utils.globalize(ks or fun)
 end
 
 function fun.partial(f, ...)
