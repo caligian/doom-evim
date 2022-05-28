@@ -377,16 +377,32 @@ function buffer:delete()
     self.status[self.index] = nil
 end
 
-function buffer:set_keymap(modes, keys, f, attribs, event)
-    oblige(keys)
+function buffer:set_keymap(modes, keys, f, attribs, doc, event)
     oblige(f)
+
+    assoc(self, {'keymaps'}, {})
+
+    keys = keys or self.keys
     modes = modes or 'n'
     event = event or 'BufEnter'
     attribs = attribs or 'buffer'
     local doc = 'Keybinding for buffer: ' .. self.index
     local pattern = sprintf('<buffer=%d>', self.index)
-    assoc(self, {'keymaps'}, {})
-    push(self.keymaps, kbd(modes, keys, f, attribs, doc, event, pattern))
+
+    each(function(m)
+        self.keymaps[m] = kbd(m, keys, f, attribs, doc, event, pattern)
+        self.keymaps[m]:enable()
+    end, to_list(modes))
+end
+
+function buffer:del_keymap(mode, keys)
+    modes = modes or 'n'
+    local k = assoc(self.keymaps, {m, keys})
+    if k then k:disable() end
+end
+
+function buffer:replace_keymap(mode, keys, f, )
+
 end
 
 -- opts for floating

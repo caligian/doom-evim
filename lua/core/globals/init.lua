@@ -76,7 +76,31 @@ _G.Doom = {
 
     log = { path = with_data_path('doom-evim.log') },
 
-    kbd = { status = {} },
+    kbd = { 
+        prefixes = {
+            ["<leader>b"] = "Buffer",
+            ["<leader>q"] = "Buffers+close",
+            ["<leader>c"] = "Commenting",
+            ["<leader>i"] = "Insert",
+            ["<leader><space>"] = "Misc",
+            ["<leader>l"] = "LSP",
+            ["<leader>t"] = "Tabs",
+            ["<leader>o"] = "Neorg",
+            ["<leader>h"] = "Help+Telescope",
+            ["<leader>f"] = "Files",
+            ["<leader>p"] = "Project",
+            ["<leader>d"] = "Debug",
+            ["<leader>&"] = "Snippets",
+            ["<leader>x"] = "Misc",
+            ["<leader>m"] = "Filetype Actions",
+            ["<leader>s"] = "Session",
+            ["<leader>g"] = "Git",
+            ["<localleader>,"] = "REPL",
+            ["<localleader>t"] = "REPL",
+            ["<localleader>e"] = "REPL",
+        },
+        status = {},
+    },
 
     repl = { status = {} },
 

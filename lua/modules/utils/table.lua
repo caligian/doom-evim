@@ -2,6 +2,13 @@ local iter = require('modules.fun')
 local utils = require('modules.utils')
 local tu = {}
 
+function tu.list_to_dict(arr, default)
+    local t = {}
+    default = default == nil and true 
+    each(function(i) t[i] = default end, arr)
+    return t
+end
+
 tu.to_dict = function(arr)
     local t = {}
 
@@ -328,65 +335,44 @@ tu.assoc = function (dict, ks, create)
     local n = #ks
     local t = dict
     local last_key = false
+    local last_t = t
     local out = {}
 
     for index, key in ipairs(ks) do
-        local v = t[key]
+        last_key = key
+        local v = last_val
 
         if not v then
             if create then
                 if index == n then
-                    if utils.callable(create) then
-                        create = create()
+                    if utils.callable(create) then 
+                        create = create(dict, current_dict, key) 
+                    elseif create == true or create then 
+                        create = {}
                     end
 
                     t[key] = create
-                else
+                    return create, last_key, last_t
+               else
                     t[key] = {}
                 end
+            else
+                return false, last_key, last_t
             end
-        else
-            return false, last_key, t
         end
 
         if not utils.table_p(t[key]) then
-            if index ~= n then 
-                return false, last_key, t
-            else
-                return v, last_key, t
-            end
-        else
-            t = t[key]
+            return t[key] or false, last_key, last_t
         end
+
+        t = t[key]
+        last_t = t
     end
+
+    return false, last_key, last_t
 end
 
-tu.update = function (dict, ks, sub)
-    ks = utils.to_list(ks)
-    local n = #ks
-    local k = tu.first(ks)
-
-    if n == 1 then
-        if not dict[k] then
-            return false
-        elseif utils.callable(sub) then
-            dict[k] = sub(dict[k])
-        else
-            dict[k] = sub
-        end
-    else
-        local _, last_key, prev_dict = tu.assoc(dict, ks)
-
-        if utils.callable(sub) then
-            prev_dict[last_key] = sub(prev_dict[last_key])
-        else
-            prev_dict[last_key] = sub
-        end
-	end
-
-    return dict
-end
-
+tu.update = tu.assoc
 
 -- If table is passed then it will be sent to tu.assoc
 tu.get = function(arr, ...)
