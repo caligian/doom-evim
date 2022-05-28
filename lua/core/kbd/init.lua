@@ -59,7 +59,7 @@ function kbd:backup_previous()
 
     if not previous.rhs == current.rhs then
         local _a = trim(join(map(function(_attrib)
-            if t[_attrib] == 1 then
+            if current[_attrib] == 1 then
                 return sprintf('<%s>', _attrib)
             else
                 return ''
@@ -77,7 +77,7 @@ function kbd:backup_previous()
 end
 
 function kbd:enable(force)
-    if not force and not self.mapped then return end
+    if not force and self.mapped then return end
 
     self:backup_previous()
 
@@ -92,41 +92,37 @@ function kbd:enable(force)
     self.attribs.buffer = true
     local is_noremap = self.attribs.noremap ~= nil
     self.attribs.noremap = nil
-    self.attribs = join(map(function(s) return sprintf('<%s>', s) end, keys(attribs)), " ")
+    self.attribs = join(map(function(s) return sprintf('<%s>', s) end, keys(self.attribs)), " ")
 
-    local _f = self.f
     if callable(self.f) then
-        _f = ':' .. au.func2ref(self.f) .. '<CR>'
-        push(Doom.au.refs, self.f)
+        self.f = ':' .. au.register(self.f) .. '<CR>'
     end
-    self.f = _f
 
-    if event or self.pattern then
+    if self.event or self.pattern then
         self.event =  self.event or 'BufEnter'
         self.pattern = self.pattern or '*.' .. vim.bo.filetype
-        self.event = to_list(self.event)
-        self.pattern = to_list(self.pattern)
         local bufnr = match(self.pattern, '<buffer=(%d+)>') or vim.fn.bufnr()
         self.au = au('doom_kbd_' .. #Doom.au.status, sprintf('Augroup for keybinding: [%s] %s', self.mode, self.keys))
-        local cmd = ''
-
-        if is_noremap then
-            cmd = sprintf('%snoremap %s %s %s', self.mode, self.attribs, self.keys, self.f)
-        else
-            cmd = sprintf('%smap %s %s %s', self.mode, self.attribs, self.keys, self.f)
-        end
-
-        local _bind = function()
-            bufnr = bufnr or vim.fn.bufnr()
-            kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
-            assoc(self.buffers, bufnr, true)
-            self.buffers[bufnr] = sprintf('autocmd BufEnter <buffer=%d> ++once :silent! exe "%sunmap %s"', bufnr, self.mode, self.keys)
-            vim.cmd(cmd)
-        end
 
         self.global = false
         self.mapped = true
-        self.au:add(self.event, self.pattern, self.f)
+
+        self.au:add(self.event, self.pattern, function()
+            local cmd = ''
+
+            if is_noremap then
+                cmd = sprintf('%snoremap %s %s %s', self.mode, self.attribs, self.keys, self.f)
+            else
+                cmd = sprintf('%smap %s %s %s', self.mode, self.attribs, self.keys, self.f)
+            end
+
+            bufnr = bufnr or vim.fn.bufnr()
+            kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
+            assoc(self, {'buffers', bufnr}, true)
+            self.buffers[bufnr] = sprintf('autocmd BufEnter <buffer=%d> ++once :silent! exe "%sunmap %s"', bufnr, self.mode, self.keys)
+            vim.cmd(cmd)
+        end)
+
         self.au:enable()
 
         return self.au
@@ -147,7 +143,7 @@ function kbd:enable(force)
     end
 end
 
-function kbd:restore()
+function kbd:restore_previous()
     if not self.previous or #self.previous == 0 then return false end
 
     self:disable()
@@ -194,5 +190,10 @@ function kbd:replace(mode, f, attribs, event, pattern)
 
     self:enable()
 end
+
+local k = kbd('n', '<leader>xx', ':tabnew<CR>', 'silent', 'Open a new tab', 'BufEnter', '*.lua')
+k:enable()
+inspect(k)
+
 
 return kbd

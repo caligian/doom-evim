@@ -8,13 +8,17 @@ function au.func2ref(f)
     if type(f) == 'string' then
         return f
     elseif type(f) == 'function' then
-        local idx = #au.refs + 1
-        return sprintf('lua Doom.au.refs[%d]()', idx)
+        return sprintf('lua Doom.au.refs[%d]()', #au.refs)
     end
 end
 
+function au.register(f)
+    if callable_p(f) then push(au.refs, f) end
+    return au.func2ref(f)
+end
+
 function au:__init(name, doc)
-    self.name = name
+    self.name = name:gsub('[^%w_]+', '')
     self.doc = doc
     self.autocmds = {}
 
@@ -38,16 +42,15 @@ Add an autocmd to augroup
 function au:add(event, pat, f, opts)
     opts = opts or {}
     event = event or 'BufEnter'
-    local _f = au.func2ref(f)
-    if func_p(_f) then push(au.refs, f) end
+    f = au.register(f)
     pat = to_list(pat)
     event = to_list(event)
-    if opts.once then _f = sprintf('++once %s', _f) end
-    if opts.nested then _f = sprintf('++nested %s', _f) end
+    if opts.once then f = sprintf('++once %s', f) end
+    if opts.nested then f = sprintf('++nested %s', f) end
 
     map(function(_e) 
         map(function(_p)
-            local aucmd = sprintf('autocmd %s %s %s %s', self.name, _e, _p, _f)
+            local aucmd = sprintf('autocmd %s %s %s %s', self.name, _e, _p, f)
             local au_name = sprintf('%s::%s', _p, _e)
             local t = self.autocmds[au_name]
 
