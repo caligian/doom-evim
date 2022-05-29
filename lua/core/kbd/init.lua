@@ -118,8 +118,8 @@ function kbd:enable(force)
 
             bufnr = bufnr or vim.fn.bufnr()
             kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
-            assoc(self, {'buffers', bufnr}, true)
-            self.buffers[bufnr] = sprintf('autocmd BufEnter <buffer=%d> ++once :silent! exe "%sunmap %s"', bufnr, self.mode, self.keys)
+            assoc(self, {'buffers'}, {})
+            push(self.buffers, bufnr)
             vim.cmd(cmd)
         end)
 
@@ -146,9 +146,6 @@ end
 function kbd:restore_previous()
     if not self.previous or #self.previous == 0 then return false end
 
-    self:disable()
-    self.au = nil
-
     for index, cmd in ipairs(self.previous) do
         vcmd(first(cmd))
     end
@@ -167,9 +164,13 @@ function kbd:disable()
         pcall(function() vim.cmd(sprintf('%sunmap! %s', self.mode, self.keys))  end)
     elseif self.au then
         self.au:disable()
+
         if self.buffers then
-            each(function(disable_au) vim.cmd(disable_au) end, vals(self.buffers))
-            self.buffers = nil
+            each(function(bufnr) 
+                pcall(function() vim.api.nvim_buf_del_keymap(bufnr, self.mode, self.keys) end)
+            end, self.buffers)
+            
+            self.buffers = {}
         end
     end
 
@@ -178,10 +179,9 @@ function kbd:disable()
     return true 
 end
 
-function kbd:replace(mode, f, attribs, event, pattern)
+function kbd:replace(f, attribs, doc, event, pattern)
     self:disable()
 
-    self.mode = mode or self.mode
     self.f = f or self.f
     self.attribs = attribs or self.attribs
     self.event = event or self.event
@@ -190,10 +190,5 @@ function kbd:replace(mode, f, attribs, event, pattern)
 
     self:enable()
 end
-
-local k = kbd('n', '<leader>xx', ':tabnew<CR>', 'silent', 'Open a new tab', 'BufEnter', '*.lua')
-k:enable()
-inspect(k)
-
 
 return kbd

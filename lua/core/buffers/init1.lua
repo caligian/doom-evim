@@ -198,7 +198,7 @@ end
 
 function buffer:read(pos, concat)
     local bufnr = self.index
-    oblige(pos.start_row, 'Starting row number not provided')
+    pos.start_row = pos.start_row or 0
     pos.end_row = pos.end_row or -1
 
     if not pos.start_col and not pos.end_col then
@@ -214,15 +214,15 @@ function buffer:read(pos, concat)
 end
 
 function buffer:write(pos, s)
+    pos = pos or {}
+    pos.start_row = pos.start_row or 0
     local bufnr = self.index
-    oblige(pos.start_row, 'Starting row number not provided')
-    oblige(pos.end_row, 'Ending row number not provided')
-    oblige(pos.start_row <= pos.end_row, 'Starting row cannot be bigger than Ending row')
+
     if str_p(s) then s = split(s, "\n\r") end
+
     local count = self:get_line_count(bufnr)
     pos.end_row = pos.end_row or count
     pos.end_row = pos.end_row > count and count or pos.end_row
-    pos.start_row = pos.start_row or count
     pos.start_row = pos.start_row > count and count or pos.start_row
 
     if not pos.start_col and not pos.end_col then
@@ -377,40 +377,59 @@ function buffer:delete()
     self.status[self.index] = nil
 end
 
-function buffer:set_keymap(modes, keys, f, attribs, doc, event)
+function buffer:set_keymap(mode, keys, f, attribs, doc, event)
     oblige(f)
 
     assoc(self, {'keymaps'}, {})
 
     keys = keys or self.keys
-    modes = modes or 'n'
+    mode = mode or 'n'
     event = event or 'BufEnter'
     attribs = attribs or 'buffer'
     local doc = 'Keybinding for buffer: ' .. self.index
     local pattern = sprintf('<buffer=%d>', self.index)
 
-    each(function(m)
-        self.keymaps[m] = kbd(m, keys, f, attribs, doc, event, pattern)
-        self.keymaps[m]:enable()
-    end, to_list(modes))
+    assoc(self.keymaps, {m, keys}, kbd(m, keys, f, attribs, doc, event, pattern))
+    self.keymaps[m][keys]:enable()
 end
 
-function buffer:del_keymap(mode, keys)
+function buffer:disable_keymap(mode, keys)
     modes = modes or 'n'
     local k = assoc(self.keymaps, {m, keys})
     if k then k:disable() end
 end
 
-function buffer:replace_keymap(mode, keys, f, )
+function buffer:replace_keymap(mode, keys, f, attribs, event, pattern)
+    mode = mode or 'n'
+    local keybinding = assoc(self.keymaps, {mode, keys})
 
+    if keybinding then
+        keybinding:replace(f, attribs, event, pattern)
+    end
 end
 
--- opts for floating
-function buffer.to_win_prompt(text, opts)
-    local temp_buffer = buffer()
-    if str_p(text) then text = split(text, "\n\r") end
-    temp_buffer:write(map(function(s) return '# ' .. s end, text))
-    temp_buffer:to_win(opts)
+function buffer:to_win_prompt(hook, doc, comment, win_opts)
+    oblige(doc, 'No documentation for callback given')
+    oblige(hook, 'No callback provided.')
+
+    local text = self:read(pos)
+    commend = comment or '#'
+    self:write({}, map(function(s) return comment .. ' ' .. s end, text))
+
+    self:set_keymap('n', 'gx', function() 
+        vim.schedule(function()
+            hook(filter(function(s) 
+                if match(s, '^' .. comment) then
+                    return true
+                end
+                return false
+            end, self:read({})))
+        end)
+    end, 'buffer', doc, sprintf('<buffer=%d>', self.index), 'BufEnter')
+
+    self.prompt = true
+    self.comment = comment
+    self:to_win(win_opts)
 end
 
 return buffer
