@@ -8,7 +8,7 @@ vim.o.autochdir = true
 vim.o.showcmd = true
 vim.o.wildmode = "longest,list,full"
 vim.o.wildmenu = true
-vim.o.termguicolors = false
+vim.o.termguicolors = true
 vim.o.laststatus = 2
 vim.o.mousefocus = true
 vim.o.shell = "/bin/bash"
@@ -19,12 +19,12 @@ vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
 vim.o.foldmethod = "indent"
-vim.o.guifont = 'Cascadia Code PL:h14'
+vim.o.guifont = 'Ubuntu Mono:h14'
 vim.g.inccommand = 'split'
 vim.g.session_autosave = false
-vim.o.background='dark'
+vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color chocolate-contrast ]]
+vim.cmd [[ color heroku ]]
 
 -- leader key
 vim.g.mapleader = " "

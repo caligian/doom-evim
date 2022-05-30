@@ -102,6 +102,7 @@ function kbd:enable(force)
         self.event =  self.event or 'BufEnter'
         self.pattern = self.pattern or '*.' .. vim.bo.filetype
         local bufnr = match(self.pattern, '<buffer=(%d+)>') or vim.fn.bufnr()
+        bufnr = tonumber(bufnr)
         self.au = au('doom_kbd_' .. #Doom.au.status, sprintf('Augroup for keybinding: [%s] %s', self.mode, self.keys))
 
         self.global = false
