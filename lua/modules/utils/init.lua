@@ -6,6 +6,8 @@ utils.boolean_p = function(e)
     return type(e) == 'boolean'
 end
 
+utils.bool_p = utils.boolean_p
+
 utils.nil_p = function (o)
     if o == nil then 
         return true
@@ -88,6 +90,24 @@ utils.to_list = function (i, force)
         return {i}
     end
 end
+
+utils.to_arr = utils.to_list
+
+utils.to_a = utils.to_arr
+
+utils.to_dict = function(default, ...)
+    default = default == nil and true
+    local args = {...}
+    local d = {}
+
+    for _, i in ipairs(args) do
+        d[i] = default or i
+    end
+
+    return d
+end
+
+utils.to_h = utils.to_dict
 
 utils.inspect = function (...)
     for _, value in ipairs({...}) do

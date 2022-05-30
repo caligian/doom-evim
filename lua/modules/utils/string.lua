@@ -14,20 +14,25 @@ function String.rtrim(s)
     return s:match('(.-)%s*$')
 end
 
-function String.sed(s, pat, sub, ...)
+String.strip = String.trim
+String.lstrip = String.ltrim
+String.rstrip = String.rtrim
+
+function String.sed(s, pat_sub, ...)
     assert(s)
-    assert(pat)
-    assert(sub)
+    assert(utils.table_p(pat_sub))
+    assert(#pat_sub == 2)
+
+    local pat, sub, times = unpack(pat_sub)
     local rest = {...}
     local n = #rest
+    s = s:gsub(pat, sub, times)
 
-    s = s:gsub(pat, sub)
-    assert(n%2 == 0, 'Require even number of params after the first 3 params')
-
-    if n > 0 then
-        for i = 4, n, 2 do
-            s = s:gsub(rest[i], rest[i+1])
-        end
+    for i=1, n do
+        assert(utils.table_p(rest[i]))
+        assert(#rest[i] >= 2)
+        local _p, _s, _n = unpack(rest[i])
+        s = string.gsub(s, _p, _s, _n)
     end
 
     return s

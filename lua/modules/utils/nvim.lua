@@ -43,4 +43,44 @@ nv.globalize = function()
     utils.globalize(nv)
 end
 
+-- @tparam text table {<display text>, <cb>}, ...
+nv.gets = function(prompt, loop, ...)
+    prompt = prompt or '% '
+    loop = loop == nil and false
+    local args = {...}
+    local out = {}
+    
+    local function _get_input(t)
+        local text, cb = unpack(to_list(t))
+        local input = vim.fn.input(prompt or '% ', text)
+
+        if input == '' then
+            if loop then return _get_input(text, cb) end
+            return false
+        else
+            if cb then
+                oblige(callable(cb), 'Invalid callback provided.')
+                local is_correct = cb(input)
+                if is_correct then 
+                    if bool_p(is_correct) then
+                        return input
+                    else
+                        return is_correct 
+                    end
+                else
+                    if loop then 
+                        return _get_input(text, cb) 
+                    else
+                        return false
+                    end
+                end
+            else
+                return input
+            end
+        end
+    end
+
+    return map(_get_input, args)
+end
+
 return nv
