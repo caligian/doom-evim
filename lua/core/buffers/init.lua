@@ -434,4 +434,31 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
     self:to_win(win_opts)
 end
 
+function buffer:split(reverse)
+    reverse = reverse == nil and false
+    oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
+
+    if reverse then
+        vim.cmd(sprintf(':split | b %d', self.index))
+    else
+        vim.cmd(sprintf(':split | wincmd j | b %d', self.index))
+    end
+end
+
+function buffer:vsplit(reverse)
+    reverse = reverse == nil and false
+    oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
+
+    if reverse then
+        vim.cmd(sprintf(':vsplit | b %d', self.index))
+    else
+        vim.cmd(sprintf(':vsplit | wincmd l | b %d', self.index))
+    end
+end
+
+function buffer:tabnew()
+    oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
+    vim.cmd(sprintf(':tabnew | b %d', self.index))
+end
+
 return buffer
