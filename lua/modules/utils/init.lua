@@ -153,25 +153,23 @@ end
 --	
 -- String ops
 --
-utils.split = vim.split
+utils.split = function(s, pat)
+   if utils.str_p(s) then
+       return vim.split(s, pat)
+   else
+       return s
+   end
+end
 
 -- Works like piped grep calls
 utils.match = function(s, ...)
+    local pats = {...}
     local m = s
-    local proceed = false
+    local idx = 1
 
-    for _, i in ipairs({...}) do
-        local _m = m:match(i)
-        if _m then 
-            m = _m 
-            proceed = true
-        else 
-            if m == s then 
-                return false
-            else
-                return m
-            end
-        end
+    while m do
+        m = m:match(pats[idx])
+        idx = idx + 1
     end
 
     return m

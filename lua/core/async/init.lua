@@ -42,8 +42,10 @@ end
 
 function job:send(s)
     if not self.running then return false end
+
     if type(s) == 'table' then s = join(s, "\n") end
     s = s .. "\n"
+
     return vim.fn.chansend(self.id, s)
 end
 
@@ -135,7 +137,11 @@ function job:open(opts)
 
         if self.persistent then
             local _, temp_file = with_open(false, 'w', function(fh)
-                map(function(s) fh:write(s .. "\n") end, split(self.cmd, "[\n\r]+"))
+                if str_p(self.cmd) then
+                    self.cmd = split(self.cmd, "\n\r")
+                end
+
+                map(function(s) fh:write(s .. "\n") end, self.cmd)
             end)
 
             self.cmd = shell .. ' ' .. temp_file

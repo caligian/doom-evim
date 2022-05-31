@@ -60,7 +60,8 @@ function buffer.cleanup()
     end
 end
 
-function buffer:bufexists()
+-- Instance methods
+function buffer:exists()
     return 1 == vim.fn.bufexists(self.index)
 end
 
@@ -76,6 +77,22 @@ function buffer:load()
     vim.fn.bufload(self.name)
 end
 
+function buffer:setvars(vars)
+    for key, value in pairs(vars) do
+        vim.api.nvim_buf_set_var(self.index, key, value)
+    end
+end
+
+function buffer:getvars(vars)
+    local t = {}
+
+    for i, o in ipairs(vars) do
+        t[o] = vim.api.nvim_buf_get_var(self.index, o)
+    end
+
+    return t
+end
+
 function buffer:setopts(options)
     for key, value in pairs(options) do
         vim.api.nvim_buf_set_option(self.index, key, value)
@@ -89,7 +106,7 @@ function buffer:setvars(vars)
 end
 
 function buffer:unlist()
-    self:setopts({buflisted=false}, self.index)
+    self:setopts({buflisted=false})
 end
 
 function buffer:equals(buf2)
@@ -110,7 +127,6 @@ function buffer:not_equals(buf2)
     end
 end
 
--- Instance methods
 function buffer:__init(name)
     local bufnr
     local is_temp
@@ -207,6 +223,7 @@ function buffer:read(pos, concat)
 
     local t = vim.api.nvim_buf_get_text(bufnr, pos.start_row, pos.start_col, pos.end_row, pos.end_col, {})
     if concat then return join(t, "\n") end
+
     return t
 end
 
@@ -217,7 +234,7 @@ function buffer:write(pos, s)
 
     if str_p(s) then s = split(s, "\n\r") end
 
-    local count = self:get_line_count(bufnr)
+    local count = self:get_line_count()
     pos.end_row = pos.end_row or count
     pos.end_row = pos.end_row > count and count or pos.end_row
     pos.start_row = pos.start_row > count and count or pos.start_row
@@ -236,9 +253,6 @@ function buffer:write(pos, s)
     if l == m == 0 then
         pos.start_col = 0
         pos.end_col = 0
-    elseif not pos.start_col and not pos.end_col then
-        pos.start_col = l - 1
-        pos.end_col = m - 1
     elseif pos.start_col or pos.end_col then
         if l == 0 then
             pos.start_col = 0
@@ -276,12 +290,13 @@ function buffer:write(pos, s)
 end
 
 function buffer:write_line(pos, s)
-    oblige(pos.start_row)
+    assert(pos.start_row)
     pos.end_row = pos.start_row
     self:write(pos, s)
 end
 
 function buffer:insert(pos, s)
+    assert(pos.start_row)
     pos.end_row = pos.start_row
     pos.end_col = pos.start_col
     self:write(pos, s)
@@ -293,7 +308,7 @@ end
 
 function buffer:put(s, prepend, _type, _follow)
     local bufnr = self.index
-    prepend = prepend and 'p' or 'P'
+    prepend = prepend and 'P' or 'p'
     _type = not _type and 'c' or _type
     _follow = _follow == nil and true or _follow
 
@@ -320,6 +335,7 @@ function buffer:getcurpos()
         winid = id,
         row = row - 1,
         col = col - 1,
+        curswant = curswant,
     }
 end
 
@@ -332,13 +348,14 @@ function buffer:getpos(expr)
     return {
         winid = id,
         row = row-1,
+        curswant = off,
         col = col-1,
     }
 end
 
 function buffer:getvcurpos()
-    local from = self:getpos("'<", self.index)
-    local till = self:getpos("'>", self.index)
+    local from = self:getpos("'<")
+    local till = self:getpos("'>")
 
     return {
         id = from.winid,
@@ -351,7 +368,7 @@ end
 
 function buffer:add_hook(event, f, opts)
     local bufnr = self.index
-    oblige(self:bufexists(bufnr), 'Invalid buffer provided: %d', bufnr)
+    oblige(self:exists(), 'Invalid buffer provided: %d', bufnr)
     event = event or 'BufEnter'
     local name = 'doom_buffer_' ..  bufnr
     local au 
@@ -422,8 +439,8 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
 end
 
 function buffer:split(reverse)
+    oblige(self:exists(), 'Buffer [%d] cannot be displayed as it is nonexistent', self.index)
     reverse = reverse == nil and false
-    oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
 
     if reverse then
         vim.cmd(sprintf(':split | b %d', self.index))
@@ -433,8 +450,8 @@ function buffer:split(reverse)
 end
 
 function buffer:vsplit(reverse)
+    oblige(self:exists(), 'Buffer [%d] cannot be displayed as it is nonexistent', self.index)
     reverse = reverse == nil and false
-    oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
 
     if reverse then
         vim.cmd(sprintf(':vsplit | b %d', self.index))
@@ -444,9 +461,8 @@ function buffer:vsplit(reverse)
 end
 
 function buffer:tabnew()
-    oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
+    oblige(self:exists(), 'Buffer [%d] cannot be displayed as it is nonexistent', self.index)
     vim.cmd(sprintf(':tabnew | b %d', self.index))
 end
-
 
 return buffer

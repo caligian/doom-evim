@@ -30,7 +30,7 @@ end
 function repl:send(method, s, no_ft_check)
     assoc(self, 'connected_buffers', {})
 
-    if s then return job.send(self, s) end
+    if s then return job.send(self, split(s, "[\n\r]")) end
     if not no_ft_check and vim.bo.filetype ~= self.filetype then return false end
 
     local current_buffer = false
