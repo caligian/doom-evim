@@ -313,4 +313,47 @@ utils.globalize = function (mod, ks)
     end
 end
 
+utils.system = function(cmd)
+    local out = vim.fn.system(cmd)
+    local t = {}
+
+    for index, s in ipairs(vim.split(out, "[\n\r]")) do
+        t[index] = s
+    end
+
+    return t
+end
+
+utils.chomp = function(s)
+    if type(s) == 'string' then
+        return s:gsub("[\n\r]$", '')
+    elseif type(s) == 'table' then
+        for i, v in ipairs(s) do
+            if type(v) == 'string' then
+                s[i] = s[i]:gsub("[\n\r]$", '')
+            end
+        end
+    end
+
+    return s
+end
+
+utils.tempfile = function()
+    return utils.system('mktemp')[1]
+end
+
+utils.with_open = function(dst, mode, f)
+    if not dst then dst = utils.tempfile() end
+    mode = mode or 'r'
+    local fh = io.open(dst, mode)
+
+    if fh then
+        local out = f(fh)
+        fh:close()
+        return out, dst
+    end
+
+    return false, dst
+end
+
 return utils

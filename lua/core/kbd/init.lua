@@ -16,7 +16,6 @@ function kbd.wk_register(mode, keys, doc, bufnr)
     end
 
     local opts = {buffer=bufnr, mode=mode}
-    local has_prefix = match(keys, 'leader')
 
     if keys:match('<leader>') then
         keys = keys:gsub('<leader>', '')
@@ -26,7 +25,7 @@ function kbd.wk_register(mode, keys, doc, bufnr)
         opts.prefix = '<localleader>'
     end
 
-    if has_prefix then
+    if opts.prefix then
         wk.register({[keys] = doc}, opts)
     else
         wk.register({[keys] = doc}, opts)
@@ -53,28 +52,28 @@ end
 function kbd:backup_previous()
     assoc(self, {'previous'}, {})
 
+    local previous = self.previous[#self.previous]
     local current = vim.fn.maparg(self.keys, self.mode, false, 1)
-    if current ~= '' then return false end
-    if previous.rhs == current.rhs then return false end
+    if current == '' then return false end
+    if previous and previous.rhs == current.rhs then return false end
 
-    if not previous.rhs == current.rhs then
-        local _a = trim(join(map(function(_attrib)
-            if current[_attrib] == 1 then
-                return sprintf('<%s>', _attrib)
-            else
-                return ''
-            end
-        end, {'silent', 'nowait', 'expr', 'buffer'}), " "))
-
-        if current.noremap == 1 then
-            push(self.previous, {sprintf('%snoremap %s %s %s', self.mode, _a, current.lhs, current.rhs), rhs=current.rhs})
+    local _a = trim(join(map(function(_attrib)
+        if current[_attrib] == 1 then
+            return sprintf('<%s>', _attrib)
         else
-            push(self.previous, {sprintf('%smap %s %s %s', self.mode, _a, current.lhs, current.rhs), rhs=current.rhs})
+            return ''
         end
+    end, {'silent', 'nowait', 'expr', 'buffer'}), " "))
+
+    if current.noremap == 1 then
+        push(self.previous, {sprintf('%snoremap %s %s %s', self.mode, _a, current.lhs, current.rhs), rhs=current.rhs, mapped=false})
+    else
+        push(self.previous, {sprintf('%smap %s %s %s', self.mode, _a, current.lhs, current.rhs), rhs=current.rhs, mapped=false})
     end
 
     return self.previous
 end
+
 
 function kbd:enable(force)
     if not force and self.mapped then return end
@@ -148,10 +147,12 @@ function kbd:restore_previous()
     if not self.previous or #self.previous == 0 then return false end
 
     for index, cmd in ipairs(self.previous) do
-        vcmd(first(cmd))
+        if not cmd.mapped then
+            vcmd(first(cmd))
+            cmd.mapped = true
+        end
     end
 
-    self.previous = nil
     return true
 end
 

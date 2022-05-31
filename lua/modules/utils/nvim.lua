@@ -45,18 +45,25 @@ end
 
 -- @tparam text table {<display text>, <cb>}, ...
 nv.gets = function(prompt, loop, ...)
-    prompt = prompt or '% '
-    loop = loop == nil and false
+    prompt = prompt or '%'
+    prompt = prompt .. ' '
     local args = {...}
     local out = {}
+    oblige(#args > 0, 'No args provided')
     
     local function _get_input(t)
-        local text, cb = unpack(to_list(t))
-        local input = vim.fn.input(prompt or '% ', text)
+        oblige(#t >= 1, 'No prompt question provided')
+        local q, default_text, cb = unpack(to_list(t))
+        q = q .. ' ' .. prompt
+        default_text = default_text or ''
+        local input = vim.fn.input(q, default_text)
 
-        if input == '' then
-            if loop then return _get_input(text, cb) end
-            return false
+        if #input == 0 then
+            if loop then 
+                return _get_input(t) 
+            else
+                return false
+            end
         else
             if cb then
                 oblige(callable(cb), 'Invalid callback provided.')
@@ -69,7 +76,7 @@ nv.gets = function(prompt, loop, ...)
                     end
                 else
                     if loop then 
-                        return _get_input(text, cb) 
+                        return _get_input(t) 
                     else
                         return false
                     end
@@ -82,5 +89,6 @@ nv.gets = function(prompt, loop, ...)
 
     return map(_get_input, args)
 end
+
 
 return nv

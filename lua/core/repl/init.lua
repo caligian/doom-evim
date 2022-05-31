@@ -1,128 +1,69 @@
-local Class = require('classy')
-local Job = require('core.async.job')
-local Buf = require('core.buffers')
-local REPL = Class('doom-repl')
-
-REPL.status = Doom.repl.status
-
-function REPL:open(opts)
-    opts = opts or self._opts or {}
-    local ft = opts.ft or self.filetype
-    local cmd = opts.cmd or self.cmd
-    opts = opts or self._opts
-
-    if not REPL.status[ft] then
-        self.job = Job(ft .. '-repl' , cmd, opts)
-        self.job:open()
-        self.buffer = self.job.terminal.buffer
-
-        if not REPL.status[ft] then
-            REPL.status[ft] = {}
-        end
-
-        REPL.status[ft] = self
-
-        return self
-    else
-        return false
-    end
-end
+local class = require('classy')
+local job = require('core.async')
+local buffer = require('core.buffers')
+local repl = class('doom-repl', job)
 
 -- opts as required by job
-function REPL:__init(opts)
-    opts = opts or {}
-    self._opts = opts
+function repl:__init(name, job_opts)
+    job_opts = job_opts or {}
+    job_opts.terminal = true
+    job_opts.persistent = true
+    job_opts.on_stdout = false
+    job_opts.on_stderr = false
+    job_opts.on_exit = false
 
-    ft = opts.ft or vim.bo.filetype
-
-    local cmd = ''
-    if opts.debug then
-        cmd = opts.debug or get(Doom.langs, {ft, 'debug'})
-        cmd = cmd .. ' ' .. vim.fn.expand('%:p')
-    else
-        cmd = opts.cmd or get(Doom.langs, {ft, 'repl'})
+    self.filetype = job_opts.ft or vim.bo.filetype
+    local cmd = job_opts.cmd
+    if not cmd then 
+        cmd = assoc(Doom.langs, {self.filetype, 'repl'}) 
     end
 
-    oblige(cmd ~= '', 'Need a command to start an REPL')
+    oblige(cmd ~= '' or cmd ~= false, 'Need a command to start an repl')
 
-    opts = opts or {}
-    opts.direction = opts.direction or 'float'
-    opts.terminal = true
-    opts.on_stdout = false
-    opts.on_stderr = false
-    opts.on_exit = false
+    job.__init(self, name, cmd, job_opts)
 
-    self._opts = opts
-    self.cmd = cmd
-    self.filetype = vim.bo.filetype
+    return self
 end
 
--- @param method string How to send a string? 'line' for a single line of assoc buffer. 'till-point' to send everything till-point. 'visual' for strings in visual range. 'count' to send the next N strings where N is defined by v:count
+-- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
 -- @param s string If s is given then method is ignored and s is simply chansend()
-function REPL:send(s, opts)
-    opts = opts or {}
-    local ft = opts.ft or self.filetype or vim.bo.filetype
-    local method = opts.method or 'line'
+function repl:send(method, s, no_ft_check)
+    assoc(self, 'connected_buffers', {})
 
-    if opts.ft:match('^%%$') then
-        opts.ft = vim.bo.filetype
+    if s then return job.send(self, s) end
+    if not no_ft_check and vim.bo.filetype ~= self.filetype then return false end
+
+    local current_buffer = false
+    local bufnr = vim.fn.bufnr()
+    if not self.connected_buffers[bufnr] then
+        current_buffer = buffer(bufnr)
+    else
+        current_buffer = self.connected_buffers[bufnr]
     end
 
-    local current_buf = Buf('%')
-    local cood = current_buf:position()
+    if not current_buffer:is_visible() then return false end
 
-    if s then
-        self.job:send(s)
-    elseif method:match('line') then
-        self.job:send(current_buf.string:current_line())
-    elseif method:match('till.point') then
-        self.job:send(current_buf.string:lines {
-            row = {from=0, till=cood.row}
-        })
-    elseif method:match('count') then
+    local pos = {}
+    method = method or '.'
+    method = strip(method)
+    local curpos = current_buffer:getcurpos()
+
+    if method == '.' then
         if vim.v.count > 0 then
-            local from = current_buf:position().row
-            local till = from + vim.v.count
-
-            self.job:send(current_buf.string:lines {
-                row = {from=from, till=till},
-                nl = true,
-            })
+            pos = { start_row=curpos.row, end_row=curpos.row + vim.v.count, }
+        else
+            pos = { start_row=curpos.row, end_row=curpos.start_row, }
         end
-    elseif method:match('visual') then
-        self.job:send(current_buf.string:visual_range {nl=true})
+    elseif method == '~.' then
+        pos = { start_row=0, end_row=curpos.row }
+    elseif method == '~' then
+        pos = { start_row=0, end_row=-1 }
+    elseif method == 'v' then
+        pos = current_buffer:getvcurpos()
     end
+
+    local s = current_buffer:read(pos)
+    job.send(self, s)
 end
 
-function REPL:focus(direction)
-    direction =  direction or self._opts.direction
-    self.buffer:focus(direction)
-end
-
-function REPL:kill()
-    self.job:kill()
-end
-
-function REPL.killall()
-    for ft, repl in pairs(REPL.status) do
-        if repl.job.running then
-            repl:kill()
-            REPL.status[ft] = nil
-        end
-    end
-end
-
-function REPL.force_killall()
-    local all_buffers = Buf.list()
-
-    for key, value in pairs(all_buffers) do
-        if key:match('term') then
-            pcall(value, value.kill, value)
-        end
-    end
-end
-
-local repl = REPL()
-repl:open()
-
-return REPL
+return repl

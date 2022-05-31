@@ -340,7 +340,7 @@ tu.assoc = function (dict, ks, create)
 
     for index, key in ipairs(ks) do
         last_key = key
-        local v = last_val
+        local v = t[key]
 
         if not v then
             if create then

@@ -60,6 +60,56 @@ function buffer.cleanup()
     end
 end
 
+function buffer:bufexists()
+    return 1 == vim.fn.bufexists(self.index)
+end
+
+function buffer:is_visible()
+    return -1 ~= vim.fn.bufwinid(self.index)
+end
+
+function buffer:is_loaded()
+    return vim.fn.bufloaded(self.index) == 1
+end
+
+function buffer:load()
+    vim.fn.bufload(self.name)
+end
+
+function buffer:setopts(options)
+    for key, value in pairs(options) do
+        vim.api.nvim_buf_set_option(self.index, key, value)
+    end
+end
+
+function buffer:setvars(vars)
+    for key, value in pairs(vars) do
+        vim.api.nvim_buf_set_var(self.index, key, value)
+    end
+end
+
+function buffer:unlist()
+    self:setopts({buflisted=false}, self.index)
+end
+
+function buffer:equals(buf2)
+    local buf1 = self
+    if class.of(buf1) == class.of(buf2) then
+        return buf1.index == buf2.index
+    else
+        return buf1 == buf2
+    end
+end
+
+function buffer:not_equals(buf2)
+    local buf1 = self
+    if class.of(buf1) == class.of(buf2) then
+        return buf1.index ~= buf2.index
+    else
+        return buf1 == buf2
+    end
+end
+
 -- Instance methods
 function buffer:__init(name)
     local bufnr
@@ -96,59 +146,6 @@ function buffer:__init(name)
     end
 end
 
-function buffer:bufexists()
-    return 1 == vim.fn.bufexists(self.index)
-end
-
-function buffer:is_visible()
-    return -1 ~= vim.fn.bufwinid(self.index)
-end
-
-function buffer:is_loaded()
-    return vim.fn.bufloaded(self.index) == 1
-end
-
-function buffer:load()
-    local bufnr = self.name
-    vim.fn.bufload(self.name)
-end
-
-function buffer:setopts(options)
-    local bufnr = self.index
-    for key, value in pairs(options) do
-        vim.api.nvim_buf_set_option(bufnr, key, value)
-    end
-end
-
-function buffer:setvars(vars)
-    local bufnr = self.index
-    for key, value in pairs(vars) do
-        vim.api.nvim_buf_set_var(bufnr, key, value)
-    end
-end
-
-function buffer:unlist(bufnr)
-    self:setopts({buflisted=false}, bufnr)
-end
-
-function buffer:equals(buf2)
-    local buf1 = self
-    if class.of(buf1) == class.of(buf2) then
-        return buf1.index == buf2.index
-    else
-        return buf1 == buf2
-    end
-end
-
-function buffer:not_equals(buf2)
-    local buf1 = self
-    if class.of(buf1) == class.of(buf2) then
-        return buf1.index ~= buf2.index
-    else
-        return buf1 == buf2
-    end
-end
-
 function buffer:get_line_count()
     return vim.api.nvim_buf_line_count(self.index)
 end
@@ -156,30 +153,27 @@ end
 -- @tparam opts table Options for vim.api.nvim_open_win
 -- @return winid number
 function buffer:to_win(opts)
-    local bufnr = bufnr or self.index
-    method = method or 'f'
     opts = opts or {}
-    opts.relative = opts.relative or 'editor'
-    local current_height = vim.o.lines / 2
-    local current_width = vim.o.columns 
+    opts.relative = opts.relative or 'win'
+    local current_height = vim.o.lines
+    local current_width = math.ceil(vim.o.columns/2) 
     opts.width = opts.width or current_width
     opts.height = opts.height or current_height
 
     if opts.relative then
         opts.row = 0
-        opts.col = opts.col or 0
+        opts.col = opts.col or -1
     end
 
     opts.border = 'solid'
     opts.style = opts.style or 'minimal'
 
-    return vim.api.nvim_open_win(bufnr, true, opts)
+    return vim.api.nvim_open_win(self.index, true, opts)
 end
 
 function buffer:exec(f, sched, timeout, tries, inc)
-    local bufnr = bufnr or self.index
     local result = false
-    local id = self:to_win({})
+    local id = self:to_win()
     local tabnr = vim.fn.tabpagenr()
 
     timeout = timeout or 10
@@ -288,7 +282,6 @@ function buffer:write_line(pos, s)
 end
 
 function buffer:insert(pos, s)
-    prepend = prepend == nil and false
     pos.end_row = pos.start_row
     pos.end_col = pos.start_col
     self:write(pos, s)
@@ -302,7 +295,7 @@ function buffer:put(s, prepend, _type, _follow)
     local bufnr = self.index
     prepend = prepend and 'p' or 'P'
     _type = not _type and 'c' or _type
-    _follow = not _follow and true or _follow
+    _follow = _follow == nil and true or _follow
 
     if str_p(s) then
         s = split(s, "\n\r")
@@ -312,18 +305,14 @@ function buffer:put(s, prepend, _type, _follow)
     timeout = timeout or 10
     tries = tries or 5
     inc = inc or 5
+    local f = partial(vim.api.nvim_put, s, _type, prepend, _follow), 
 
-    self:exec(
-    partial(vim.api.nvim_put, s, _type, prepend, _follow), 
-    sched,
-    timeout, tries, inc,
-    bufnr)
+    self:exec(f, sched, timeout, tries, inc)
 end
 
 function buffer:getcurpos()
-    local bufnr = self.index
     local row, col, curswant
-    local id = buffer.get_floating_win(bufnr)
+    local id = self:to_win()
     bufnr, row, col, curswant = unpack(vim.fn.getcurpos(winnr))
     buffer.hide_by_winid(id)
 
@@ -335,9 +324,8 @@ function buffer:getcurpos()
 end
 
 function buffer:getpos(expr)
-    local bufnr = self.index
     expr = expr or '.'
-    local id = self:to_win({}, bufnr)
+    local id = self:to_win()
     local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
     buffer.hide_by_winid(id)
 
@@ -349,9 +337,8 @@ function buffer:getpos(expr)
 end
 
 function buffer:getvcurpos()
-    local bufnr = self.index
-    local from = self:getpos("'<", bufnr)
-    local till = self:getpos("'>", bufnr)
+    local from = self:getpos("'<", self.index)
+    local till = self:getpos("'>", self.index)
 
     return {
         id = from.winid,
@@ -460,5 +447,6 @@ function buffer:tabnew()
     oblige(self:bufexists(), 'Buffer cannot be displayed as it is nonexistent')
     vim.cmd(sprintf(':tabnew | b %d', self.index))
 end
+
 
 return buffer
