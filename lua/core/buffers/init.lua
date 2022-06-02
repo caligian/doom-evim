@@ -3,20 +3,19 @@ local kbd = require('core.kbd')
 local path = require('path')
 local augroup = require('core.au')
 local buffer = class('doom-buffer')
+local exception = require('core.buffers.exception')
 
 buffer.status = Doom.buffer.status
 
 -- Class methods
-function buffer.find_by_bufnr()
-    local bufnr = self.index
+function buffer.find_by_bufnr(bufnr)
     if vim.fn.bufexists(bufnr) == 0 then return false end
-    local bufnr = vim.fn.bufnr(bufnr)
     if Doom.buffer.status[bufnr] then return Doom.buffer.status[bufnr] end
     return false
 end
 
 function buffer.find_by_winnr(winnr)
-    return buffer.find_by_bufnr(vim.fn.winbufnr(winnr), create)
+    return buffer.find_by_bufnr(vim.fn.winbufnr(winnr))
 end
 
 function buffer.find_by_winid(id)
@@ -73,19 +72,24 @@ function buffer:is_loaded()
     return vim.fn.bufloaded(self.index) == 1
 end
 
+buffer.loaded_p = buffer.is_loaded
+
 function buffer:load()
     vim.fn.bufload(self.name)
 end
 
 function buffer:setvars(vars)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     for key, value in pairs(vars) do
         vim.api.nvim_buf_set_var(self.index, key, value)
     end
 end
 
 function buffer:getvars(vars)
-    local t = {}
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
 
+    local t = {}
     for i, o in ipairs(vars) do
         t[o] = vim.api.nvim_buf_get_var(self.index, o)
     end
@@ -94,6 +98,8 @@ function buffer:getvars(vars)
 end
 
 function buffer:setopts(options)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     for key, value in pairs(options) do
         vim.api.nvim_buf_set_option(self.index, key, value)
     end
@@ -114,7 +120,7 @@ function buffer:equals(buf2)
     if class.of(buf1) == class.of(buf2) then
         return buf1.index == buf2.index
     else
-        return buf1 == buf2
+        return buf1.index == buf2
     end
 end
 
@@ -123,7 +129,7 @@ function buffer:not_equals(buf2)
     if class.of(buf1) == class.of(buf2) then
         return buf1.index ~= buf2.index
     else
-        return buf1 == buf2
+        return buf1.index == buf2
     end
 end
 
@@ -163,12 +169,15 @@ function buffer:__init(name)
 end
 
 function buffer:get_line_count()
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
     return vim.api.nvim_buf_line_count(self.index)
 end
 
 -- @tparam opts table Options for vim.api.nvim_open_win
 -- @return winid number
 function buffer:to_win(opts)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     opts = opts or {}
     opts.relative = opts.relative or 'win'
     local current_height = vim.o.lines
@@ -188,6 +197,8 @@ function buffer:to_win(opts)
 end
 
 function buffer:exec(f, sched, timeout, tries, inc)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     local result = false
     local id = self:to_win()
     local tabnr = vim.fn.tabpagenr()
@@ -209,6 +220,8 @@ function buffer:exec(f, sched, timeout, tries, inc)
 end
 
 function buffer:read(pos, concat)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     pos = pos or {}
     local bufnr = self.index
     pos.start_row = pos.start_row or 0
@@ -218,8 +231,8 @@ function buffer:read(pos, concat)
         return vim.api.nvim_buf_get_text(bufnr, pos.start_row, 0, pos.end_row, -1, {})
     end
 
-    oblige(pos.start_col, 'Starting column number not provided')
     pos.end_col = pos.end_col or -1
+    pos.start_col = pos.start_col or 0
 
     local t = vim.api.nvim_buf_get_text(bufnr, pos.start_row, pos.start_col, pos.end_row, pos.end_col, {})
     if concat then return join(t, "\n") end
@@ -228,6 +241,8 @@ function buffer:read(pos, concat)
 end
 
 function buffer:write(pos, s)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     pos = pos or {}
     pos.start_row = pos.start_row or 0
     local bufnr = self.index
@@ -244,7 +259,7 @@ function buffer:write(pos, s)
         return
     end
 
-    oblige(pos.start_col, 'No starting column provided')
+    assert(pos.start_col, 'No starting column provided')
     local a = first(self:read({start_row=pos.start_row, end_row=pos.start_row}, false, bufnr))
     local l = a and #a or 0
     local b = first(self:read({start_row=pos.end_row, end_row=pos.end_row}, false, bufnr))
@@ -290,13 +305,14 @@ function buffer:write(pos, s)
 end
 
 function buffer:write_line(pos, s)
-    assert(pos.start_row)
+    assert(pos.start_row, 'No start row provided')
+
     pos.end_row = pos.start_row
     self:write(pos, s)
 end
 
 function buffer:insert(pos, s)
-    assert(pos.start_row)
+    assert(pos.start_row, 'No start row provided')
     pos.end_row = pos.start_row
     pos.end_col = pos.start_col
     self:write(pos, s)
@@ -326,6 +342,8 @@ function buffer:put(s, prepend, _type, _follow)
 end
 
 function buffer:getcurpos()
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     local row, col, curswant
     local id = self:to_win()
     bufnr, row, col, curswant = unpack(vim.fn.getcurpos(winnr))
@@ -340,6 +358,8 @@ function buffer:getcurpos()
 end
 
 function buffer:getpos(expr)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     expr = expr or '.'
     local id = self:to_win()
     local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
@@ -354,6 +374,8 @@ function buffer:getpos(expr)
 end
 
 function buffer:getvcurpos()
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     local from = self:getpos("'<")
     local till = self:getpos("'>")
 
@@ -367,8 +389,9 @@ function buffer:getvcurpos()
 end
 
 function buffer:add_hook(event, f, opts)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     local bufnr = self.index
-    oblige(self:exists(), 'Invalid buffer provided: %d', bufnr)
     event = event or 'BufEnter'
     local name = 'doom_buffer_' ..  bufnr
     local au 
@@ -385,6 +408,8 @@ function buffer:delete()
 end
 
 function buffer:set_keymap(mode, keys, f, attribs, doc, event)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     oblige(f)
     oblige(doc)
 
@@ -402,12 +427,16 @@ function buffer:set_keymap(mode, keys, f, attribs, doc, event)
 end
 
 function buffer:disable_keymap(mode, keys)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     modes = modes or 'n'
     local k = assoc(self.keymaps, {m, keys})
     if k then k:disable() end
 end
 
 function buffer:replace_keymap(mode, keys, f, attribs, event, pattern)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     mode = mode or 'n'
     local keybinding = assoc(self.keymaps, {mode, keys})
 
@@ -417,6 +446,8 @@ function buffer:replace_keymap(mode, keys, f, attribs, event, pattern)
 end
 
 function buffer:to_win_prompt(hook, doc, comment, win_opts)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     oblige(doc, 'No documentation for callback given')
     oblige(hook, 'No callback provided.')
 
@@ -439,7 +470,8 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
 end
 
 function buffer:split(reverse)
-    oblige(self:exists(), 'Buffer [%d] cannot be displayed as it is nonexistent', self.index)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     reverse = reverse == nil and false
 
     if reverse then
@@ -450,7 +482,8 @@ function buffer:split(reverse)
 end
 
 function buffer:vsplit(reverse)
-    oblige(self:exists(), 'Buffer [%d] cannot be displayed as it is nonexistent', self.index)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     reverse = reverse == nil and false
 
     if reverse then
@@ -461,7 +494,8 @@ function buffer:vsplit(reverse)
 end
 
 function buffer:tabnew()
-    oblige(self:exists(), 'Buffer [%d] cannot be displayed as it is nonexistent', self.index)
+    assert(self:exists(), exception.BUFNR_NOT_EXISTS)
+
     vim.cmd(sprintf(':tabnew | b %d', self.index))
 end
 

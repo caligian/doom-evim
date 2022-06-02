@@ -44,7 +44,7 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
     self.doc = doc
     self.event = event
     self.pattern = pattern
-    self.mapped = false
+    self.mapped = 0
 end
 
 function kbd:backup_previous()
@@ -73,7 +73,7 @@ function kbd:backup_previous()
 
     local t = {
         mode .. ' ' .. _a .. ' ' .. current.lhs .. ' ' .. current.rhs;
-        mapped = false;
+        mapped = 0,
         rhs = current.rhs;
     }
 
@@ -82,9 +82,8 @@ function kbd:backup_previous()
     return self.previous
 end
 
-
 function kbd:enable(force)
-    if not force and self.mapped then return end
+    if not force and self.mapped ~= 0 then return end
 
     self:backup_previous()
 
@@ -145,27 +144,29 @@ function kbd:enable(force)
         kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
 
         self.global = true
-        self.mapped = true
+        self.mapped = self.mapped + 1
         vim.cmd(cmd)
 
         return cmd
     end
 end
 
-function kbd:restore_previous()
-    if not self.previous or #self.previous == 0 then return false end
+-- Restore nth previous keybinding
+function kbd:restore_previous(n)
+    n = n or 1
+    assert(n > 0, 'Invalid index provided')
 
-    for index, cmd in ipairs(self.previous) do
-        if not cmd.mapped then
-            vcmd(first(cmd))
-            cmd.mapped = true
-        end
-    end
+    if not self.previous or #self.previous == 0 then return false end
+    if #self.previous > n then n = #self.previous end
+
+    local prev = self.previous[n]
+    prev.mapped = prev.mapped + 1
+    vim.cmd(first(prev))
 
     return true
 end
 
-function kbd:disable()
+function kbd:disable(buffers)
     if not self.mapped then return false end
 
     if self.au then self.au:disable() end
@@ -177,11 +178,19 @@ function kbd:disable()
         self.au:disable()
 
         if self.buffers then
+            if not buffers then
+                buffers = keys(self.buffers)
+            else
+                buffers = intersection(buffers, keys(self.buffers))
+            end
+
             each(function(bufnr) 
-                pcall(function() vim.api.nvim_buf_del_keymap(bufnr, self.mode, self.keys) end)
+                pcall(function() 
+                    vim.api.nvim_buf_del_keymap(bufnr, self.mode, self.keys)
+                end)
+
+                self.buffers[bufnr] = nil
             end, self.buffers)
-            
-            self.buffers = {}
         end
     end
 

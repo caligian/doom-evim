@@ -331,7 +331,7 @@ end
 
 -- With side effects
 --@tparam transform function Spec: transform(value, table, key, previous_table, previous_key). The function is only used when a key is found
---@tparam create boolean|any If create is true then create a table in its place. If create is false or nil, false is returned. If create is anything else, it is simply put in place of the missing value
+--@tparam create boolean|any If create is true then create a table in its place. If create is false or nil, false is returned. If create is anything else, it is simply put in place of the missing value. If 'd' is passed, that element is removed from the dict iff it is found
 tu.assoc = function (dict, ks, create, transform)
     ks = utils.to_list(ks)
     local n = #ks
@@ -339,6 +339,13 @@ tu.assoc = function (dict, ks, create, transform)
     local last_key = false
     local last_t = t
     local out = {}
+
+    if str_p(create) then create = strip(create) end
+    local delete = create == 'd'
+
+    if delete == true then
+        create = false
+    end
 
     for index, key in ipairs(ks) do
         last_key = key
@@ -432,27 +439,9 @@ tu.findall = function(t, i)
 end
 
 -- misc operations
+--
 tu.globalize = function (ks)
     utils.globalize(tu, ks)
-end
-
-tu.ifilter = function (f, ...)
-    local arrs = {...}
-    local max_len = {}
-
-    for _, a in ipairs(arrs) do
-        max_len[#max_len+1] = a
-    end
-    max_len = math.min(unpack(max_len))
-
-    local index = 1
-    return function ()
-        if index > max_len then return end
-        index = index + 1
-        local out = f(unpack(tu.nth(index-1, unpack(arrs)))) or false
-        if out then out = true end
-        return index, out
-    end, arrs, index
 end
 
 tu.imap = function (f, ...)
@@ -516,23 +505,22 @@ tu.reduce = function (f, arr, init)
     return init
 end
 
-tu.filter = function (f, ...)
-    local out = {}
-    local arrs = {...}
-    local max_len = {}
+tu.filter = function (f, t)
+    local correct = {}
 
-    for _, a in ipairs(arrs) do
-        max_len[#max_len+1] = #a
+    for k, v in pairs(t) do
+        local o = f(v)
+
+        if o then
+            if o == true then
+                correct[k] = v
+            else
+                correct[k] = o
+            end
+        end
     end
-    max_len = math.min(unpack(max_len))
 
-    for i=1, max_len do
-        local v = tu.nth(i, ...) or false
-        local _o = f(unpack(v)) or false
-        tu.extend(out, _o)
-    end
-
-    return out
+    return correct
 end
 
 -- iterator operations
@@ -611,6 +599,27 @@ tu.defaultdict = function (default)
     return t
 end
 
+-- @tparam t table If all the elements are truthy then return true or else return false
+tu.all = function(t)
+    local v = tu.vals(t)
+    local n = #v
+
+    return #(tu.filter(function(k)
+        local e = t[k]
+        return e ~= nil and e ~= false
+    end, v)) == n 
+end
+
+tu.some = function(t)
+    local v = tu.vals(t)
+    local n = #v
+
+    return #(tu.filter(function(k)
+        local e = t[k]
+        return e ~= nil and e ~= false
+    end, v)) > 0
+end
+
 tu.union = function(t1, t2)
     local a = tu.to_dict(t1, true)
     local b = tu.to_dict(t2, true)
@@ -621,7 +630,7 @@ tu.union = function(t1, t2)
         end
     end
 
-    return tu.keys(a)
+    return 
 end
 
 tu.intersection = function(t1, t2)
