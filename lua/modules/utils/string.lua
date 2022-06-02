@@ -1,24 +1,24 @@
-local String = {}
+local str = {}
 local utils = require('modules.utils')
 
-function String.trim(s)
+function str.trim(s)
     s = s:match('^%s*(.-)%s*$')
     return s
 end
 
-function String.ltrim(s)
+function str.ltrim(s)
     return s:match('^%s*(.-)')
 end
 
-function String.rtrim(s)
+function str.rtrim(s)
     return s:match('(.-)%s*$')
 end
 
-String.strip = String.trim
-String.lstrip = String.ltrim
-String.rstrip = String.rtrim
+str.strip = str.trim
+str.lstrip = str.ltrim
+str.rstrip = str.rtrim
 
-function String.sed(s, pat_sub, ...)
+function str.sed(s, pat_sub, ...)
     assert(s)
     assert(utils.table_p(pat_sub))
     assert(#pat_sub == 2)
@@ -38,8 +38,50 @@ function String.sed(s, pat_sub, ...)
     return s
 end
 
-function String.globalize(ks)
-    utils.globalize(String, ks)
+function str.globalize(ks)
+    utils.globalize(str, ks)
 end
 
-return String
+function str.match(s, ...)
+    local r = {...}
+    local n = #r
+    assert(n > 0, 'No patterns provided')
+
+    local function get_match(a, i)
+        if i > n then
+            return a or false
+        end
+
+        local m = string.match(a, r[i])
+        if not m then
+            return false
+        else
+            return get_match(m, i+1)
+        end
+    end
+
+    return get_match(s, 1)
+end
+
+function str.gmatch(s, pat, iter)
+    if iter then
+        return string.gmatch(s, pat)
+    end
+
+    local matches = {}
+    local n = #s
+    local a, b = string.find(s, pat)
+    if not a or b == n then return false end
+    matches[#matches+1] = {a, b}
+
+    while a ~= nil do
+        a, b = string.find(s, pat, b+1)
+        if a then
+            matches[#matches+1] = {a, b}
+        end
+    end
+
+    return matches
+end
+
+return str

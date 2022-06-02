@@ -1,5 +1,6 @@
 local path = require('path')
 local yaml = require('yaml')
+local iter = require('modules.fun')
 local utils = {}
 
 utils.boolean_p = function(e)
@@ -9,7 +10,7 @@ end
 utils.bool_p = utils.boolean_p
 
 utils.nil_p = function (o)
-    if o == nil then 
+    if o == nil then
         return true
     else
         return false
@@ -17,7 +18,7 @@ utils.nil_p = function (o)
 end
 
 utils.false_p = function (o)
-    if o == false then 
+    if o == false then
         return true
     end
 
@@ -150,7 +151,7 @@ utils.to_stderr = function(fmt, ...)
     vim.api.nvim_err_writeln(utils.sprintf(fmt, ...))
 end
 
---	
+--
 -- String ops
 --
 utils.split = function(s, pat)
@@ -161,29 +162,9 @@ utils.split = function(s, pat)
    end
 end
 
--- Works like piped grep calls
-utils.match = function(s, ...)
-    local pats = {...}
-    local m = s
-    local idx = 1
-
-    while m do
-        m = m:match(pats[idx])
-        idx = idx + 1
-    end
-
-    return m
-end
-
-utils.gmatch = function(s, pat)
-    return string.gmatch(s, pat)
-end
-
 --
 -- Function ops
 --
-
-utils.vcall = vim.call
 
 utils.call = function (f, ...)
     return f(...)
@@ -286,7 +267,7 @@ utils.add_global = function(f, name, force)
         _G[name] = f
     elseif not _G[name] then
         _G[name] = f
-    end 
+    end
 
     return f
 end
@@ -295,13 +276,13 @@ utils.globalize = function (mod, ks)
     mod = mod or utils
 
     if not ks then
-        for k, f in pairs(mod) do 
+        for k, f in pairs(mod) do
             if not _G[k] and not k:match('globalize') then
                 _G[k] = f
             end
         end
     else
-        for _, k in pairs(ks) do 
+        for _, k in pairs(ks) do
             f = mod[k]
 
             if f and not _G[k] and not k:match('globalize') then
@@ -353,5 +334,7 @@ utils.with_open = function(dst, mode, f)
 
     return false, dst
 end
+
+utils.add_global(iter, 'iter')
 
 return utils

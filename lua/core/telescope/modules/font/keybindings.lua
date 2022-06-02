@@ -1,4 +1,10 @@
-local TFS = require('core.telescope.modules.font')
-local Kbd = require('core.kbd')
+local tfont = require('core.telescope.modules.font')
+local kbd = require('core.kbd')
 
-Kbd(false, false, 'n', false, '<leader>xf', TFS.switch_fonts, 'Switch to another font'):enable()
+return to_callable(function(keys)
+    keys = keys or '<leader>xf'
+    local k = kbd('n', keys, tfont, {noremap=true}, 'Switch to another font')
+    k:save()
+    k:enable()
+end)
+

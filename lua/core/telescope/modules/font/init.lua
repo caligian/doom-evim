@@ -1,70 +1,56 @@
-local Utils = require('utils')
-local TPickers = require('telescope.pickers')
-local TFinders = require('telescope.finders')
-local TConf = require('telescope.config').values
-local TActions = require('telescope.actions')
-local TActionState = require('telescope.actions.state')
-local TIvy = require('telescope.themes').get_ivy()
-local Rx = require('rex_pcre2')
-local TFontSwitcher = {}
+local tfont = {}
+local telescope = require('core.telescope')
+local rx = require('rex_pcre2')
 
-if not Doom.telescope.modules then
-    Doom.telescope.modules = {
-        font = {
-            exclude = '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)',
-        },
-    }
-end
+tfont.exclude = Doom.telescope.modules.font.exclude
+tfont.include = Doom.telescope.modules.font.include
 
-TFontSwitcher.exclude = Doom.telescope.modules.font.exclude
+function tfont.get_fonts(include, exclude)
+    include = include or tfont.include or ''
+    exclude = exclude or tfont.exclude or ''
 
-function TFontSwitcher.get_fonts(filter_regex)
-    local fonts = vim.fn.system('fc-match -a')
-    fonts = Utils.split(fonts, "[\n\r]+")
+    local fonts = system('fc-list -f "%{family}\n" :spacing=100 | uniq')
 
     local fonts_found = {}
-
-    for _, f in ipairs(fonts) do
-        if #f > 0 then
-            f = Rx.match(f, '^[^"]+"([^"]+)"')
-
-            if filter_regex then
-                if Rx.match(f, filter_regex) then
-                    fonts_found[f] = true
+    fonts = filter(function(f)
+        if rx.match(f, include) and rx.match(f, exclude) then
+            if match(f, ',') then
+                for _, i in ipairs(split(f, ',')) do
+                    fonts_found[i] = true
                 end
             else
                 fonts_found[f] = true
             end
         end
+    end, fonts)
+
+    return keys(fonts_found)
+end
+
+function tfont.get_current_font()
+    return string.match(vim.go.guifont, '([^:]+)([^$]+)')
+end
+
+function tfont.set_font(font)
+    local set_font = function(face, height)
+        vim.go.guifont = font .. ':h' .. height
     end
 
-    return Utils.keys(fonts_found)
+    return telescope('Select font height', map(dump, range(8, 20)), false, 'fzy', function(height)
+        set_font(font, tonumber(height))
+    end)
 end
 
-function TFontSwitcher.set_font(font)
-    local old_font, height = string.match(vim.go.guifont, '([^:]+)([^$]+)')
-    vim.go.guifont = font .. height
-end
-
-function TFontSwitcher.switch_fonts(opts)
+return to_callable(function(include, exclude, opts)
     opts = opts or {}
-    opts = vim.tbl_extend('force', opts, TIvy)
-    local filter_regex = opts.exclude or Doom.telescope.modules.font.exclude
+    include = include or false
+    exclude = exclude or false
 
-    TPickers.new(opts, {
-        prompt_title = 'fonts',
-        finder = TFinders.new_table { results = TFontSwitcher.get_fonts(filter_regex) },
-        sorter = TConf.generic_sorter(opts),
-        attach_mappings = function (bufnr, map)
-            TActions.select_default:replace(function ()
-                TActions.close(bufnr)
-                local selection = TActionState.get_selected_entry()
-                TFontSwitcher.set_font(selection[1])
-            end)
+    local title = 'Select font'
+    local results = tfont.get_fonts()
+    local entry_maker = false
+    local sorter = 'fzy_index'
+    local default_mapping = function(selection) tfont.set_font(selection) end
 
-            return true
-        end
-    }):find()
-end
-
-return TFontSwitcher
+    return telescope(title, results, entry_maker, 'fzy', default_mapping, false, opts or {})
+end)

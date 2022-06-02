@@ -57,6 +57,15 @@ _G.Doom = {
         ensure = {"python", "norg", "fennel", "json", "javascript", "c", "lua", "perl", "ruby"},
     },
 
+    telescope = {
+        modules = {
+            font = {
+                include = '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)',
+                exclude = '',
+            }
+        }
+    },
+
     templates = {
         path = {with_data_path('templates'), with_config_path('templates')}
     },
@@ -102,7 +111,8 @@ _G.Doom = {
         status = {},
     },
 
-    repl = { status = {} },
-
     pkgs = {},
+
+    -- Format: <mode> = {<keys> = kbd_obj}
+    keybindings = {}
 }

@@ -32,8 +32,6 @@ function kbd.wk_register(mode, keys, doc, bufnr)
     end
 end
 
-
-
 function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
     assert(keys)
     assert(f)
@@ -54,7 +52,8 @@ function kbd:backup_previous()
 
     local previous = self.previous[#self.previous]
     local current = vim.fn.maparg(self.keys, self.mode, false, 1)
-    if current == '' then return false end
+
+    if #keys(current) == 0 then return false end
     if previous and previous.rhs == current.rhs then return false end
 
     local _a = trim(join(map(function(_attrib)
@@ -65,11 +64,20 @@ function kbd:backup_previous()
         end
     end, {'silent', 'nowait', 'expr', 'buffer'}), " "))
 
+    local mode = self.mode
     if current.noremap == 1 then
-        push(self.previous, {sprintf('%snoremap %s %s %s', self.mode, _a, current.lhs, current.rhs), rhs=current.rhs, mapped=false})
+        mode = mode .. 'noremap'
     else
-        push(self.previous, {sprintf('%smap %s %s %s', self.mode, _a, current.lhs, current.rhs), rhs=current.rhs, mapped=false})
+        mode = mode .. 'map'
     end
+
+    local t = {
+        mode .. ' ' .. _a .. ' ' .. current.lhs .. ' ' .. current.rhs;
+        mapped = false;
+        rhs = current.rhs;
+    }
+
+    push(self.previous, t)
 
     return self.previous
 end
@@ -94,6 +102,7 @@ function kbd:enable(force)
     self.attribs = join(map(function(s) return sprintf('<%s>', s) end, keys(self.attribs)), " ")
 
     if callable(self.f) then
+        local _f = au.register(self.f)
         self.f = ':' .. au.register(self.f) .. '<CR>'
     end
 
@@ -191,6 +200,10 @@ function kbd:replace(f, attribs, doc, event, pattern)
     self.doc = doc or self.doc
 
     self:enable()
+end
+
+function kbd:save()
+    update(Doom.keybindings, {self.mode, self.keys}, self) 
 end
 
 return kbd

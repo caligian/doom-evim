@@ -5,15 +5,17 @@ au.status = Doom.au.status
 au.refs = Doom.au.refs
 
 function au.func2ref(f)
-    if type(f) == 'string' then
+    assert(str_p(f) or callable(f))
+
+    if str_p(f) then
         return f
-    elseif type(f) == 'function' then
+    elseif callable(f) then
         return sprintf('lua Doom.au.refs[%d]()', #au.refs)
     end
 end
 
 function au.register(f)
-    if callable_p(f) then push(au.refs, f) end
+    if callable(f) then push(au.refs, f) end
     return au.func2ref(f)
 end
 

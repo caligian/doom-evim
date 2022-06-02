@@ -1,11 +1,12 @@
-local Notify = require('notify')
-local Notification = {}
+local nvim_notify = require('notify')
 
-function Notification.notify(title, message, level, opts)
-    assert(title)
-    assert(message)
+local function notify(title, message, level, opts)
+    assert(title, 'No title provided for notification')
+    assert(message, 'No message provided for notification')
+
     opts = opts or {}
-    level = level or 'INFO'
+    level = level or 'info'
+
     local on_open_hook = opts.on_open
     local on_close_hook = opts.on_close
     local timeout = opts.timeout or 2000
@@ -16,7 +17,7 @@ function Notification.notify(title, message, level, opts)
         message = table.concat(message, "\n")
     end
 
-    Notify(message, level, {
+    nvim_notify(message, level, {
         on_open = on_open_hook,
         on_close = on_close_hook,
         render = render,
@@ -25,26 +26,9 @@ function Notification.notify(title, message, level, opts)
     })
 end
 
-function Notification.info(title, message, opts)
-    Notification.notify(title, message, 'info', opts)
-end
-
-function Notification.fatal(title, message, opts)
-    Notification.notify(title, message, 'fatal', opts)
-end
-
-function Notification.trace(title, message, opts)
-    Notification.notify(title, message, 'trace', opts)
-end
-
-function Notification.debug(title, message, opts)
-    Notification.notify(title, message, 'debug', opts)
-end
-
-function Notification.warn(title, message, opts)
-    Notification.notify(title, message, 'warn', opts)
-end
-
-vim.notify = Notify
-
-return Notification
+add_global(notify, 'win_notify')
+add_global(function(title, message, opts) notify(title, message, 'info', opts) end, 'win_notify_info')
+add_global(function(title, message, opts) notify(title, message, 'fatal', opts) end, 'win_notify_fatal')
+add_global(function(title, message, opts) notify(title, message, 'debug', opts) end, 'win_notify_debug')
+add_global(function(title, message, opts) notify(title, message, 'trace', opts) end, 'win_notify_trace')
+add_global(function(title, message, opts) notify(title, message, 'warn', opts) end, 'win_notify_warn')

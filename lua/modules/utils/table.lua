@@ -330,7 +330,9 @@ tu.items = function(dict)
 end
 
 -- With side effects
-tu.assoc = function (dict, ks, create)
+--@tparam transform function Spec: transform(value, table, key, previous_table, previous_key). The function is only used when a key is found
+--@tparam create boolean|any If create is true then create a table in its place. If create is false or nil, false is returned. If create is anything else, it is simply put in place of the missing value
+tu.assoc = function (dict, ks, create, transform)
     ks = utils.to_list(ks)
     local n = #ks
     local t = dict
@@ -345,15 +347,13 @@ tu.assoc = function (dict, ks, create)
         if not v then
             if create then
                 if index == n then
-                    if utils.callable(create) then 
-                        create = create(dict, current_dict, key) 
-                    elseif create == true or create then 
-                        create = {}
+                    if create == true then
+                        t[key] = {}
+                    else
+                        t[key] = create
                     end
-
-                    t[key] = create
                     return create, last_key, last_t
-               else
+                else
                     t[key] = {}
                 end
             else
@@ -362,7 +362,16 @@ tu.assoc = function (dict, ks, create)
         end
 
         if not utils.table_p(t[key]) then
-            return t[key] or false, last_key, last_t
+            if transform then 
+                assert(func_p(transform), 'Transformer must be a callable')
+                t[key] = transform(t[key], t, key, last_t, last_key)
+            end
+
+            if index ~= n then
+                return false, last_key, last_t
+            else
+                return t[key], last_key, last_t
+            end
         end
 
         t = t[key]
@@ -374,7 +383,7 @@ end
 
 tu.update = tu.assoc
 
--- If table is passed then it will be sent to tu.assoc
+-- if table is passed then it will be sent to tu.assoc
 tu.get = function(arr, ...)
     local ks = {...}
     local vs = {}
@@ -422,7 +431,7 @@ tu.findall = function(t, i)
     return found
 end
 
--- Misc operations
+-- misc operations
 tu.globalize = function (ks)
     utils.globalize(tu, ks)
 end
@@ -526,7 +535,7 @@ tu.filter = function (f, ...)
     return out
 end
 
--- Iterator operations
+-- iterator operations
 tu.vec = function (index, n, gen, param, state)
     index = index or -1
     n = n or -1
@@ -658,6 +667,25 @@ end
 
 tu.superset_p = function(t1, t2)
     return tu.subset_p(t2, t1)
+end
+
+tu.range = function (from, till, step)
+    assert(from, 'No starting index provided')
+    assert(till, 'No ending index provided')
+
+    step = step or 1
+    local t = {}
+
+    for i=from, till, step do
+        tu.push(t, i)
+    end
+
+    return t
+end
+
+tu.to_callable = function(f)
+    assert(utils.func_p(f), 'Only functions can be used in callable tables')
+    return setmetatable({}, {__call = function(_, ...) f(...) end})
 end
 
 return tu
