@@ -1,11 +1,11 @@
-local Lsp = {}
+local lsp = {}
 
-function Lsp.on_attach(_, bufnr)
+function lsp.on_attach(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
     vim.cmd('command! Format execute lua vim.lsp.buf.formatting()')
 end
 
-function Lsp.setup_lua()
+function lsp.setup_lua()
     local binarypath = with_data_path('lsp_servers', 'sumneko_lua', 'extension', 'server', 'bin', 'lua-language-server')
     local mainpath = with_data_path('lsp_servers', 'sumneko_lua', 'extension', 'server', 'bin', 'main.lua')
     local runtimepath = split(package.path, ';')
@@ -36,7 +36,7 @@ function Lsp.setup_lua()
     })
 end
 
-function Lsp.setup_servers()
+function lsp.setup_servers()
     local cmp_nvim_lsp = require('cmp_nvim_lsp')
     local nvim_lsp = require('lspconfig')
 
@@ -54,13 +54,13 @@ function Lsp.setup_servers()
             if nvim_lsp[server] then
                 if conf.manual then
                     if server == 'sumneko_lua' then
-                        Lsp.setup_lua()
+                        lsp.setup_lua()
                     else
                         conf.manual()
                     end
                 else
                     conf = conf.config or {
-                        on_attach = Lsp.on_attach,
+                        on_attach = lsp.on_attach,
                         capabilities = cmp_nvim_lsp.update_capabilities(vim.lsp.protocol.make_client_capabilities())
                     }
 
@@ -73,4 +73,4 @@ function Lsp.setup_servers()
     end, keys(Doom.langs))
 end
 
-return Lsp
+return lsp
