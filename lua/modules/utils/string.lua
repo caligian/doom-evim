@@ -32,7 +32,7 @@ function str.sed(s, pat_sub, ...)
         assert(utils.table_p(rest[i]))
         assert(#rest[i] >= 2)
         local _p, _s, _n = unpack(rest[i])
-        s = string.gsub(s, _p, _s, _n)
+        s = s:gsub(_p, _s, _n)
     end
 
     return s

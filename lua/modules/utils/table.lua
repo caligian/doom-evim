@@ -2,13 +2,6 @@ local iter = require('modules.fun')
 local utils = require('modules.utils')
 local tu = {}
 
-function tu.list_to_dict(arr, default)
-    local t = {}
-    default = default == nil and true 
-    each(function(i) t[i] = default end, arr)
-    return t
-end
-
 tu.to_dict = function(arr)
     local t = {}
 

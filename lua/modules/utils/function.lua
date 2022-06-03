@@ -1,5 +1,6 @@
 local fun = {}
 local utils = require('modules.utils')
+local tutils = require('modules.utils.table')
 
 function fun.globalize(ks)
     utils.globalize(ks or fun)
@@ -9,7 +10,7 @@ function fun.partial(f, ...)
     local outer = {...}
 
     return function(...)
-        return f(unpack(extend(outer, {...})))
+        return f(unpack(tutils.extend(outer, {...})))
     end
 end
 
@@ -17,7 +18,7 @@ function fun.lpartial(f, ...)
     local outer = {...}
 
     return function(...)
-        return f(unpack(extend({...}, outer)))
+        return f(unpack(tutils.extend({...}, outer)))
     end
 end
 

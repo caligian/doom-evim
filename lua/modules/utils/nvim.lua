@@ -1,4 +1,5 @@
 local nv = {}
+local tu = require('modules.utils.table')
 local utils = require('modules.utils')
 
 -- @tparam timeout number Pass -1 to immediately return the result
@@ -11,7 +12,7 @@ function nv.wait(timeout, tries, inc, sched, f, ...)
     local out
 
     if sched then 
-        oblige(timeout ~= false, 'Cannot defer execution without waiting. Please supply a timeout value')
+        assert(timeout ~= false, 'Cannot defer execution without waiting. Please supply a timeout value')
 
         vim.schedule(function()
             out = f(unpack(args))
@@ -49,11 +50,11 @@ nv.gets = function(prompt, loop, ...)
     prompt = prompt .. ' '
     local args = {...}
     local out = {}
-    oblige(#args > 0, 'No args provided')
+    assert(#args > 0, 'No args provided')
     
     local function _get_input(t)
-        oblige(#t >= 1, 'No prompt question provided')
-        local q, default_text, cb = unpack(to_list(t))
+        assert(#t >= 1, 'No prompt question provided')
+        local q, default_text, cb = unpack(utils.to_list(t))
         q = q .. ' ' .. prompt
         default_text = default_text or ''
         local input = vim.fn.input(q, default_text)
@@ -66,10 +67,10 @@ nv.gets = function(prompt, loop, ...)
             end
         else
             if cb then
-                oblige(callable(cb), 'Invalid callback provided.')
+                assert(utils.callable(cb), 'Invalid callback provided.')
                 local is_correct = cb(input)
                 if is_correct then 
-                    if bool_p(is_correct) then
+                    if utils.bool_p(is_correct) then
                         return input
                     else
                         return is_correct 
@@ -87,7 +88,7 @@ nv.gets = function(prompt, loop, ...)
         end
     end
 
-    return map(_get_input, args)
+    return tu.map(_get_input, args)
 end
 
 

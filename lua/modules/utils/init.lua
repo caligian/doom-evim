@@ -96,20 +96,6 @@ utils.to_arr = utils.to_list
 
 utils.to_a = utils.to_arr
 
-utils.to_dict = function(default, ...)
-    default = default == nil and true
-    local args = {...}
-    local d = {}
-
-    for _, i in ipairs(args) do
-        d[i] = default or i
-    end
-
-    return d
-end
-
-utils.to_h = utils.to_dict
-
 utils.inspect = function (...)
     for _, value in ipairs({...}) do
         vim.api.nvim_echo({{vim.inspect(value)}}, false, {})
@@ -277,7 +263,7 @@ utils.globalize = function (mod, ks)
 
     if not ks then
         for k, f in pairs(mod) do
-            if not _G[k] and not k:match('globalize') then
+            if not _G[k] then
                 _G[k] = f
             end
         end
@@ -285,7 +271,7 @@ utils.globalize = function (mod, ks)
         for _, k in pairs(ks) do
             f = mod[k]
 
-            if f and not _G[k] and not k:match('globalize') then
+            if f and not _G[k] then
                 _G[k] = f
             end
         end
@@ -322,7 +308,6 @@ utils.tempfile = function()
 end
 
 utils.with_open = function(dst, mode, f)
-    if not dst then dst = utils.tempfile() end
     mode = mode or 'r'
     local fh = io.open(dst, mode)
 
@@ -333,6 +318,21 @@ utils.with_open = function(dst, mode, f)
     end
 
     return false, dst
+end
+
+function utils.with_tempfile(mode, f)
+    mode = mode or 'w'
+    local tf = utils.tempfile()
+    local fh = io.open(tf, mode) 
+
+    if fh then
+        local out = f(fh)
+        fh:close()
+        utils.system('rm ' .. tf)
+        return out or true
+    end
+
+    return false
 end
 
 utils.add_global(iter, 'iter')
