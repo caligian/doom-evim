@@ -33,6 +33,8 @@ utils.defined_p = function(o)
     end
 end
 
+utils.defined = utils.defined_p
+
 utils.true_p = function (o)
     if not utils.nil_p(o) and utils.false_p(o) then
         return true
@@ -40,6 +42,8 @@ utils.true_p = function (o)
         return false
     end
 end
+
+utils.is_truthful = utils.true_p
 
 utils.number_p = function (i)
     return type(i) == 'number'
@@ -56,6 +60,8 @@ end
 utils.func_p = function (f)
     return type(f) == 'function'
 end
+
+utils.function_p = utils.func_p
 
 utils.callable = function (f)
     if utils.func_p(f) then
@@ -176,7 +182,7 @@ utils.slurp = function (src, iter)
         else
             fh:close()
         end
-    end
+    end, fh
 end
 
 utils.spit = function (dst, s, mode)
@@ -291,11 +297,11 @@ end
 
 utils.chomp = function(s)
     if type(s) == 'string' then
-        return s:gsub("[\n\r]$", '')
+        return s:gsub("[\n\r ]$", '')
     elseif type(s) == 'table' then
         for i, v in ipairs(s) do
             if type(v) == 'string' then
-                s[i] = s[i]:gsub("[\n\r]$", '')
+                s[i] = s[i]:gsub("[\n\r ]$", '')
             end
         end
     end

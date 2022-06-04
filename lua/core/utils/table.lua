@@ -438,11 +438,6 @@ tu.findall = function(t, i)
     return found
 end
 
--- Misc operations
-tu.globalize = function (ks)
-    utils.globalize(tu, ks)
-end
-
 tu.imap = function (f, ...)
     local arrs = _getis(...)
     local max_len = {}

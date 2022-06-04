@@ -61,7 +61,6 @@ _G.Doom = {
         modules = {
             font = {
                 include = '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)',
-                exclude = '',
             }
         }
     },
@@ -112,7 +111,4 @@ _G.Doom = {
     },
 
     pkgs = {},
-
-    -- Format: <mode> = {<keys> = kbd_obj}
-    keybindings = {}
 }

@@ -2,15 +2,31 @@ local iter = require('modules.fun')
 local utils = require('modules.utils')
 local tu = {}
 
-tu.to_dict = function(arr)
+tu.to_dict = function(...)
+    local args = {...}
     local t = {}
 
-    for _, v in ipairs(arr) do 
-        t[v] = true
+    for _, item in ipairs(args) do 
+        t[item] = true
     end
 
     return t
 end
+
+tu.list_to_dict = function(...)
+    local t = {}
+    local args = {...}
+
+    for _, arr in ipairs(args) do
+        assert(utils.table_p(arr), 'List should be a table')
+        t[#t+1] = tu.to_dict(unpack(arr))
+    end
+
+    if #t == 1 then return first(t) end
+    return t
+end
+
+tu.arr_to_dict = tu.list_to_dict
 
 tu.partition = function (arr, n)
     n = n or 2
@@ -52,6 +68,7 @@ tu.push = function (arr, ...)
 end
 
 tu.pop = function (arr, n)
+    n = n or 1
     local tail = {}
 
     for i=#arr,#arr-n+1, -1 do
@@ -59,6 +76,7 @@ tu.pop = function (arr, n)
         arr[i] = nil
     end
 
+    if #tail == 1 then tail = tail[1] end
     return tail, arr
 end
 
@@ -109,15 +127,16 @@ tu.shift = function(arr, n)
         end
     end
 
+    if #head == 1 then head = head[1] end
     return head, arr
 end
 
 tu.splice = function(arr, from, len, ...)
     assert(from > 0 and from < #arr)
-    assert(len and len > 0)
-
     local args = {...}
     len = len or 0
+
+    assert(len > 0, 'Len cannot be negative')
 
     if len == 0 then
         for i in ipairs(args) do
@@ -155,6 +174,8 @@ tu.vals = function (dict)
 
     return vs
 end
+
+tu.values = tu.vals
 
 tu.slice = function (arr, start, finish)
     assert(start > 0)

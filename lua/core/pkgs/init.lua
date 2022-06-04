@@ -60,11 +60,7 @@ function pkgs.load_all(force_recompile)
         end
     end)
 
-    if not with_config_path('plugins', 'packer_compiled.lua') then
-        Doom.pkgs.packer.compile()
-    end
-
-    if force_recompile then
+    if not with_config_path('plugins', 'packer_compiled.lua') or force_recompile then
         Doom.pkgs.packer.compile()
     end
 end

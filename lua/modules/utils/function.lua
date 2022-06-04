@@ -26,4 +26,9 @@ function fun.identity(i)
     return i
 end
 
+local classy = require('classy')
+utils.add_global(classy, 'class')
+utils.add_global(classy.multimethod, 'multimethod')
+utils.add_global(classy.overload, 'overload')
+
 return fun

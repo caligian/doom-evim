@@ -2,16 +2,15 @@ local str = {}
 local utils = require('modules.utils')
 
 function str.trim(s)
-    s = s:match('^%s*(.-)%s*$')
-    return s
+    return s:match('^%s*(.-)%s*$') or s
 end
 
 function str.ltrim(s)
-    return s:match('^%s*(.-)')
+    return s:match('^%s*(.-)') or s
 end
 
 function str.rtrim(s)
-    return s:match('(.-)%s*$')
+    return s:match('(.-)%s*$') or s
 end
 
 str.strip = str.trim
@@ -63,21 +62,47 @@ function str.match(s, ...)
     return get_match(s, 1)
 end
 
-function str.gmatch(s, pat, iter)
-    if iter then
-        return string.gmatch(s, pat)
+str.strslice = string.sub
+str.substr = string.sub
+
+function str.strsplice(s, from, len, ...)
+    assert(utils.str_p(s))
+    assert(from > 0 and from < #s)
+
+    local args = {...}
+    len = len or 0
+    s = vim.split(s, "")
+
+    assert(len > 0, 'Len cannot be negative')
+
+    if len == 0 then
+        for i in ipairs(args) do
+            table.insert(s, from, i)
+        end
+    elseif len > 0 then
+        for i=1,len do
+            table.remove(s, from)
+        end
+
+        for i=#args, 1, -1 do
+            table.insert(s, from, args[i])
+        end
     end
 
+    return table.concat(s, "")
+end
+
+function str.gmatch(s, pat)
     local matches = {}
     local n = #s
     local a, b = string.find(s, pat)
-    if not a or b == n then return false end
-    matches[#matches+1] = {a, b}
+    if not a then return false end
+    matches[#matches+1] = {a, b, str.substr(s, a, b)}
 
     while a ~= nil do
         a, b = string.find(s, pat, b+1)
         if a then
-            matches[#matches+1] = {a, b}
+            matches[#matches+1] = {a, b, str.substr(s, a, b)}
         end
     end
 
