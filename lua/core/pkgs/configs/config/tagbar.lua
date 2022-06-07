@@ -1,2 +1,1 @@
-local kbd = require('core.kbd')
-kbd(false, false, 'n', false, '<C-t>', ':TagbarToggle<CR>', 'Open tagbar'):enable()
+kbd('n', '<C-t>', ':TagbarToggle<CR>', false, 'Open tagbar'):enable()

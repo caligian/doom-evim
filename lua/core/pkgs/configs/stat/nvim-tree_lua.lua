@@ -1,5 +1,6 @@
+local kbd = dofile(with_config_lua_path('core', 'kbd', 'init.lua'))
 local nvim_tree = require('nvim-tree')
-local kbd = require('core.kbd')
 
 nvim_tree.setup()
-kbd(false, false, 'n', false, '<leader>`', ':NvimTreeToggle<CR>', 'Toggle nvim-tree'):enable()
+
+kbd('n', '<leader>`', ':NvimTreeToggle<CR>', {'noremap'}, 'Toggle nvim-tree'):enable()

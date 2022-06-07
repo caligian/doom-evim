@@ -1,30 +1,34 @@
-local path = require('path')
 local packer = require('packer')
-local fs = require('path.fs')
 local pkgs = {}
 
 function pkgs.get_packer_form(plug)
     local t = {}
     local fn = plug:gsub('%.', '_')
     local base = with_config_path('lua', 'core', 'pkgs', 'configs') 
-    local has_conf = path.exists(path(base, 'config', fn .. '.lua'))
-    local has_run = path.exists(path(base, 'run', fn .. '.lua'))
-    local has_setup = path.exists(path(base, 'setup', fn .. '.lua'))
-    local base_require = 'core.pkgs.configs'
+    local stat = path.exists(path(base, 'stat', fn .. '.lua'))
 
-    if has_conf then 
-        t.config = function()
-            pcall(require, string.format('%s.config.%s', base_require, fn))
+    if stat then
+        require('core.pkgs.configs.stat.' .. fn)
+    else
+        local has_conf = path.exists(path(base, 'config', fn .. '.lua'))
+        local has_run = path.exists(path(base, 'run', fn .. '.lua'))
+        local has_setup = path.exists(path(base, 'setup', fn .. '.lua'))
+        local base_require = 'core.pkgs.configs'
+
+        if has_conf then 
+            t.config = function()
+                pcall(require, string.format('%s.config.%s', base_require, fn))
+            end
         end
-    end
-    if has_run then 
-        t.run = function()
-            pcall(require, string.format('%s.run.%s', base_require, fn))
+        if has_run then 
+            t.run = function()
+                pcall(require, string.format('%s.run.%s', base_require, fn))
+            end
         end
-    end
-    if has_setup then 
-        t.setup = function()
-            pcall(require,string.format('%s.setup.%s', base_require, fn))
+        if has_setup then 
+            t.setup = function()
+                pcall(require,string.format('%s.setup.%s', base_require, fn))
+            end
         end
     end
 
@@ -55,7 +59,6 @@ function pkgs.load_all(force_recompile)
     Doom.pkgs.packer = packer
     Doom.pkgs.packer.startup(function(use)
         for k, v in pairs(Doom.pkgs.packages) do
-            inspect(v)
             use(v)
         end
     end)

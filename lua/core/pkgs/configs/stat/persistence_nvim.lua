@@ -5,5 +5,5 @@ persistence.setup {
     dir = with_data_path('sessions')
 }
 
-kbd(false, false, 'n', false, '<leader>sl', "lua require('persistence').load({last=true})<cr>", 'Load session'):enable()
-kbd(false, false, 'n', false, '<leader>ss', "lua require('persistence').save()<cr>", 'Save current session'):enable()
+kbd('n', '<leader>sl', "lua require('persistence').load({last=true})", 'noremap', 'Load session'):enable()
+kbd('n', '<leader>ss', "lua require('persistence').save()<CR>", 'noremap', 'Save current session'):enable()

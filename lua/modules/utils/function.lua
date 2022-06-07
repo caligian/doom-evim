@@ -1,6 +1,7 @@
 local fun = {}
 local utils = require('modules.utils')
 local tutils = require('modules.utils.table')
+local class = require('classy')
 
 function fun.globalize(ks)
     utils.globalize(ks or fun)
@@ -26,9 +27,8 @@ function fun.identity(i)
     return i
 end
 
-local classy = require('classy')
-utils.add_global(classy, 'class')
-utils.add_global(classy.multimethod, 'multimethod')
-utils.add_global(classy.overload, 'overload')
+utils.add_global(class, 'class')
+utils.add_global(class.multimethod, 'multimethod')
+utils.add_global(class.overload, 'overload')
 
 return fun

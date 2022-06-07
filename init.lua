@@ -24,7 +24,7 @@ vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color heroku ]]
+vim.cmd [[ color bold-light ]]
 
 -- leader key
 vim.g.mapleader = " "

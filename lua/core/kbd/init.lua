@@ -1,19 +1,15 @@
-local class = require('classy')
 local au = require('core.au')
-local wk = false
+local wk = require('which-key')
+
 local kbd = class('doom-kbd')
+assoc(Doom.kbd, 'status', {})
+kbd.status = Doom.kbd.status
 kbd.prefixes = Doom.kbd.prefixes
 
 function kbd.wk_register(mode, keys, doc, bufnr)
     oblige(mode)
     oblige(keys)
     oblige(doc)
-
-    if not packer_plugins['which-key.nvim'] then
-        return 
-    else
-        wk = require('which-key')
-    end
 
     local opts = {buffer=bufnr, mode=mode}
 
@@ -32,19 +28,78 @@ function kbd.wk_register(mode, keys, doc, bufnr)
     end
 end
 
-function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
-    assert(keys)
-    assert(f)
-    assert(doc)
+function kbd.find(mode, keys)
+    return assoc(kbd.status, {mode, keys})
+end
 
+function kbd.load_prefixes()
+    if Doom.kbd.prefixes_loaded then return end
+
+    each(function(prefix) 
+        local doc = Doom.kbd.prefixes[prefix]
+        local leader = match(prefix, '<[^>]+>')
+        wk.register({[prefix]={name=doc}})
+    end, keys(Doom.kbd.prefixes))
+
+    Doom.kbd.prefixes_loaded = true
+end
+
+kbd.load_prefixes()
+
+function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
+    assert(keys, 'need keys')
+    assert(f, 'need a command')
+    assert(doc, 'need documentation')
+    assert(str_p(keys), 'need string')
+    assert(str_p(f) or callable(f), 'need string or table[string]')
+    assert(str_p(doc), 'need string')
+    assert(mode ~= nil or mode ~= false and str_p(mode), 'need string')
+    assert(attribs ~= nil or attribs ~= false and str_p(attribs) or table_p(attribs), 'need string or table[string]')
+
+    if not mode then
+        mode = 'n'
+    end
+
+    if not attribs or attribs and #attribs == 0 then
+        attribs = {'noremap', 'silent', 'nowait'}
+    else
+        attribs = to_list(attribs)
+    end
+
+    if event or event and #event == 0 then 
+        assert(str_p(event) or table_p(event), 'need string or table[string]') 
+        event = to_list(event)
+    end
+
+    if pattern or pattern and #pattern == 0 then 
+        assert(str_p(pattern) or table_p(pattern), 'need string or table[string]') 
+        pattern = to_list(pattern)
+    end
+
+    self.noremap = find(attribs, 'noremap')
+
+    if self.noremap then
+        attribs[self.noremap] = nil
+    end
+
+    self.attribs = vals(attribs)
+    self.noremap = self.noremap ~= nil and true
     self.mode = mode
     self.keys = keys
     self.f = f 
-    self.attribs = attribs
+    self.attribs_s = join(map(function(s)
+        if str_p(s) then
+            return sprintf('<%s>', s)
+        else
+            return ''
+        end
+    end, self.attribs), ' ')
     self.doc = doc
     self.event = event
     self.pattern = pattern
     self.mapped = 0
+
+    assoc(self.status, {mode, keys}, self)
 end
 
 function kbd:backup_previous()
@@ -54,7 +109,7 @@ function kbd:backup_previous()
     local current = vim.fn.maparg(self.keys, self.mode, false, 1)
 
     if #keys(current) == 0 then return false end
-    if previous and previous.rhs == current.rhs then return false end
+    if previous and previous.rhs == current.rhs or self.f == current.rhs then return false end
 
     local _a = trim(join(map(function(_attrib)
         if current[_attrib] == 1 then
@@ -87,19 +142,6 @@ function kbd:enable(force)
 
     self:backup_previous()
 
-    assert(self.keys)
-    assert(self.f)
-    assert(self.doc)
-
-    self.mode = self.mode or 'n'
-    self.keys = trim(self.keys)
-    self.attribs = self.attribs or {'silent', 'nowait'}
-    self.attribs = list_to_dict(to_list(self.attribs))
-    self.attribs.buffer = true
-    local is_noremap = self.attribs.noremap ~= nil
-    self.attribs.noremap = nil
-    self.attribs = join(map(function(s) return sprintf('<%s>', s) end, keys(self.attribs)), " ")
-
     if callable(self.f) then
         local _f = au.register(self.f)
         self.f = ':' .. au.register(self.f) .. '<CR>'
@@ -118,10 +160,10 @@ function kbd:enable(force)
         self.au:add(self.event, self.pattern, function()
             local cmd = ''
 
-            if is_noremap then
-                cmd = sprintf('%snoremap %s %s %s', self.mode, self.attribs, self.keys, self.f)
+            if self.noremap then
+                cmd = sprintf('%snoremap %s %s %s', self.mode, attribs, self.keys, self.f)
             else
-                cmd = sprintf('%smap %s %s %s', self.mode, self.attribs, self.keys, self.f)
+                cmd = sprintf('%smap %s %s %s', self.mode, attribs, self.keys, self.f)
             end
 
             bufnr = bufnr or vim.fn.bufnr()
@@ -136,15 +178,16 @@ function kbd:enable(force)
         return self.au
     else
         local cmd = ''
-        if is_noremap then
-            cmd = sprintf('%snoremap %s %s %s', self.mode, self.attribs, self.keys, self.f)
+        if self.noremap then
+            cmd = sprintf('%snoremap %s %s %s', self.mode, self.attribs_s, self.keys, self.f)
         else
-            cmd = sprintf('%smap %s %s %s', self.mode, self.attribs, self.keys, self.f)
+            cmd = sprintf('%smap %s %s %s', self.mode, self.attribs_s, self.keys, self.f)
         end
         kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
 
         self.global = true
         self.mapped = self.mapped + 1
+        self.cmd = cmd
         vim.cmd(cmd)
 
         return cmd
@@ -209,10 +252,6 @@ function kbd:replace(f, attribs, doc, event, pattern)
     self.doc = doc or self.doc
 
     self:enable()
-end
-
-function kbd:save()
-    update(Doom.keybindings, {self.mode, self.keys}, self) 
 end
 
 return kbd

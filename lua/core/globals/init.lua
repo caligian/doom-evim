@@ -90,7 +90,6 @@ _G.Doom = {
             ["<leader>q"] = "Buffers+close",
             ["<leader>c"] = "Commenting",
             ["<leader>i"] = "Insert",
-            ["<leader><space>"] = "Misc",
             ["<leader>l"] = "LSP",
             ["<leader>t"] = "Tabs",
             ["<leader>o"] = "Neorg",

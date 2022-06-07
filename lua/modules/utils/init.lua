@@ -243,7 +243,7 @@ utils.with_config_lua_path = function(...)
 end
 
 utils.with_user_config_path = function(...)
-    return path(os.getenv('HOME'), '.vdoom.d', 'lua')
+    return path(os.getenv('HOME'), '.vdoom.d', 'lua', ...)
 end
 
 utils.with_stdpath = function (what, ...)

@@ -1,6 +1,6 @@
-local Neorg = require('neorg')
+local neorg = require('neorg')
 
-Neorg.setup({
+neorg.setup({
     load =  {
         ['core.keybinds'] =  {
             config =  {

@@ -1,4 +1,3 @@
-local class = require('classy')
 local sorters = require('telescope.sorters')
 local finders = require('telescope.finders')
 local actions = require('telescope.actions')
@@ -9,7 +8,10 @@ local ivy_theme = require('telescope.themes').get_ivy({
     layout_config = {height=0.37}
 })
 
-assert(packer_plugins['telescope.nvim'], 'No telescope installation found')
+local ts = class('doom-telescope')
+ts.exception = require('core.telescope.exception')
+
+assert(packer_plugins['telescope.nvim'], ts.exception.NO_TELESCOPE)
 
 -- How entry is parsed
 -- Either {value => value, display => value.display, ordinal => value.ordinal}
@@ -18,7 +20,7 @@ assert(packer_plugins['telescope.nvim'], 'No telescope installation found')
 -- Or     {value => value[1], display => value[2], ordinal => value[3]}
 -- Or     {value => value[1], display => value[2], ordinal => value[2]}
 -- Or     {value => value, display => value, ordinal => value}
-local function default_entry_maker(entry)
+function ts.entry_maker(entry)
     local t = {}
 
     if not table_p(entry) then
@@ -56,9 +58,9 @@ end
 -- @tparam[optional] sorter string
 -- @tparam mappings table[string,string,function]
 local function new_picker (title, results, entry_maker, sorter, mappings, opts)
-    oblige(title, 'No prompt title provided')
-    oblige(results, 'No results provided')
-    assert(mappings, 'Need at least one mapping')
+    assert(title, ts.exception.picker.MISSING_TITLE)
+    assert(results, ts.exception.picker.MISSING_RESULTS)
+    assert(mappings, ts.exception.picker.MISSING_MAPPINGS)
 
     opts = opts or {}
     opts = merge(ivy_theme, opts)
@@ -81,7 +83,7 @@ local function new_picker (title, results, entry_maker, sorter, mappings, opts)
     if entry_maker then
         oblige(callable(entry_maker), 'Entry maker should be callable')
     else 
-        entry_maker = default_entry_maker
+        entry_maker = ts.entry_maker
     end
 
     -- Currently callable results are not working
@@ -103,7 +105,7 @@ local function new_picker (title, results, entry_maker, sorter, mappings, opts)
 
             local default_action = shift(mappings)
 
-            assert(callable(default_action), 'Default action is mapped to <CR>. You only have to pass a callable for the first mapping')
+            assert(callable(default_action), 'Action should be a callable')
 
             actions.select_default:replace(function()
                 actions.close(bufnr)
@@ -131,4 +133,61 @@ local function new_picker (title, results, entry_maker, sorter, mappings, opts)
     }):find()
 end
 
-return to_callable(new_picker)
+function ts.from_picker(picker, title, sorter, mappings, opts)
+    assert(picker, 'No telescope picker provided')
+    assert(title, ts.exception.MISSING_TITLE)
+    assert(mappings, ts.exception.MISSING_MAPPINGS)
+    assert(str_p(picker), 'Invalid picker name provided')
+    assert(table_p(mappings), 'Invalid mappings list provided')
+
+    opts = opts or {}
+    opts = merge(ivy_theme, opts)
+    sorter = sorter or 'fzy_index'
+
+    local new_picker = require('telescope')
+
+    each(function(mode)
+        local binding = mappings[mode]
+        assert(table_p(binding), 'Invalid mapping provided. Need {keys, callback}')
+        assert(#binding == 2, 'Need {keys, callback}')
+    end, keys(mappings))
+
+    return picker(opts, {
+        prompt_title =  title,
+        sorter = sorter,
+        attach_mappings = function(bufnr, bind)
+            assert(#mappings >= 1, 'Need at least one mapping')
+
+            local default_action = shift(mappings)
+
+            assert(callable(default_action), 'Action should be a callable')
+
+            actions.select_default:replace(function()
+                actions.close(bufnr)
+                selection = action_state.get_selected_entry()
+                default_action(selection.value)
+            end)
+
+            if #mappings > 0 then
+                map(function(m) 
+                    assert(table_p(m))
+                    assert(#m == 3, 'Require mode, keys and callback')
+
+                    local mode, keys, f = unpack(m)
+
+                    bind(mode, keys, function()
+                        actions.close(bufnr)
+                        selection = action_state.get_selected_entry()
+                        f(selection.value)
+                    end)
+                end, mappings)
+            end
+
+            return true
+        end
+    })
+end
+
+ts.from_picker(require('telescope.builtin').find_files, 'Madarchod', false, {function(selection) inspect(selection) end})
+
+return ts

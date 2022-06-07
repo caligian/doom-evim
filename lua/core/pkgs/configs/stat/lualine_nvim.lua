@@ -177,11 +177,7 @@ function modeline.setup(bg, fg)
 
     -- Insert mid section. You can make any number of sections in neovim :)
     -- for lualine it's any number greater then 2
-    ins_left {
-        function()
-            return "%="
-        end
-    }
+    ins_left { function() return "%=" end }
 
     ins_left {
         -- Lsp server name .
@@ -238,9 +234,7 @@ function modeline.setup(bg, fg)
     }
 
     ins_right {
-        function()
-            return "▊"
-        end,
+        function() return "▊" end,
         color = {fg = c.blue},
         padding = {left = 1}
     }
