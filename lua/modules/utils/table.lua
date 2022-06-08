@@ -648,8 +648,8 @@ tu.union = function(t1, t2)
 end
 
 tu.intersection = function(t1, t2)
-    local a = tu.to_dict(t1, true)
-    local b = tu.to_dict(t2, true)
+    local a = tu.list_to_dict(t1)
+    local b = tu.list_to_dict(t2)
 
     for k, _ in pairs(a) do
         if not b[k] then

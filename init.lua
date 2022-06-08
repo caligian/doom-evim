@@ -24,7 +24,7 @@ vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color bold-light ]]
+vim.cmd [[ color bold ]]
 
 -- leader key
 vim.g.mapleader = " "
