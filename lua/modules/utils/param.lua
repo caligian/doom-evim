@@ -42,6 +42,25 @@ function param.assert_type(param, _type)
     assert(type(param) == _type, u.sprintf('Param `%s` is not of type %s', param, _type))
 end
 
+function param.assert_type(param, ...)
+    assert(param, 'No param supplied')
+
+    local fail = 0
+    local t_param = type(param)
+    local failed = {}
+
+    for _, i in ipairs({...}) do
+        if t_param ~= i then
+            fail = fail + 1
+            tu.push(failed, i)
+        end
+    end
+
+    if fail > 0 then
+        error(dump(failed) .. ' failed to match with param type `%s`', type(param))
+    end
+end
+
 function param.assert_equal(a, b)
     assert(a == b, u.sprintf('Param `%s` is not equal to param `%s`', a, b))
 end

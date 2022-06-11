@@ -8,6 +8,7 @@ globalize(require('modules.utils.table'))
 globalize(require('modules.utils.string'))
 globalize(require('modules.utils.function'))
 globalize(require('modules.utils.nvim'))
+globalize(require('modules.utils.param'))
 
 add_global(require('path'), 'path')
 add_global(require('path.fs'), 'fs')
