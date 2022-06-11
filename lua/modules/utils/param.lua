@@ -1,10 +1,8 @@
 local class = require('classy')
 local u = require('modules.utils')
 local tu = require('modules.utils.table')
+local fu = require('modules.utils.function')
 local param = class('doom-param-utils')
-
-local function get_assert_string()
-end
 
 function param.assert_s(s)
     assert(u.str_p(s), u.sprintf('Param `%s` is not a string', s))
@@ -48,7 +46,12 @@ function param.assert_equal(a, b)
     assert(a == b, u.sprintf('Param `%s` is not equal to param `%s`', a, b))
 end
 
+function param.assert_type_equal(a, b)
+    assert(type(a) == type(b), u.sprintf('Param `%s` is not equal to param `%s`', a, b))
+end
+
 param.assert_eql = param.assert_equal
+param.assert_type_eql = param.assert_type_equal
 
 -- @tparam params table Form: param_name = param
 function param.assert_types(params, _type)
@@ -56,6 +59,15 @@ function param.assert_types(params, _type)
 
     for _, param in ipairs(params) do
         assert(type(param) == _type, u.sprintf('Param `%s` is not of type %s', param, _type))
+    end
+end
+
+function param.assert_equal_class(a, b)
+    local cls_a = class.of(a)
+    local cls_b = class.of(b)
+
+    if cls_a and cls_b then 
+        assert(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, type(a), type(b)))
     end
 end
 
@@ -72,16 +84,26 @@ end
 
 param.compare_cls = param.compare_class
 
-function param.assert_key(t, ...)
+function param.assert_key(t, default, ...)
+    default = default == nil and false
+
     for _, k in ipairs({...}) do
-        assert(t[k], u.sprintf('Table %s does not has key %s', t, k))
+        local no_key_err_msg = u.sprintf("Table %s does not have key %s with the required value", t, k)
+
+        if default then
+            no_key_err_msg = no_key_err_msg .. ': ' .. u.dump(default)
+        end
+
+        assert(t[k], no_key_err_msg)
     end
 end
 
 function param.dfs_compare_table(table_a, table_b, cmp)
-    param.assert_h(table_a, 'table_1')
-    param.assert_h(table_b, 'table_2')
-    if cmp then param.assert_callable(cmp, 'comparison_function') end
+    param.assert_h(table_a)
+    param.assert_h(table_b)
+    if cmp then param.assert_callable(cmp) end
+    local new_t = {}
+    local _new_t = new_t
 
     local function __compare(_table_a, _table_b)
         local later_ks = {}
@@ -93,33 +115,41 @@ function param.dfs_compare_table(table_a, table_b, cmp)
 
             if u.table_p(a) and is_equal then
                 if param.compare_cls(a, b) then
-                    a[k] = a == b
+                    if cmp then
+                        _new_t[k] = cmp(a, b)
+                    else
+                        _new_t[k] = a == b
+                    end
                 else
+                    _new_t[k] = {}
+                    _new_t = _new_t[k]
                     __compare(a, b, cmp)
                 end
             elseif is_equal then
                 if cmp then 
-                    _table_a = cmp(a, b)
+                    _new_t[k] = cmp(a, b)
                 else
-                    _table_a[k] = a == b
+                    _new_t[k] = a == b
                 end
             else
-                _table_a[k] = false 
+                _new_t[k] = false 
             end
         end
     end
 
-    local _table_a, _table_b = u.copy(table_a), u.copy(table_b)
-    __compare(_table_a, _table_b)
-    return _table_a
+    __compare(table_a, table_b)
+    return new_t
 end
 
 function param.bfs_compare_table(table_a, table_b, cmp)
-    param.assert_h(table_a, 'table_1')
-    param.assert_h(table_b, 'table_2')
-    if cmp then param.assert_callable(cmp, 'comparison_function') end
+    param.assert_h(table_a)
+    param.assert_h(table_b)
 
-    local function __compare(_table_a, _table_b)
+    local new_t = {}
+    local _new_t = new_t
+    if cmp then param.assert_callable(cmp) end
+
+    local function __compare(_table_a, _table_b, _new_t)
         local later_ks = {}
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
@@ -128,56 +158,58 @@ function param.bfs_compare_table(table_a, table_b, cmp)
 
             if u.table_p(a) and is_equal then
                 if param.compare_cls(a, b) then
-                    a[k] = a == b
+                    if cmp then
+                        _new_t[k] = cmp(a, b)
+                    else
+                        _new_t[k] = a == b
+                    end
                 else
                     push(later_ks, k)
                 end
             elseif is_equal then
                 if cmp then 
-                    _table_a = cmp(a, b)
+                    _new_t[k] = cmp(a, b)
                 else
-                    _table_a[k] = a == b
+                    _new_t[k] = a == b
                 end
             else
-                _table_a[k] = false 
+                _new_t[k] = false 
             end
         end
 
         for _, k in ipairs(later_ks) do
-            __compare(_table_a[k], _table_b[k])
+            _new_t[k] = {}
+            __compare(_table_a[k], _table_b[k], _new_t[k])
         end
     end
 
-    local _table_a, _table_b = u.copy(table_a), u.copy(table_b)
-    __compare(_table_a, _table_b)
-    return _table_a
+    __compare(table_a, table_b, _new_t)
+    return new_t
 end
 
-function param.bfs_assert_table(table_a, table_b, cmp, use_value)
+function param.bfs_assert_table(table_a, table_b, use_value)
     param.assert_h(table_a)
     param.assert_h(table_b)
-
-    use_value = use_value == nil and true or false
 
     local function __compare(_table_a, _table_b)
         local later_ks = {}
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            assert(param.compare_type(a, b), u.sprintf('Param at key %s (%s) in table `%s`  is invalid. Required param type: %s', k, a, _table_a, type(b)))
+            param.assert_type_equal(a, b)
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    assert(param.compare_cls(a, b), u.sprintf('Param at key %s (%s) in table `%s`  is invalid. Required class: %s', k, a, _table_a, type(b)))
+                    param.assert_equal_class(a, b)
 
                     if use_value then
-                        assert(a == b, u.sprintf('Param at key %s (%s) in table `%s`  is invalid. Required param: %s', k, a, _table_a, b))
+                        param.assert_key(_table_a, k, b)
                     end
                 else
                     push(later_ks, k)
                 end
             elseif use_value then
-                assert(a == b, u.sprintf('Param at key %s (%s) in table `%s`  is invalid. Required param: %s', k, a, _table_a, b))
+                param.assert_key(_table_a, k, b)
             end
         end
 
@@ -189,28 +221,30 @@ function param.bfs_assert_table(table_a, table_b, cmp, use_value)
     __compare(table_a, table_b)
 end
 
-function param.dfs_assert_table(table_a, table_b, cmp)
-    param.assert_h(table_a, 'table_1')
-    param.assert_h(table_b, 'table_2')
+function param.dfs_assert_table(table_a, table_b, use_value)
+    param.assert_h(table_a)
+    param.assert_h(table_b)
+
+    use_value = use_value == nil and true or false
 
     local function __compare(_table_a, _table_b)
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            assert(param.compare_type(a, b), u.sprintf('Param at key %s (%s) in table `%s` is invalid. Required param type: %s', k, a, _table_a, type(b)))
+            assert(param.compare_type(a, b))
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    assert(param.compare_cls(a, b), u.sprintf('Param at key %s (%s) in table `%s` have different classes. Required param class: %s', k, a, _table_a, class.of(b)))
+                    param.assert_equal_class(a, b)
 
                     if use_value then
-                        assert(a == b, u.sprintf('Param at key %s (%s) in table `%s` is invalid. Required param: %s', k, a, _table_a, b))
+                        param.assert_key(_table_a, k, b)
                     end
                 else
-                    __compare(a, b)
+                    __compare(_table_a[k], _table_b[k])
                 end
             elseif use_value then
-                assert(a == b, u.sprintf('Param at key %s (%s) in table `%s` is invalid. Required param: %s', k, a, _table_a, b))
+                param.assert_key(_table_a, k, b)
             end
         end
     end
