@@ -64,12 +64,12 @@ function au:add(event, pat, f, opts)
     f = au.register(f)
     pat = to_list(pat)
     event = to_list(event)
-    if opts.once then f = sprintf('++once %s', f) end
-    if opts.nested then f = sprintf('++nested %s', f) end
+    local once = opts.once == nil and '' or '++once'
+    local nested = opts.nested == nil and '' or '++nested'
 
     map(function(_e) 
         map(function(_p)
-            local aucmd = sprintf('autocmd %s %s %s %s', self.name, _e, _p, f)
+            local aucmd = sprintf('autocmd %s %s %s %s %s %s', self.name, _e, _p, once, nested, f)
             local au_name = sprintf('%s::%s', _p, _e)
             local t = self.autocmds[au_name]
 
