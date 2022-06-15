@@ -1,5 +1,7 @@
 local str = {}
 local utils = require('modules.utils')
+local class = require('classy')
+local pcre = require('rex_pcre2')
 
 function str.trim(s)
     return s:match('^%s*(.-)%s*$') or s
@@ -25,6 +27,25 @@ function str.sed(s, pat_sub, ...)
     local pat, sub, times = unpack(pat_sub)
     local rest = {...}
     local n = #rest
+    s = pcre.gsub(s, pat, sub, times)
+
+    for i=1, n do
+        assert(utils.table_p(rest[i]))
+        assert(#rest[i] >= 2)
+        s = pcre.gsub(s, unpack(rest[i]))
+    end
+
+    return s
+end
+
+function str.lsed(s, pat_sub, ...)
+    assert(s)
+    assert(utils.table_p(pat_sub))
+    assert(#pat_sub == 2)
+
+    local pat, sub, times = unpack(pat_sub)
+    local rest = {...}
+    local n = #rest
     s = s:gsub(pat, sub, times)
 
     for i=1, n do
@@ -37,11 +58,28 @@ function str.sed(s, pat_sub, ...)
     return s
 end
 
-function str.globalize(ks)
-    utils.globalize(str, ks)
+function str.match(s, ...)
+    local r = {...}
+    local n = #r
+    assert(n > 0, 'No patterns provided')
+
+    local function get_match(a, i)
+        if i > n then
+            return a or false
+        end
+
+        local m = pcre.match(a, r[i])
+        if not m then
+            return false
+        else
+            return get_match(m, i+1)
+        end
+    end
+
+    return get_match(s, 1)
 end
 
-function str.match(s, ...)
+function str.lmatch(s, ...)
     local r = {...}
     local n = #r
     assert(n > 0, 'No patterns provided')
@@ -92,7 +130,24 @@ function str.strsplice(s, from, len, ...)
     return table.concat(s, "")
 end
 
-function str.gmatch(s, pat)
+function str.strfind(s, pat)
+    local matches = {}
+    local n = #s
+    local a, b = pcre.find(s, pat)
+    if not a then return false end
+    matches[#matches+1] = {a, b, str.substr(s, a, b)}
+
+    while a ~= nil do
+        a, b = pcre.find(s, pat, b+1)
+        if a then
+            matches[#matches+1] = {a, b, str.substr(s, a, b)}
+        end
+    end
+
+    return matches
+end
+
+function str.lstrfind(s, pat)
     local matches = {}
     local n = #s
     local a, b = string.find(s, pat)

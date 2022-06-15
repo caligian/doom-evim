@@ -42,6 +42,7 @@ function pkgs.compile_packer_forms()
 
     if path.exists(user_overrides_path) then
         user_overrides = require('user.pkgs.plugins')
+        assert_t(user_overrides)
     end
 
     merge(packages, user_overrides)
@@ -62,10 +63,6 @@ function pkgs.load_all(force_recompile)
             use(v)
         end
     end)
-
-    if not with_config_path('plugins', 'packer_compiled.lua') or force_recompile then
-        Doom.pkgs.packer.compile()
-    end
 end
 
 return pkgs

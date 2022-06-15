@@ -1,25 +1,33 @@
 local class = require('classy')
+local ex = require('core.au.exception')
 local au = class('doom-augroup')
 
 au.status = Doom.au.status
 au.refs = Doom.au.refs
 
-function au.func2ref(f)
-    assert(str_p(f) or callable(f))
+function au.func2ref(f, for_keybinding)
+    assert(f, ex.no_f())
+    assert_type(f, 'string', 'callable')
 
     if str_p(f) then
         return f
-    elseif callable(f) then
-        return sprintf('lua Doom.au.refs[%d]()', #au.refs)
+    else
+        if not for_keybinding then
+            return sprintf('lua Doom.au.refs[%d]()', #au.refs)
+        else
+            return sprintf(':lua Doom.au.refs[%d]()<CR>', #au.refs)
+        end
     end
 end
 
-function au.register(f)
+function au.register(f, for_keybinding)
     if callable(f) then push(au.refs, f) end
-    return au.func2ref(f)
+    return au.func2ref(f, for_keybinding)
 end
 
 function au:__init(name, doc)
+    assert_s(doc)
+
     self.name = name:gsub('[^%w_]+', '')
     self.doc = doc
     self.autocmds = {}
@@ -27,6 +35,8 @@ function au:__init(name, doc)
     if not self.name then
         self.name = sprintf('doom_group_%d', len(au.status) + 1)
     end
+
+    assert_s(name)
 end
 
 --[[
@@ -42,6 +52,13 @@ Add an autocmd to augroup
 @treturns table Containing autocmd strings
 --]]
 function au:add(event, pat, f, opts)
+    assert(pat, ex.no_pat())
+    assert(f, ex.no_f())
+
+    assert_t(opts)
+    assert_type(event, 'string', 'table')
+    assert_type(pat, 'string', 'table')
+
     opts = opts or {}
     event = event or 'BufEnter'
     f = au.register(f)

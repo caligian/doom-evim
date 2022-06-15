@@ -24,7 +24,7 @@ vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color bold ]]
+vim.cmd [[ color Base2Tone-Forest-dark ]]
 
 -- leader key
 vim.g.mapleader = " "
@@ -34,10 +34,10 @@ vim.g.maplocalleader = ","
 vim.cmd [[ tnoremap <Esc> <C-\><C-n> ]]
 
 local path = require('path')
-local config_dir = vim.fn.stdpath('config')
-vim.o.backupdir = path(config_dir, 'temp', 'backups')
-vim.o.directory = path(config_dir, 'temp', 'tmp')
-vim.o.undodir = path(config_dir, 'temp', 'undo')
+local data_dir = vim.fn.stdpath('data')
+vim.o.backupdir = path(data_dir, 'temp', 'backups')
+vim.o.directory = path(data_dir, 'temp', 'tmp')
+vim.o.undodir = path(data_dir, 'temp', 'undo')
 
 local home = os.getenv('HOME')
 -- paths
@@ -87,7 +87,9 @@ local kbd = {
     'noremap <leader>qq :qa!',
     'noremap <leader>qw :xa!',
 
-    'noremap <leader><leader> :noh'
+    'noremap <leader><leader> :noh';
+
+    'noremap <leader>ht :Telescope colorscheme';
 }
 
 for _, kbd in ipairs(kbd) do vim.cmd(kbd .. '<CR>') end

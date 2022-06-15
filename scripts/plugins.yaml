@@ -1,5 +1,4 @@
 # <repo>: [<commit>, <args>]
-wbthomason/packer.nvim: [false, '--depth 1']
 svermeulen/vimpeccable: [false]
 nvim-lua/plenary.nvim: [false]
 Olical/aniseed: [false]

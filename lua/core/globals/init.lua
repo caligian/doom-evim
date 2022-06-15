@@ -1,4 +1,4 @@
-_G.Doom = {
+return {
     ui = {
         theme = 'everforest',
     },
@@ -58,10 +58,8 @@ _G.Doom = {
     },
 
     telescope = {
-        modules = {
-            font = {
-                include = '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)',
-            }
+        font_switcher = {
+            include = '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)',
         }
     },
 
@@ -109,5 +107,8 @@ _G.Doom = {
         status = {},
     },
 
-    pkgs = {},
+    pkgs = {
+        paq = require('paq');
+        loaded = {},
+    },
 }

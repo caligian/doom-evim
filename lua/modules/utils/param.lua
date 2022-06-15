@@ -2,63 +2,93 @@ local class = require('classy')
 local u = require('modules.utils')
 local tu = require('modules.utils.table')
 local fu = require('modules.utils.function')
-local param = class('doom-param-utils')
+local regex = require('rex_pcre2')
+
+local param = {}
+
+function param.assert_boolean(b)
+    assert(b == true or b == false, u.sprintf('Param `%s` is not a boolean', b))
+end
+
+param.assert_bool = param.assert_boolean
+param.assert_b = param.assert_bool
 
 function param.assert_s(s)
-    assert(u.str_p(s), u.sprintf('Param `%s` is not a string', s))
+    if s ~= nil then
+        assert(u.str_p(s), u.sprintf('Param `%s` is not a string', s))
+    end
 end
 
 param.assert_string = param.assert_s
 param.assert_str = param.assert_s
 
 function param.assert_num(num)
-    assert(u.num_p(num), u.sprintf('Param `%s` is not a number', num))
+    if num ~= nil then
+        assert(u.num_p(num), u.sprintf('Param `%s` is not a number', num))
+    end
 end
 
 param.assert_number = param.assert_num
+param.assert_n = param.assert_num
 
 function param.assert_t(t)
-    assert(u.table_p(t), u.sprintf('Param `%s` is not a table', t))
+    if t ~= nil then
+        assert(u.table_p(t), u.sprintf('Param `%s` is not a table', t))
+    end
 end
 
 param.assert_h = param.assert_t
 param.assert_table = param.assert_t
 
 function param.assert_class(cls)
-    assert(class.of(cls), u.sprintf('Param `%s` is not a class', cls))
+    if cls ~= nil then
+        assert(class.of(cls), u.sprintf('Param `%s` is not a class', cls))
+    end
 end
 
 param.assert_cls = param.assert_class
 
 function param.assert_func(f)
-    assert(u.func_p(f), u.sprintf('Param `%s` is not a function', f))
+    if f ~= nil then
+        assert(u.func_p(f), u.sprintf('Param `%s` is not a function', f))
+    end
 end
 
 function param.assert_callable(f)
-    assert(u.callable(f), u.sprintf('Param `%s` is not a callable', f))
-end
-
-function param.assert_type(param, _type)
-    assert(type(param) == _type, u.sprintf('Param `%s` is not of type %s', param, _type))
+    if f ~= nil then
+        assert(u.callable(f), u.sprintf('Param `%s` is not a callable', f))
+    end
 end
 
 function param.assert_type(param, ...)
-    assert(param, 'No param supplied')
+    if param == nil then return end
 
     local fail = 0
     local t_param = type(param)
     local failed = {}
 
-    for _, i in ipairs({...}) do
-        if t_param ~= i then
+    local args = {...}
+    local n = #args
+
+    for _, i in ipairs(args) do
+        if i == 'callable' then
+            if not u.callable(param) then
+                fail = fail + 1
+                tu.push(failed, i)
+            end
+        elseif not match(i, 'table', 'string', 'number', 'function',  'userdata') then
+            local param_cls = type(param)
+            if param_cls and param_cls.__name == i then
+                fail = fail + 1
+                tu.push(failed, i)
+            end
+        elseif t_param ~= i then
             fail = fail + 1
             tu.push(failed, i)
         end
     end
 
-    if fail > 0 then
-        error(dump(failed) .. ' failed to match with param type `%s`', type(param))
-    end
+    assert(fail ~= n, dump(failed) .. string.format(' failed to match with param type `%s`', type(param)))
 end
 
 function param.assert_equal(a, b)
@@ -72,16 +102,7 @@ end
 param.assert_eql = param.assert_equal
 param.assert_type_eql = param.assert_type_equal
 
--- @tparam params table Form: param_name = param
-function param.assert_types(params, _type)
-    param.assert_table(params)
-
-    for _, param in ipairs(params) do
-        assert(type(param) == _type, u.sprintf('Param `%s` is not of type %s', param, _type))
-    end
-end
-
-function param.assert_equal_class(a, b)
+function param.assert_class_equal(a, b)
     local cls_a = class.of(a)
     local cls_b = class.of(b)
 
@@ -89,6 +110,9 @@ function param.assert_equal_class(a, b)
         assert(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, type(a), type(b)))
     end
 end
+
+param.assert_cls_equal = param.assert_class_equal
+param.assert_cls_eql = param.assert_cls_eql
 
 function param.compare_type(a, b)
     return type(a) == type(b)
@@ -104,6 +128,8 @@ end
 param.compare_cls = param.compare_class
 
 function param.assert_key(t, default, ...)
+    param.assert_h(t)
+
     default = default == nil and false
 
     for _, k in ipairs({...}) do
@@ -120,6 +146,7 @@ end
 function param.dfs_compare_table(table_a, table_b, cmp)
     param.assert_h(table_a)
     param.assert_h(table_b)
+
     if cmp then param.assert_callable(cmp) end
     local new_t = {}
     local _new_t = new_t
@@ -163,10 +190,10 @@ end
 function param.bfs_compare_table(table_a, table_b, cmp)
     param.assert_h(table_a)
     param.assert_h(table_b)
+    param.assert_callable(cmp)
 
     local new_t = {}
     local _new_t = new_t
-    if cmp then param.assert_callable(cmp) end
 
     local function __compare(_table_a, _table_b, _new_t)
         local later_ks = {}
@@ -219,7 +246,7 @@ function param.bfs_assert_table(table_a, table_b, use_value)
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    param.assert_equal_class(a, b)
+                    param.assert_class_equal(a, b)
 
                     if use_value then
                         param.assert_key(_table_a, k, b)
@@ -254,7 +281,7 @@ function param.dfs_assert_table(table_a, table_b, use_value)
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    param.assert_equal_class(a, b)
+                    param.assert_class_equal(a, b)
 
                     if use_value then
                         param.assert_key(_table_a, k, b)
@@ -270,6 +297,8 @@ function param.dfs_assert_table(table_a, table_b, use_value)
 
     __compare(table_a, table_b)
 end
+
+param.assert_table = param.bfs_assert_table
 
 function param.bfs_compare(a, b, cmp)
     if not param.compare_type(a, b) then

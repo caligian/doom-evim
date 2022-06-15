@@ -1,9 +1,16 @@
+local err = function(fmt)
+    return function(...)
+        return sprintf(fmt, ...)
+    end
+end
+
 return {
-    NO_TELESCOPE = 'No telescope installation found';
+    no_telescope = err('No telescope installation found');
 
     picker = {
-        MISSING_TITLE = 'No title for picker given';
-        MISSING_RESULTS = 'No results provided';
-        MISSING_MAPPINGS = 'No default mapping and other mappings provided'
+        missing = err('No picker provided');
+        missing_title = err('No title for picker given');
+        missing_results = err('No results provided');
+        missing_mappings = err('No default mapping and other mappings provided')
     }
 }

@@ -29,7 +29,7 @@ function buffer.find_by_winid(id)
 end
 
 function buffer.find_by_bufname(expr)
-    assert_types(expr, 'string', 'number')
+    assert_type(expr, 'string', 'number')
 
     expr = trim(expr)
 
@@ -163,13 +163,16 @@ buffer.not_equals = buffer.nequals
 buffer.__eq = buffer.equals
 buffer.__neq = buffer.nequals
 
-function buffer:__init(name)
+function buffer:__init(name, scratch)
     local bufnr
     local is_temp
 
-    assert_types(name, 'string', 'number')
+    assert_type(name, 'string', 'number')
 
-    if not name then
+    if scratch then
+        name = with_data_path('temp', 'doom-scratch-buffer' .. '.' .. vim.bo.filetype)
+        bufnr = vim.fn.bufadd(name)
+    elseif not name then
         name = sprintf('doom-buffer-%d', #(keys(Doom.buffer.status)))
         bufnr = vim.fn.bufadd(name)
         is_temp = true
@@ -177,7 +180,7 @@ function buffer:__init(name)
         if str_p(name) then name = trim(name) end
 
         if num_p(name) then
-            oblige(vim.fn.bufname(name) ~= '', 'Invalid bufnr provided')
+            exception.bufname_not_valid(name)
             name = vim.fn.bufname(name)
         elseif name:match('%%:?[a-z]?') then
             name = vim.fn.expand(name)
@@ -188,7 +191,9 @@ function buffer:__init(name)
     self.index = bufnr
     self.name = name
     if is_temp then
-        self:setopts({buftype='nofile', noswapfile=true, buflisted=false})
+        self:setopts({buftype='nofile', swapfile=false, buflisted=false})
+    elseif scratch then
+        self:setopts({buflisted=false, swapfile=false, filetype=vim.bo.filetype})
     end
 
     if self.status[bufnr] then
@@ -273,8 +278,8 @@ function buffer:read(pos, concat)
 end
 
 function buffer:write(pos, s)
-    assert(pos.start_row, 'No start row provided')
     assert(self:exists(), exception.bufnr_not_valid(self.index))
+    assert(pos.start_row, exception.no_start_row(pos))
 
     pos = pos or {}
     pos.start_row = pos.start_row or 0
@@ -292,7 +297,6 @@ function buffer:write(pos, s)
         return
     end
 
-    assert(pos.start_col, 'No starting column provided')
     local a = first(self:read({start_row=pos.start_row, end_row=pos.start_row}, false, bufnr))
     local l = a and #a or 0
     local b = first(self:read({start_row=pos.end_row, end_row=pos.end_row}, false, bufnr))
@@ -334,19 +338,18 @@ function buffer:write(pos, s)
             pos.end_col = m
         end
     end
+
     vim.api.nvim_buf_set_text(bufnr, pos.start_row, pos.start_col, pos.end_row, pos.end_col, s)
 end
 
 function buffer:write_line(pos, s)
-    assert(pos.start_row, 'No start row provided')
-
-    pos.end_row = pos.start_row
+    pos = pos or {}
+    if pos.start_row then pos.end_row = pos.start_row end
     self:write(pos, s)
 end
 
 function buffer:insert(pos, s)
-    assert(pos.start_row, 'No start row provided')
-
+    pos = pos or {}
     pos.end_row = pos.start_row
     pos.end_col = pos.start_col
     self:write(pos, s)
@@ -359,20 +362,23 @@ end
 function buffer:put(s, prepend, _type, _follow)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
+    assert_type(s, 'table', string)
+    assert_s(prepend)
+    assert_s(_type)
+    assert_s(_follow)
+
     local bufnr = self.index
     prepend = prepend and 'P' or 'p'
     _type = not _type and 'c' or _type
     _follow = _follow == nil and true or _follow
 
-    if str_p(s) then
-        s = split(s, "\n\r")
-    end
+    if str_p(s) then s = split(s, "\n\r") end
 
     sched = sched == nil and false
     timeout = timeout or 10
     tries = tries or 5
     inc = inc or 5
-    local f = partial(vim.api.nvim_put, s, _type, prepend, _follow), 
+    local f = partial(vim.api.nvim_put, to_list(s), _type, prepend, _follow), 
 
     self:exec(f, sched, timeout, tries, inc)
 end
@@ -444,13 +450,12 @@ function buffer:delete()
 end
 
 function buffer:set_keymap(mode, keys, f, attribs, doc, event)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
-    oblige(f)
-    oblige(doc)
+    assert(mode)
+    assert(key)
+    assert(f)
+    assert(doc)
 
     assoc(self, {'keymaps', mode, keys}, {})
-
     keys = keys or self.keys
     mode = mode or 'n'
     event = event or 'BufEnter'
@@ -483,9 +488,14 @@ end
 
 function buffer:to_win_prompt(hook, doc, comment, win_opts)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
+    assert(doc, exception.no_doc())
+    assert(hook, exception.no_f())
 
-    oblige(doc, 'No documentation for callback given')
-    oblige(hook, 'No callback provided.')
+    assert_type(doc, 'string')
+    assert_t(win_opts)
+    assert_s(comment)
+    assert_s(doc)
+    assert_type(hook, 'callable', 'string')
 
     local text = self:read(pos)
     comment = comment or '#'
@@ -533,6 +543,16 @@ function buffer:tabnew()
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
     vim.cmd(sprintf(':tabnew | b %d', self.index))
+end
+
+function buffer:save(where)
+    assert_s(where)
+
+    if not where then where = self.name end
+
+    self:exec(function() 
+        vcmd('w ' .. where)
+    end)
 end
 
 return buffer

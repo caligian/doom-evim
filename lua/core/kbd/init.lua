@@ -1,15 +1,20 @@
 local au = require('core.au')
 local wk = require('which-key')
+local ex = require('core.kbd.exception')
 
-local kbd = class('doom-kbd')
+local kbd = class('doom-keybinding')
 assoc(Doom.kbd, 'status', {})
 kbd.status = Doom.kbd.status
 kbd.prefixes = Doom.kbd.prefixes
 
 function kbd.wk_register(mode, keys, doc, bufnr)
-    oblige(mode)
-    oblige(keys)
-    oblige(doc)
+    assert(mode, ex.no_mode())
+    assert(keys, ex.no_keys())
+    assert(doc, ex.no_doc())
+
+    assert_type(mode, 'string', 'table')
+    assert_s(keys)
+    assert_s(doc)
 
     local opts = {buffer=bufnr, mode=mode}
 
@@ -29,6 +34,9 @@ function kbd.wk_register(mode, keys, doc, bufnr)
 end
 
 function kbd.find(mode, keys)
+    assert(mode, ex.no_mode())
+    assert(keys, ex.no_keys())
+ 
     return assoc(kbd.status, {mode, keys})
 end
 
@@ -44,21 +52,20 @@ function kbd.load_prefixes()
     Doom.kbd.prefixes_loaded = true
 end
 
-kbd.load_prefixes()
 
 function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
-    assert(keys, 'need keys')
-    assert(f, 'need a command')
-    assert(doc, 'need documentation')
-    assert(str_p(keys), 'need string')
-    assert(str_p(f) or callable(f), 'need string or table[string]')
-    assert(str_p(doc), 'need string')
-    assert(mode ~= nil or mode ~= false and str_p(mode), 'need string')
-    assert(attribs ~= nil or attribs ~= false and str_p(attribs) or table_p(attribs), 'need string or table[string]')
+    assert(mode, ex.no_mode())
+    assert(keys, ex.no_keys())
+    assert(doc, ex.no_doc())
+    assert(f, ex.no_f())
 
-    if not mode then
-        mode = 'n'
-    end
+    assert_type(mode, 'string', 'table')
+    assert_s(keys)
+    assert_s(doc)
+    assert_type(f, 'string', 'table')
+    assert_type(attribs, 'string', 'table')
+    assert_type(event, 'string', 'table')
+    assert_type(pattern, 'string', 'table')
 
     if not attribs or attribs and #attribs == 0 then
         attribs = {'noremap', 'silent', 'nowait'}
@@ -66,21 +73,12 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
         attribs = to_list(attribs)
     end
 
-    if event or event and #event == 0 then 
-        assert(str_p(event) or table_p(event), 'need string or table[string]') 
-        event = to_list(event)
-    end
-
-    if pattern or pattern and #pattern == 0 then 
-        assert(str_p(pattern) or table_p(pattern), 'need string or table[string]') 
-        pattern = to_list(pattern)
-    end
+    if event then event = to_list(event) end
+    if pattern then pattern = to_list(pattern) end
 
     self.noremap = find(attribs, 'noremap')
 
-    if self.noremap then
-        attribs[self.noremap] = nil
-    end
+    if self.noremap then attribs[self.noremap] = nil end
 
     self.attribs = vals(attribs)
     self.noremap = self.noremap ~= nil and true
@@ -142,10 +140,7 @@ function kbd:enable(force)
 
     self:backup_previous()
 
-    if callable(self.f) then
-        local _f = au.register(self.f)
-        self.f = ':' .. au.register(self.f) .. '<CR>'
-    end
+    self.f = au.register(self.f, true)
 
     if self.event or self.pattern then
         self.event =  self.event or 'BufEnter'
@@ -183,6 +178,7 @@ function kbd:enable(force)
         else
             cmd = sprintf('%smap %s %s %s', self.mode, self.attribs_s, self.keys, self.f)
         end
+
         kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
 
         self.global = true
@@ -196,8 +192,9 @@ end
 
 -- Restore nth previous keybinding
 function kbd:restore_previous(n)
+    assert_num(n)
     n = n or 1
-    assert(n > 0, 'Invalid index provided')
+    assert(n > 0, ex.index_not_valid)
 
     if not self.previous or #self.previous == 0 then return false end
     if #self.previous > n then n = #self.previous end
@@ -210,6 +207,10 @@ function kbd:restore_previous(n)
 end
 
 function kbd:disable(buffers)
+    assert_type(buffers, 'number', 'table')
+    
+    buffers = to_list(buffers)
+
     if not self.mapped then return false end
 
     if self.au then self.au:disable() end
