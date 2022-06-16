@@ -462,7 +462,7 @@ tu.imap = function (f, ...)
     local arrs = {...}
     local max_len = {}
 
-    for _, a in ipairs(arrs) do
+    for _, a in pairs(arrs) do
         max_len[#max_len+1] = #a
     end
     max_len = math.min(unpack(max_len))
@@ -481,7 +481,7 @@ tu.map = function (f, ...)
     local arrs = {...}
     local max_len = {}
 
-    for _, a in ipairs(arrs) do
+    for _, a in pairs(arrs) do
         max_len[#max_len+1] = #a
     end
     max_len = math.min(unpack(max_len))
@@ -498,7 +498,7 @@ tu.each = function (f, ...)
     local arrs = {...}
     local max_len = {}
 
-    for _, a in ipairs(arrs) do
+    for _, a in pairs(arrs) do
         max_len[#max_len+1] = #a
     end
     max_len = math.min(unpack(max_len))
@@ -512,7 +512,7 @@ end
 tu.reduce = function (f, arr, init)
     init = init or false
 
-    for _, v in ipairs(arr) do 
+    for _, v in pairs(arr) do 
         init = f(v, init)
     end
 

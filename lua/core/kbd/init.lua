@@ -33,11 +33,14 @@ function kbd.wk_register(mode, keys, doc, bufnr)
     end
 end
 
-function kbd.find(mode, keys)
+function kbd.find(mode, keys, n)
     assert(mode, ex.no_mode())
     assert(keys, ex.no_keys())
+
+    n = n or 1
+    assert_n(n)
  
-    return assoc(kbd.status, {mode, keys})
+    return assoc(kbd.status, {mode, keys, n})
 end
 
 function kbd.load_prefixes()
@@ -97,7 +100,9 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
     self.pattern = pattern
     self.mapped = 0
 
-    assoc(self.status, {mode, keys}, self)
+    if not self.status[mode] then self.status[mode] = {} end
+    if not self.status[mode][keys] then self.status[mode][keys] = {} end
+    push(self.status[mode][keys], self)
 end
 
 function kbd:backup_previous()

@@ -1,31 +1,3 @@
--- Basic keybindings in case of initialization failures
-local basic_keys = {
-    'noremap <leader>fv :source %',
-    'noremap <leader>fs :w %',
-    'noremap <leader>fR :if &modifiable == 1 <bar> set nomodifiable nonumber <bar> else <bar> set modifiable <bar> endif',
-
-    'noremap <leader>bk :hide',
-    'noremap <leader>bq :bwipeout',
-    'noremap <leader>bn :bnext',
-    'noremap <leader>br :e %',
-
-    'noremap <leader>tt :tabnew',
-    'noremap <leader>tk :tabclose',
-    'noremap <leader>tn :tabnext',
-    'noremap <leader>tp :tabprev',
-
-    'noremap <localleader>,t :tabnew term://bash',
-    'noremap <localleader>,S :split term://bash',
-    'noremap <localleader>,V :vsplit term://bash',
-
-    'noremap <leader>qq :qa!',
-    'noremap <leader>qw :xa!',
-
-    'noremap <leader><leader> :noh';
-}
-
-for _, basic_keys in ipairs(basic_keys) do vim.cmd(basic_keys .. '<CR>') end
-
 -- All the required modules
 require('modules.utils').globalize()
 globalize(require('modules.utils.table'))
@@ -67,6 +39,7 @@ pkgs.load_plugins()
 
 -- Require keybindings
 require('core.buffers.keybindings')
+require('core.kbd.defaults')
 
 -- Load post-initialization user config
 if path.exists(with_user_config_path('lua', 'user', 'config.lua')) then require('user.config') end

@@ -11,7 +11,7 @@ vim.o.wildmenu = true
 vim.o.termguicolors = true
 vim.o.laststatus = 2
 vim.o.mousefocus = true
-vim.o.shell = "/bin/bash --login"
+vim.o.shell = "/bin/bash"
 vim.o.backspace = "indent,eol,start"
 vim.o.number = true
 vim.o.cursorline = true
@@ -24,7 +24,7 @@ vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color Base2Tone-Cave-dark ]]
+vim.cmd [[ color Base2Tone-Morning-dark ]]
 
 -- leader key
 vim.g.mapleader = " "

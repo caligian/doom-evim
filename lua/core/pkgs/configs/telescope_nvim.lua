@@ -1,5 +1,5 @@
 local ivy_theme = require('telescope.themes').get_ivy({
-    layout_config = {height=0.50}
+    layout_config = {height=0.55}
 })
 
 local ts = require('telescope')
@@ -17,5 +17,3 @@ kbd('n', '<leader>gS', get_picker('git_status'), 'noremap', 'Show git status'):e
 kbd('n', '<leader>bb', get_picker('buffers'), 'noremap', 'Show listed buffers'):enable()
 kbd('n', '<leader>ht', get_picker('colorscheme'), 'noremap', 'Change colorscheme'):enable()
 kbd('n', '<leader>fr', get_picker('oldfiles'), 'noremap', 'Recent files'):enable()
-
-

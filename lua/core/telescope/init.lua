@@ -71,10 +71,12 @@ function ts:__init(title, results, entry_maker, sorter, mappings, opts)
         layout_config = {height=0.37}
     })
     opts = opts or {}
-    opts = merge(ivy_theme, opts)
+    merge(opts, ivy_theme)
     mappings = to_list(mappings)
     sorter = sorter or 'fzy_index'
     sorter = strip(sorter)
+
+    inspect(opts)
 
     if sorter:match('^generic_fzy') then
         sorter = sorters.get_generic_fuzzy_sorter()
@@ -105,7 +107,7 @@ end
 function ts:new(opts)
     assert_t(opts)
 
-    opts = opts or {}
+    opts = opts or self.opts
 
     -- Currently callable results are not working
     if callable(self.results) then
@@ -190,7 +192,18 @@ function ts:update(title, results, entry_maker, sorter, mappings, opts)
 end
 
 function ts:find(opts)
-    ts:new(opts):find()
+    if not self.picker then self:new(opts) end
+    assert(self.picker)
+    self.picker:find()
+end
+
+function ts.load_module(module)
+    assert(module)
+    assert_s(module)
+
+    if path.exists(with_config_lua_path('core', 'telescope', module, 'init.lua')) then
+        require('core.telescope.' .. module)
+    end
 end
 
 return ts
