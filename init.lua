@@ -24,7 +24,7 @@ vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color Base2Tone-Forest-dark ]]
+vim.cmd [[ color Base2Tone-Cave-dark ]]
 
 -- leader key
 vim.g.mapleader = " "
@@ -50,49 +50,6 @@ package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/init.lua'
 
 -- cpaths
 package.cpath = package.cpath .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.so'
-
--- Temp keybindings
-local kbd = {
-    'noremap <leader>ff :Telescope find_files',
-    'noremap <leader>fr :Telescope oldfiles',
-    'noremap <leader>fv :source %',
-    'noremap <leader>fs :w %',
-    'noremap <leader>fR :if &modifiable == 1 <bar> set nomodifiable nonumber <bar> else <bar> set modifiable <bar> endif',
-
-    'noremap <leader>gf :Telescope git_files',
-    'noremap <leader>gb :Telescope git_branches',
-    'noremap <leader>gS :Telescope git_status',
-    'noremap <leader>gs :Git stage %',
-    'noremap <leader>gp :Git push',
-    'noremap <leader>gg :Git',
-    'noremap <leader>gi :Git init',
-    'noremap <leader>gc :Git commit',
-    'noremap <leader>ga :Git add %',
-
-    'noremap <leader>bb :Telescope buffers',
-    'noremap <leader>bk :hide',
-    'noremap <leader>bq :bwipeout',
-    'noremap <leader>bn :bnext',
-    'noremap <leader>br :e %',
-
-    'noremap <leader>tt :tabnew',
-    'noremap <leader>tk :tabclose',
-    'noremap <leader>tn :tabnext',
-    'noremap <leader>tp :tabprev',
-
-    'noremap <localleader>,t :tabnew term://bash',
-    'noremap <localleader>,S :split term://bash',
-    'noremap <localleader>,V :vsplit term://bash',
-
-    'noremap <leader>qq :qa!',
-    'noremap <leader>qw :xa!',
-
-    'noremap <leader><leader> :noh';
-
-    'noremap <leader>ht :Telescope colorscheme';
-}
-
-for _, kbd in ipairs(kbd) do vim.cmd(kbd .. '<CR>') end
 
 -- Load doom
 require('core')

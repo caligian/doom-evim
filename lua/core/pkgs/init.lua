@@ -91,20 +91,24 @@ local function download_rock(rock)
 end
 
 local function get_pkgs_loader_cmd(plugin, config)
+    assert_type(plugin, 'string', 'table')
+
     local req_path = false
-    plugin = path.name(plugin)
-    plugin = sed(plugin, {'[^A-Za-z0-9_.-]+', ''}, {'\\.', '_'})
-    local dst = with_config_lua_path('core', 'pkgs', 'configs', plugin .. '.lua')
+    plugin = path.name(table_p(plugin) and first(plugin) or plugin)
     local cmd = 'packadd! ' .. plugin
+    plugin = sed(plugin, {'\\.', '_'})
+    local dst = with_config_lua_path('core', 'pkgs', 'configs', plugin .. '.lua')
      
     if path.exists(dst) then 
         req_path = sprintf("core.pkgs.configs.%s", plugin)
 
         return au.register(function()
-            vim.cmd(cmd)
-            require(req_path)
-            Doom.pkgs.loaded[plugin] = true
-            if config then vim.cmd(au.register(config)) end
+            vim.schedule(function()
+                vim.cmd(cmd)
+                require(req_path)
+                Doom.pkgs.loaded[plugin] = true
+                if config then vim.cmd(au.register(config)) end
+            end)
         end)
     end
 
@@ -119,9 +123,7 @@ local function parse_specs(spec, opt)
 
     assert_s(spec[1])
 
-    --if Doom.pkgs.loaded[spec[1]] then
-        --return 
-    --end
+    if Doom.pkgs.loaded[spec[1]] then return spec end
 
     assert_type(spec.keys, 'table', 'string')
     assert_type(spec.pattern, 'table', 'string')
@@ -129,16 +131,15 @@ local function parse_specs(spec, opt)
     assert_type(spec.event, 'table', 'string')
     assert_callable(spec.cond)
 
-    opt = opt == nil and false
+    opt = opt == nil and false or true
 
-    spec.opt = opt == false and nil
     local keys = spec.keys
     local pattern = spec.pattern
     local event = spec.event
     local rocks = rocks
 
     if keys then
-        keys = copy(spec.keys)
+        _keys = copy(spec.keys)
 
         local _mode, _keys, _f, _attribs = false, false, false, false
 
@@ -151,6 +152,8 @@ local function parse_specs(spec, opt)
             assert_s(_keys)
             assert_type(_attribs, 'table', 'string')
             assert_type(_f, 'callable', 'string')
+        else
+            _keys = keys
         end
 
         _mode = _mode or 'n'
@@ -168,18 +171,20 @@ local function parse_specs(spec, opt)
 
         _attribs = join(map(function(a) return '<' .. a .. '>' end, _attribs), ' ')
 
-        local cmd = ''
+        local keybinding = ''
         if noremap then
-            cmd = sprintf('%snoremap %s %s ', _mode, _attribs, _keys)
+            keybinding = sprintf('%snoremap %s %s ', _mode, _attribs, _keys)
         else
-            cmd = sprintf('%smap %s %s ', _mode, _attribs, _keys)
+            keybinding = sprintf('%smap %s %s ', _mode, _attribs, _keys)
         end
 
-        cmd = cmd .. get_pkgs_loader_cmd(spec[1], _f) .. sprintf(' <bar> %sunmap %s<CR>', _mode, _keys)
+        keybinding = keybinding .. au.register(function()
+            vim.cmd(get_pkgs_loader_cmd(spec[1], _f)) 
+        end, true)
 
-        spec.cmd = cmd
+        spec.cmd = keybinding
 
-        vim.cmd(cmd)
+        vim.cmd(keybinding)
     elseif event or pattern then
         assert(pattern)
 
@@ -191,6 +196,8 @@ local function parse_specs(spec, opt)
         a:add(event or 'BufEnter', pattern, cmd, {once=true})
         a:enable()
         spec.augroup = a
+    else
+        vim.cmd(get_pkgs_loader_cmd(spec))
     end
 
     if rocks then each(download_rock, to_list(rocks)) end
@@ -200,7 +207,9 @@ local function parse_specs(spec, opt)
     return spec
 end
 
-function pkgs.load_plugins()
+function pkgs.load_plugins(force)
+    if pkgs.paq and not force then return end
+
     local specs = pkgs.plugin_specs
 
     if path.exists(pkgs.user_plugins_path) then
@@ -218,6 +227,11 @@ function pkgs.load_plugins()
     end
 
     paq(t)
+
+    pkgs.plugins = t
+    pkgs.paq = paq
+
+    return t
 end
 
 return pkgs

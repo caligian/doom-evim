@@ -244,3 +244,8 @@ function modeline.setup(bg, fg)
 end
 
 modeline.setup()
+
+local lualine_au = au('lualine_nvim_auto_color_changer', 'Automatically change status bar colors with colorscheme')
+lualine_au:add('colorscheme', '*', partial(modeline.setup))
+lualine_au:enable()
+

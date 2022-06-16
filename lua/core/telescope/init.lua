@@ -94,43 +94,6 @@ function ts:__init(title, results, entry_maker, sorter, mappings, opts)
         entry_maker = ts.entry_maker
     end
 
-    local _mappings = copy(mappings)
-
-    -- Format: {mode, keys, callable[prompt_bufnr], transform?}
-    for index, k in ipairs(_mappings) do
-        local mode, keys, f, doc, transform = unpack(k)
-        transform = transfrom == nil and false
-
-        assert(mode)
-        assert(keys)
-        assert(f)
-        assert(doc)
-
-        assert_s(mode)
-        assert_s(keys)
-        assert_s(doc)
-        assert_callable(f)
-
-        local _action = function(bufnr)
-            local entry = action_state.get_selected_entry()
-            action_state.get_current_picker(bufnr)
-            action.close(bufnr)
-            _mappings[index][3](entry, bufnr)
-        end
-
-        local final_action = false
-
-        if transform then
-            final_action = transform_mod({_action})
-        else
-            final_action = _action
-        end
-
-        mappings[index] = nil
-
-        assoc(mappings, {mode, keys}, final_action)
-    end
-
     self.sorter = sorter
     self.entry_maker = entry_maker
     self.mappings = mappings
@@ -153,12 +116,62 @@ function ts:new(opts)
         self.results = finders.new_oneshot_job({self.results, entry_maker=entry_maker})
     end
 
-    opts.mappings = self.mappings
+    opts.mappings = opts.mappings or self.mappings
 
     self.picker = pickers.new(opts, {
         prompt_title = self.title,
         finder = self.results,
         sorter = self.sorter,
+        attach_mappings = function(prompt_bufnr, map)
+            actions.select_default:replace(function()
+                local f = opts.mappings[1]
+                if table_p(f) then f = f[3] end
+                actions.close(prompt_bufnr)
+                local sel = action_state.get_selected_entry()
+                f(sel)
+
+                return true
+            end)
+
+            if #opts.mappings < 2 then return true end
+
+            shift(opts.mappings)
+
+            for index, k in ipairs(opts.mappings) do
+                local mode, keys, f, doc, transform = unpack(k)
+                print(mode, keys, f, doc, transform)
+                transform = transfrom == nil and false
+
+                assert(mode)
+                assert(keys)
+                assert(f)
+                assert(doc)
+
+                assert_s(mode)
+                assert_s(keys)
+                assert_s(doc)
+                assert_callable(f)
+
+                local _action = function()
+                    local entry = action_state.get_selected_entry()
+                    action_state.get_current_picker(prompt_bufnr)
+                    actions.close(prompt_bufnr)
+                    opts.mappings[index][3](entry, bufnr)
+                end
+
+                local final_action = false
+
+                if transform then
+                    final_action = transform_mod({_action})
+                else
+                    final_action = _action
+                end
+
+                map(mode, keys, final_action)
+            end
+
+            return true
+        end
     })
 
     return self.picker
@@ -176,44 +189,8 @@ function ts:update(title, results, entry_maker, sorter, mappings, opts)
     return self:new()
 end
 
--- @tparam picker_type [string] [e]xtension or [b]uiltin
-function ts.from_picker(picker_type, picker_name, title, sorter, mappings, opts)
-    assert(picker_type, 'No picker type specified: [b]uiltin or [e]xtension?')
-    assert(title, ex.picker.missing_title())
-    assert(mappings, ex.picker.missing_mappings())
-
-    assert_s(picker_type)
-    assert_s(picker_name)
-    assert_t(mappings)
-    assert_s(title)
-    assert_t(opts)
-
-
-    if match(picker_type, '^b') then
-        picker_type = 'picker'
-    elseif match(picker_type, '^e') then
-        picker_type = 'extension'
-    else
-        error('Invalid picker type provided: ' .. picker_type)
-    end
-
-    opts = opts or {}
-    opts = merge(ivy_theme, opts)
-    sorter = sorter or 'fzy_index'
-
-    local new_picker = require('telescope')
-
-    new_picker.setup {
-        defaults = {};
-        [picker_type] = {
-            [picker_name] = opts
-        }
-    }
+function ts:find(opts)
+    ts:new(opts):find()
 end
-
-local t = ts('Hello world', {'a', 'b', 'c'}, false, 'fzy_index', {
-    {'n', '<CR>', function(entry) inspect(entry) end, 'inspect entry'},
-})
-
 
 return ts
