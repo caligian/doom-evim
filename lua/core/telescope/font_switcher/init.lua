@@ -1,5 +1,5 @@
 -- local telescope = require('core.telescope')
-local telescope = dofile('../init.lua')
+local telescope = require('core.telescope')
 local rx = require('rex_pcre2')
 local tfont = class('doom-telescope-font-switcher')
 
@@ -71,7 +71,7 @@ function tfont:set_font(font, default_font)
     end, {default_text=tostring(default_height)}):find()
 end
 
-function tfont:run(include, default_height, picker_opts)
+function tfont:find(include, default_height, picker_opts)
     assert_t(picker_opts)
     assert_s(include)
 
@@ -86,6 +86,10 @@ function tfont:run(include, default_height, picker_opts)
     local default_mapping = function(selection) self:set_font(first(selection), default_height) end
 
     return telescope(title, results, entry_maker, 'fzy', default_mapping, picker_opts):find()
+end
+
+if not kbd.find('n', '<leader>hf', 1) then
+    kbd('n', tfont.keys, function() tfont():find() end, {'noremap'}, 'Switch to another font'):enable()
 end
 
 return tfont

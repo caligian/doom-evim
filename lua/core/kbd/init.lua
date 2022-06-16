@@ -37,10 +37,13 @@ function kbd.find(mode, keys, n)
     assert(mode, ex.no_mode())
     assert(keys, ex.no_keys())
 
-    n = n or 1
-    assert_n(n)
- 
-    return assoc(kbd.status, {mode, keys, n})
+    if n == nil or n == false then
+        n = 1
+    else
+        assert_n(n)
+    end
+
+    return assoc(Doom.kbd.status, {mode, keys, n})
 end
 
 function kbd.load_prefixes()
@@ -100,8 +103,7 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
     self.pattern = pattern
     self.mapped = 0
 
-    if not self.status[mode] then self.status[mode] = {} end
-    if not self.status[mode][keys] then self.status[mode][keys] = {} end
+    assoc(self.status, {mode, keys}, {})
     push(self.status[mode][keys], self)
 end
 

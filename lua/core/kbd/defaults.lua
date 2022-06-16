@@ -62,4 +62,4 @@ function keybindings.set(overrides)
     end
 end
 
-keybindings.set()
+return keybindings

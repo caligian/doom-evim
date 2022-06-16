@@ -197,13 +197,4 @@ function ts:find(opts)
     self.picker:find()
 end
 
-function ts.load_module(module)
-    assert(module)
-    assert_s(module)
-
-    if path.exists(with_config_lua_path('core', 'telescope', module, 'init.lua')) then
-        require('core.telescope.' .. module)
-    end
-end
-
 return ts

@@ -354,13 +354,6 @@ tu.assoc = function (dict, ks, create, transform)
     local last_t = t
     local out = {}
 
-    if str_p(create) then create = strip(create) end
-    local delete = create == 'd'
-
-    if delete == true then
-        create = false
-    end
-
     for index, key in ipairs(ks) do
         last_key = key
         local v = t[key]
@@ -373,33 +366,28 @@ tu.assoc = function (dict, ks, create, transform)
                     else
                         t[key] = create
                     end
-                    return create, last_key, last_t
+
+                    return create, last_key, last_t, dict
                 else
                     t[key] = {}
                 end
             else
-                return false, last_key, last_t
+                return false, last_key, last_t, dict
             end
-        end
-
-        if not utils.table_p(t[key]) then
+        elseif not utils.table_p(v) then
             if transform then 
                 assert(func_p(transform), 'Transformer must be a callable')
-                t[key] = transform(t[key], t, key, last_t, last_key)
+                t[key] = transform(v, t, key, last_t, last_key)
             end
 
-            if index ~= n then
-                return false, last_key, last_t
-            else
-                return t[key], last_key, last_t
-            end
+            return t[key], last_key, last_t, dict
         end
 
-        t = t[key]
         last_t = t
+        t = t[key]
     end
 
-    return false, last_key, last_t
+    return last_t[last_key], last_key, last_t, dict
 end
 
 tu.update = tu.assoc
@@ -710,7 +698,5 @@ tu.to_callable = function(f)
     assert(utils.func_p(f), 'Only functions can be used in callable tables')
     return setmetatable({}, {__call = function(_, ...) f(...) end})
 end
-
-
 
 return tu

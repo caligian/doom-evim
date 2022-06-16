@@ -129,9 +129,8 @@ local function parse_specs(spec, opt)
     assert_type(spec.pattern, 'table', 'string')
     assert_type(spec.rocks, 'table', 'string')
     assert_type(spec.event, 'table', 'string')
-    assert_callable(spec.cond)
 
-    opt = opt == nil and false or true
+    if opt then spec.opt = true end
 
     local keys = spec.keys
     local pattern = spec.pattern
@@ -197,12 +196,12 @@ local function parse_specs(spec, opt)
         a:enable()
         spec.augroup = a
     else
-        vim.cmd(get_pkgs_loader_cmd(spec))
+        spec.loader_command = get_pkgs_loader_cmd(spec)
     end
 
-    if rocks then each(download_rock, to_list(rocks)) end
+    if not opt then vim.cmd(spec.loader_command) end
 
-    Doom.pkgs.loaded[spec[1]] = true
+    if rocks then each(download_rock, to_list(rocks)) end
 
     return spec
 end

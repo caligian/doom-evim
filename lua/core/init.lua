@@ -32,6 +32,7 @@ add_global(require('core.notify'), 'notify')
 add_global(require('core.kbd'), 'kbd')
 add_global(require('core.buffers'), 'buffer')
 add_global(require('core.telescope'), 'telescope')
+telescope.font_switcher = require('core.telescope.font_switcher')
 kbd.load_prefixes()
 
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
@@ -39,7 +40,7 @@ pkgs.load_plugins()
 
 -- Require keybindings
 require('core.buffers.keybindings')
-require('core.kbd.defaults')
+require('core.kbd.defaults').set()
 
 -- Load post-initialization user config
 if path.exists(with_user_config_path('lua', 'user', 'config.lua')) then require('user.config') end
