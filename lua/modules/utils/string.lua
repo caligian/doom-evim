@@ -114,7 +114,7 @@ function str.strsplice(s, from, len, ...)
     assert(len > 0, 'Len cannot be negative')
 
     if len == 0 then
-        for i in ipairs(args) do
+        for _, i in ipairs(args) do
             table.insert(s, from, i)
         end
     elseif len > 0 then
@@ -130,34 +130,47 @@ function str.strsplice(s, from, len, ...)
     return table.concat(s, "")
 end
 
-function str.strfind(s, pat)
+function str.strfind(s, pat, store)
     local matches = {}
     local n = #s
     local a, b = pcre.find(s, pat)
     if not a then return false end
-    matches[#matches+1] = {a, b, str.substr(s, a, b)}
+    matches[#matches+1] = {a, b}
+
+    if store then 
+        push(matches[#matches], str.substr(s, a, b))
+    end
 
     while a ~= nil do
         a, b = pcre.find(s, pat, b+1)
         if a then
-            matches[#matches+1] = {a, b, str.substr(s, a, b)}
+            matches[#matches+1] = {a, b}
+            if store then 
+                push(matches[#matches], str.substr(s, a, b))
+            end
         end
     end
 
     return matches
 end
 
-function str.lstrfind(s, pat)
+function str.lstrfind(s, pat, store)
     local matches = {}
     local n = #s
     local a, b = string.find(s, pat)
     if not a then return false end
-    matches[#matches+1] = {a, b, str.substr(s, a, b)}
+    matches[#matches+1] = {a, b,}
+    if store then
+        push(matches[#matches], str.substr(s, a, b))
+    end
 
     while a ~= nil do
         a, b = string.find(s, pat, b+1)
         if a then
-            matches[#matches+1] = {a, b, str.substr(s, a, b)}
+            matches[#matches+1] = {a, b}
+            if store then
+                push(matches[#matches], str.substr(s, a, b))
+            end
         end
     end
 

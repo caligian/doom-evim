@@ -19,12 +19,11 @@ vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
 vim.o.foldmethod = "indent"
-vim.o.guifont = 'Ubuntu Mono:h14'
+vim.o.guifont = 'UbuntuMono Nerd Font:h15'
 vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.cmd [[ color solarized8 ]]
 
 -- leader key
 vim.g.mapleader = " "
@@ -44,6 +43,7 @@ local home = os.getenv('HOME')
 package.path = package.path .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.lua'
 package.path = package.path .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?/init.lua'
 package.path = package.path .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?/?.lua'
+
 package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?.lua'
 package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/?.lua'
 package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/init.lua'

@@ -44,8 +44,8 @@ Combinations of keys that can be supplied:
 keys    string|table[string]
 Load package after pressing these keys. 
 Keys should be in the format:
-{mode, keys, attribs, doc, event, pattern} where attribs, event, pattern can be string|table and the rest must be strings or keys
-If keys is a string then it will be mapped with noremap {keys} {plugin loader}
+{mode, keys, attribs, f} where attribs, event, pattern can be string|table and the rest must be strings or keys
+If keys is a string then it will be mapped with noremap {keys} {plugin loader}. Multiple keydefs can be passed as table[string] in which all of them will be mapped in normal mode or if table[table] then use the above 4 elements to create oneshot keybindings
 
 event   string|table[string]
 Load package after this event.
@@ -149,34 +149,52 @@ local function parse_specs(spec, opt)
     local pattern = spec.pattern
     local event = spec.event
     local rocks = rocks
+    local keep_keys = spec.keep_keys
 
     if keys then
-        _keys = copy(spec.keys)
-        local _mode, _keys, _f, _attribs, _doc = unpack(keys)
-        local cmd = ''
+        local multiple = false
 
-        assert(#keys == 5, 'Need 5 ingredients for the keybinding')
+        for _, i in ipairs(to_list(keys)) do
+            local _mode, _keys, _f, _attribs, _doc, cmd = false, false, false, false, ''
 
-        cmd = function()
-            get_pkgs_loader_cmd(spec[1], true)()
-            if str_p(_f) then vim.cmd(_f) elseif callable(_f) then _f() end
-            if assoc(Doom.kbd.status, {mode, keys}) then
-                local k = assoc(Doom.kbd.status, {_mode, _keys}, 1)
-                k:disable()
+            assert_type(i, 'string', 'table')
+
+            if str_p(i) then
+                _mode = 'n'
+                _keys = i
+                _attribs = kbd.defaults.attribs
+            elseif table_p(i) then
+                assert(#i >= 3, 'Need at least 3 vals: mode, keys, f')
+                _mode, _keys, _f, _attribs, _doc = unpack(i)
+            end
+
+            cmd = function(k)
+                get_pkgs_loader_cmd(spec[1], true)()
+                if str_p(_f) then
+                    vim.cmd(_f) 
+                elseif callable(_f) then
+                    _f() 
+                end
+            end
+
+            if keep_keys then
+                kbd(_mode, _keys, cmd, _attribs, _doc):enable()
+            else
+                kbd.oneshot(_mode, _keys, cmd, _attribs)
             end
         end
-
-        local k = kbd(_mode, _keys, cmd, _attribs, _doc)
-        k:enable()
     elseif event or pattern then
         local a = au(spec[1], 'Oneshot autocmd for plugin: ' .. spec[1])
         local cmd = get_pkgs_loader_cmd(spec[1], false, true)
-        assert_s(event)
+
+        if not event then event = 'BufEnter' end
+        if not pattern then pattern = '*' end
 
         if not cmd then cmd = ':packadd ' .. path.name(spec[1]) end
 
-        a:add(event or 'BufEnter', pattern, cmd, {once=true})
+        a:add(event, pattern, cmd, {once=true})
         a:enable()
+
         spec.augroup = a
     else
         local cmd = get_pkgs_loader_cmd(spec[1], false, false)
@@ -200,19 +218,25 @@ function pkgs.load_plugins(force)
     local t = {}
 
     for _, p in ipairs(specs.start) do
-      push(t, parse_specs(p)) 
+        p = to_list(p)
+        push(t, parse_specs(p)) 
     end
 
     for _, p in ipairs(specs.opt) do
+        p = to_list(p)
         push(t, parse_specs(p, true)) 
     end
 
-    paq(t)
+    if not Doom.pkgs.init then
+        paq(t)
 
-    pkgs.plugins = t
-    pkgs.paq = paq
-    Doom.pkgs.paq = paq
-    Doom.pkgs.plugins = t
+        pkgs.plugins = t
+        pkgs.paq = paq
+        Doom.pkgs.paq = paq
+        Doom.pkgs.plugins = t
+    end
+
+    Doom.pkgs.init = true
 
     return t
 end

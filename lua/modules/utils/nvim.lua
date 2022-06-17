@@ -44,16 +44,17 @@ nv.globalize = function()
     utils.globalize(nv)
 end
 
--- @tparam text table {<display text>, <cb>}, ...
+-- @tparam text table {question, default_text, callback }, ...
 nv.gets = function(prompt, loop, ...)
     prompt = prompt or '%'
     prompt = prompt .. ' '
     local args = {...}
     local out = {}
     assert(#args > 0, 'No args provided')
-    
+
     local function _get_input(t)
         assert(#t >= 1, 'No prompt question provided')
+
         local q, default_text, cb = unpack(utils.to_list(t))
         q = q .. ' ' .. prompt
         default_text = default_text or ''

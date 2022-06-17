@@ -9,6 +9,10 @@ local config = require('telescope.config').values
 local ts = class('doom-telescope')
 local ex = require('core.telescope.exception')
 
+ts.defaults = assoc(Doom, {'telescope', 'defaults'}, {})
+ts.defaults.opts = require('telescope.themes').get_ivy({layout_config={height=0.37}})
+ts.defaults.sorter = 'fzy_index'
+
 -- How entry is parsed
 -- Either {value => value, display => value.display, ordinal => value.ordinal}
 -- Or     {value => value[1], display => value.display, ordinal => value[1]}
@@ -49,6 +53,8 @@ function ts.entry_maker(entry)
     return t
 end
 
+ts.defaults.entry_maker = ts.entry_maker
+
 -- @tparam title string Title of the Telescope buffer
 -- @tparam results table[string]|function]|table[table[string]] 
 -- @tparam[optional] entry_maker function 
@@ -67,16 +73,17 @@ function ts:__init(title, results, entry_maker, sorter, mappings, opts)
     assert_type(mappings, 'callable', 'table')
     assert_t(opts)
 
-    local ivy_theme = require('telescope.themes').get_ivy({
-        layout_config = {height=0.37}
-    })
-    opts = opts or {}
-    merge(opts, ivy_theme)
+    local default_opts = copy(ts.defaults.opts)
+
+    if not opts then 
+        opts = default_opts
+    else
+        merge(default_opts, opts)
+    end
+
     mappings = to_list(mappings)
     sorter = sorter or 'fzy_index'
     sorter = strip(sorter)
-
-    inspect(opts)
 
     if sorter:match('^generic_fzy') then
         sorter = sorters.get_generic_fuzzy_sorter()
@@ -195,6 +202,14 @@ function ts:find(opts)
     if not self.picker then self:new(opts) end
     assert(self.picker)
     self.picker:find()
+end
+
+function ts.quick(title, results, mappings, opts)
+    assert(title)
+    assert(results)
+    assert(mappings)
+
+    return ts(title, results, ts.entry_maker, ts.defaults.sorter, mappings, opts or ts.defaults.opts)
 end
 
 return ts

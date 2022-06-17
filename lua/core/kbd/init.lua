@@ -4,6 +4,13 @@ local ex = require('core.kbd.exception')
 
 local kbd = class('doom-keybinding')
 assoc(Doom.kbd, 'status', {})
+assoc(Doom.kbd, 'defaults', {})
+
+local defaults = Doom.kbd.defaults
+defaults.attribs = {'silent', 'nowait', 'noremap'}
+defaults.mode = 'n'
+
+kbd.defaults = defaults
 kbd.status = Doom.kbd.status
 kbd.prefixes = Doom.kbd.prefixes
 
@@ -68,16 +75,13 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
     assert_type(mode, 'string', 'table')
     assert_s(keys)
     assert_s(doc)
-    assert_type(f, 'string', 'table')
-    assert_type(attribs, 'string', 'table')
+    assert_type(f, 'string', 'callable')
+    assert_type(attribs, 'string', 'table', 'boolean')
     assert_type(event, 'string', 'table')
     assert_type(pattern, 'string', 'table')
 
-    if not attribs or attribs and #attribs == 0 then
-        attribs = {'noremap', 'silent', 'nowait'}
-    else
-        attribs = to_list(attribs)
-    end
+    attribs = attribs or defaults.attribs
+    attribs = to_list(attribs)
 
     if event then event = to_list(event) end
     if pattern then pattern = to_list(pattern) end
@@ -147,7 +151,9 @@ function kbd:enable(force)
 
     self:backup_previous()
 
-    self.f = au.register(self.f, true)
+    if callable(self.f) then
+        self.f = au.register(partial(self.f, self), true)
+    end
 
     if self.event or self.pattern then
         self.event =  self.event or 'BufEnter'
@@ -260,6 +266,56 @@ function kbd:replace(f, attribs, doc, event, pattern)
     self.doc = doc or self.doc
 
     self:enable()
+end
+
+
+function kbd.oneshot(mode, keys, f, attribs)
+    assert(mode, ex.no_mode())
+    assert(keys, ex.no_keys())
+    assert(f, ex.no_f())
+
+    assert_s(mode, 'string')
+    assert_s(keys)
+    assert_type(f, 'string', 'callable')
+    assert_type(attribs, 'string', 'table', 'boolean')
+
+    attribs = attribs or defaults.attribs
+    attribs = to_list(attribs)
+    local noremap = find(attribs, 'noremap')
+    if noremap then attribs[noremap] = nil end
+    attribs = vals(attribs)
+    noremap = noremap ~= nil and true
+
+    attribs_s = join(map(function(s)
+        if str_p(s) then
+            return sprintf('<%s>', s)
+        else
+            return ''
+        end
+    end, attribs), ' ')
+
+    local new_f = false
+
+    new_f = au.register(function()
+        pcall(function() vim.cmd(sprintf('%sunmap %s', mode, keys)) end)
+        if str_p(f) then 
+            vim.cmd(f)
+        else
+            f()
+        end
+    end, true)
+
+    local cmd = ''
+
+    if noremap then
+        cmd = sprintf('%snoremap %s %s %s', mode, attribs_s, keys, new_f)
+    else
+        cmd = sprintf('%smap %s %s %s', mode, attribs_s, keys, new_f)
+    end
+
+    vim.cmd(cmd)
+
+    return cmd
 end
 
 return kbd

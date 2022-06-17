@@ -1,5 +1,6 @@
 -- All the required modules
 require('modules.utils').globalize()
+
 globalize(require('modules.utils.table'))
 globalize(require('modules.utils.string'))
 globalize(require('modules.utils.function'))
@@ -28,11 +29,13 @@ end
 -- Load doom packages
 add_global(require('core.au'), 'au')
 add_global(require('core.kbd'), 'kbd')
+add_global(require('core.telescope'), 'ts')
 add_global(require('core.pkgs'), 'pkgs')
 add_global(require('core.notify'), 'notify')
 add_global(require('core.buffers'), 'buffer')
-add_global(require('core.telescope'), 'telescope')
-telescope.font_switcher = require('core.telescope.font_switcher')
+
+-- Load extras from builtin modules
+ts.font_switcher = require('core.telescope.font_switcher')
 kbd.load_prefixes()
 
 -- Require keybindings

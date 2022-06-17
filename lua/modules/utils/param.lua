@@ -76,9 +76,9 @@ function param.assert_type(param, ...)
                 fail = fail + 1
                 tu.push(failed, i)
             end
-        elseif not match(i, 'table', 'string', 'number', 'function',  'userdata') then
-            local param_cls = type(param)
-            if param_cls and param_cls.__name == i then
+        elseif not match(i, '(table|boolean|string|number|function|userdata)') then
+            local param_cls = class.of(param_cls)
+            if not param_cls or not table_p(param_cls) or not param_cls.__name == i then
                 fail = fail + 1
                 tu.push(failed, i)
             end
