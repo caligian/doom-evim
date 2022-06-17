@@ -90,26 +90,39 @@ local function download_rock(rock)
     end
 end
 
-local function get_pkgs_loader_cmd(plugin, config)
+local function get_pkgs_loader_cmd(plugin, opt)
+    assert(plugin)
+    assert(opt ~= nil)
+
     assert_type(plugin, 'string', 'table')
+    assert_bool(opt)
+
+    if boolean_p(config) then config = false end
 
     local req_path = false
     plugin = path.name(table_p(plugin) and first(plugin) or plugin)
-    local cmd = 'packadd! ' .. plugin
-    plugin = sed(plugin, {'\\.', '_'})
-    local dst = with_config_lua_path('core', 'pkgs', 'configs', plugin .. '.lua')
-     
-    if path.exists(dst) then 
-        req_path = sprintf("core.pkgs.configs.%s", plugin)
+    local name = sed(plugin, {'\\.', '_'})
+    local dst = with_config_lua_path('core', 'pkgs', 'configs', name .. '.lua')
+    local cmd = false
 
-        return au.register(function()
-            vim.schedule(function()
-                vim.cmd(cmd)
-                require(req_path)
-                Doom.pkgs.loaded[plugin] = true
-                if config then vim.cmd(au.register(config)) end
-            end)
-        end)
+    if path.exists(dst) then 
+        req_path = sprintf("core.pkgs.configs.%s", name)
+
+        cmd = function()
+            if opt then 
+                vim.api.nvim_exec(':packadd ' .. plugin, true) 
+            end
+
+            require(req_path)
+
+            Doom.pkgs.loaded[plugin] = true
+        end
+    elseif opt then
+        cmd = function()
+            if opt then 
+                vim.api.nvim_exec(':packadd ' .. plugin, true) 
+            end
+        end
     end
 
     return cmd
@@ -139,67 +152,36 @@ local function parse_specs(spec, opt)
 
     if keys then
         _keys = copy(spec.keys)
+        local _mode, _keys, _f, _attribs, _doc = unpack(keys)
+        local cmd = ''
 
-        local _mode, _keys, _f, _attribs = false, false, false, false
+        assert(#keys == 5, 'Need 5 ingredients for the keybinding')
 
-        if table_p(keys) then
-            _mode, _keys, _f, _attribs = unpack(keys)
-            assert(_mode)
-            assert(_keys)
-
-            assert_s(_mode)
-            assert_s(_keys)
-            assert_type(_attribs, 'table', 'string')
-            assert_type(_f, 'callable', 'string')
-        else
-            _keys = keys
+        cmd = function()
+            get_pkgs_loader_cmd(spec[1], true)()
+            if str_p(_f) then vim.cmd(_f) elseif callable(_f) then _f() end
+            if assoc(Doom.kbd.status, {mode, keys}) then
+                local k = assoc(Doom.kbd.status, {_mode, _keys}, 1)
+                k:disable()
+            end
         end
 
-        _mode = _mode or 'n'
-        _attribs = _attribs or {'noremap', 'silent', 'nowait'}
-
-        local noremap = false
-
-        if str_p(_attribs) then
-            _attribs = to_list(_attribs)
-        end
-
-        noremap = find(_attribs, 'noremap')
-        if noremap then table.remove(_attribs, noremap) end
-        noremap = noremap and true
-
-        _attribs = join(map(function(a) return '<' .. a .. '>' end, _attribs), ' ')
-
-        local keybinding = ''
-        if noremap then
-            keybinding = sprintf('%snoremap %s %s ', _mode, _attribs, _keys)
-        else
-            keybinding = sprintf('%smap %s %s ', _mode, _attribs, _keys)
-        end
-
-        keybinding = keybinding .. au.register(function()
-            vim.cmd(get_pkgs_loader_cmd(spec[1], _f)) 
-        end, true)
-
-        spec.cmd = keybinding
-
-        vim.cmd(keybinding)
+        local k = kbd(_mode, _keys, cmd, _attribs, _doc)
+        k:enable()
     elseif event or pattern then
-        assert(pattern)
-
-        pattern = copy(pattern)
-        if event then event = copy(event) end
         local a = au(spec[1], 'Oneshot autocmd for plugin: ' .. spec[1])
+        local cmd = get_pkgs_loader_cmd(spec[1], false, true)
+        assert_s(event)
 
-        local cmd = get_pkgs_loader_cmd(spec[1], true)
+        if not cmd then cmd = ':packadd ' .. path.name(spec[1]) end
+
         a:add(event or 'BufEnter', pattern, cmd, {once=true})
         a:enable()
         spec.augroup = a
     else
-        spec.loader_command = get_pkgs_loader_cmd(spec)
+        local cmd = get_pkgs_loader_cmd(spec[1], false, false)
+        if cmd then cmd() end
     end
-
-    if not opt then vim.cmd(spec.loader_command) end
 
     if rocks then each(download_rock, to_list(rocks)) end
 
@@ -218,7 +200,7 @@ function pkgs.load_plugins(force)
     local t = {}
 
     for _, p in ipairs(specs.start) do
-        push(t, parse_specs(p)) 
+      push(t, parse_specs(p)) 
     end
 
     for _, p in ipairs(specs.opt) do
@@ -229,6 +211,8 @@ function pkgs.load_plugins(force)
 
     pkgs.plugins = t
     pkgs.paq = paq
+    Doom.pkgs.paq = paq
+    Doom.pkgs.plugins = t
 
     return t
 end

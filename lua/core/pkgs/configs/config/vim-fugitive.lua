@@ -1,6 +1,0 @@
-kbd('n', '<leader>gg', ':Git<CR>', false, 'Open Fugitive'):enable()
-kbd('n', '<leader>gs', ':Git stage<CR>', false, 'Stage current file'):enable()
-kbd('n', '<leader>gp', ':Git push<CR>', false, 'Push changes to remote'):enable()
-kbd('n', '<leader>ga', ':Git add<CR>', false, 'Git init in dir'):enable()
-kbd('n', '<leader>gc', ':Git commit<CR>', false, 'Commit changes'):enable()
-kbd('n', '<leader>gP', ':Git pull<CR>', false, 'Pull changes'):enable()

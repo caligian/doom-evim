@@ -1,6 +1,6 @@
 local keybindings = {}
 local kbd = require('core.kbd')
-local attribs = {'noremap', 'silent', 'nowait'}
+local attribs = {'noremap', 'nowait'}
 
 keybindings.tabs = {
     {'n', '<leader>tt', ":tabnew <CR>", attribs, 'Open a new tab'};
