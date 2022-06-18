@@ -1,6 +1,5 @@
 local str = {}
 local utils = require('modules.utils')
-local class = require('classy')
 local pcre = require('rex_pcre2')
 
 function str.trim(s)

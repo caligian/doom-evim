@@ -92,5 +92,15 @@ nv.gets = function(prompt, loop, ...)
     return tu.map(_get_input, args)
 end
 
+nv.system = function(cmd)
+    local out = vim.fn.system(cmd)
+    local t = {}
+
+    for index, s in ipairs(vim.split(out, "[\n\r]")) do
+        t[index] = s
+    end
+
+    return t
+end
 
 return nv

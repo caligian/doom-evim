@@ -43,6 +43,7 @@ return {
         { 
             "folke/trouble.nvim"; 
             keys = {{'n', "<leader>lt", ':TroubleToggle', false, 'Toggle trouble'}};
+            keep_keys = true;
         };
         { 
             "plasticboy/vim-markdown";

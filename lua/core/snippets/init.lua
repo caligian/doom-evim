@@ -1,110 +1,60 @@
-local buffer = require('core.buffer')
-local fs = require('path.fs')
-local path = require('path')
+local buffer = require('core.buffers')
 local kbd = require('core.kbd')
 local snippet = {}
 
-snippet.path = Doom.snippet.path
-local _path 
-
-local savePath = Path(vim.fn.stdpath('data'), 'doom-snippets')
+assoc(Doom, {'snippet', 'dirs'}, {with_user_config_path('snippets')})
+assoc(Doom, {'snippet', 'dir'}, Doom.snippet.dirs[1])
+snippet.dirs = Doom.snippet.dirs
+snippet.dir = Doom.snippet.dir
 
 if not vim.g.vsnip_snippet_dirs then
-    vim.g.vsnip_snippet_dir = savePath
+    vim.g.vsnip_snippet_dir = snippet.dirs
 end
 
-vim.g.vsnip_snippet_dir = savePath
-
-if not Path.exists(savePath) then
-    Fs.mkdir(savePath)
+if not vim.g.vsnip_snippet_dir then
+    vim.g.vsnip_snippet_dir = snippet.dir
 end
 
-Snippet = {
-    directory = savePath,
-}
+if not path.exists(snippet.dir) then
+    fs.mkdir(snippet.dir)
+end
 
-function Snippet.save(ft, snippet)
-    local saveAt = Path(savePath, ft .. '.json')
+function snippet.save(ft, name, prefix, s)
+    ft = ft or vim.bo.filetype
+    local save = path(snippet.dir, ft .. '.json')
+    local current = path.exists(save) and jslurp(save) or {}
+    current[name] = {prefix=prefix, body=s}
 
-    if not Path.exists(saveAt) then
-        Core.spit(saveAt, vim.fn.json_encode(snippet))
+    jspit(save, current)
+end
+
+function snippet.new(split)
+    local ft = vim.bo.filetype
+    local b = buffer()
+    b:setopts {filetype=ft}
+    local fname = path(snippet.dir, ft .. '.json')
+    split = split or 's'
+
+    b:set_keymap('n', 'gs', function()
+        buffer.hide_by_winnr(vim.fn.winnr())
+        local s = buffer('%'):read({})
+
+        if #s > 0 then
+            local name, prefix, new_ft = unpack(gets('%', true, {'Snippet name'}, {'Snippet prefix'}, {'Filetype', ft}))
+            if new_ft == 'n' then new_ft = ft end
+            snippet.save(new_ft, name, prefix, s)
+        end
+    end, false, 'Save current snippet', 'BufEnter')
+
+    if split == 's' then
+        b:split()
+    elseif split == 'v' then
+        b:vsplit()
     else
-        local existing = vim.fn.json_decode(Core.slurp(saveAt))
-        existing = vim.tbl_deep_extend('force', existing, snippet)
-        Core.spit(saveAt, vim.fn.json_encode(existing))
+        b:to_win() 
     end
+
+    b:delete()
 end
 
-function Snippet.saveFromString(name, prefix, ft, snippet)
-    local t = {
-        [name] = {
-            prefix = prefix,
-            body = snippet
-        }
-    }
-
-    Snippet.save(ft, t)
-end
-
-function Snippet.new()
-    Kbd.new({
-        leader = false,
-        keys = 'gx',
-        help = 'Save snippet',
-        pattern = vim.fn.expand('%'),
-        event = 'BufEnter',
-        exec = function ()
-            local userInput = Utils.getUserInput({
-                name = {'Name', true},
-                prefix = {'Abbreviation to expand', true},
-            })
-
-            local buffer = BufUtils.getSubstring(0, {fromRow = 0, toRow = -1, concat = true})
-
-            if #buffer > 0 then
-                Snippet.saveFromString(userInput.name, userInput.prefix, vim.bo.filetype, buffer)
-            end
-        end
-    })
-end
-
-function Snippet.splitEdit(buffer, opts)
-    buffer = buffer or 0
-    opts = opts or {}
-    local previousBufferFt = opts.ft or vim.bo.filetype
-
-    BufUtils.loadTemporaryBuffer(
-    buffer,
-    opts.direction or 'sp',
-    {
-        reverse = false,
-        hook = opts.hook or function ()
-            vim.bo.filetype = previousBufferFt
-            Snippet.new()
-        end
-    })
-end
-
-function Snippet.vsplitEdit(buffer, opts)
-    opts = opts or {}
-    opts.direction = 'vsp'
-    Snippet.splitEdit(buffer, opts)
-end
-
-function Snippet.makeKeybindings()
-    Kbd.new({
-        leader = 'l',
-        keys = '&ss',
-        help = 'Create a new snippet',
-        name = 'Snippets & Templates',
-        exec = Snippet.splitEdit,
-    },
-    {
-        leader = 'l',
-        keys = '&sv',
-        help = 'Create a new snippet [vsp]',
-        exec = Snippet.vsplitEdit,
-    })
-end
-
-return Snippet
+return snippet

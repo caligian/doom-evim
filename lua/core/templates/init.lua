@@ -1,121 +1,98 @@
-local Template = {}
-local Au = require('doom-au')
-local Str = require('aniseed.string')
-local Buffer = require('core.buffers')
-local Core = require('aniseed.core')
-local Fs = require('path.fs')
-local Path = require('path')
-local Kbd = require('doom-kbd')
+local buffer = require('core.buffers')
+local kbd = require('core.kbd')
+local template = {}
 
-local savePath = Path(vim.fn.stdpath('data'), 'doom-templates')
-Template.savePath = savePath
+assoc(Doom, {'template', 'dir'}, with_user_config_path('templates'))
+template.dir = Doom.template.dir
 
-if not Path.exists(savePath) then
-    Fs.mkdir(savePath)
+if not path.exists(template.dir) then
+    fs.mkdir(template.dir)
 end
 
-Template = {
-    directory = savePath,
-}
-
-function Template.save(ft, template)
-    local saveAt = Path(savePath, ft .. '.json')
-
-    if not Path.exists(saveAt) then
-        Core.spit(saveAt, vim.fn.json_encode(template))
-    else
-        local existing = vim.fn.json_decode(Core.slurp(saveAt))
-        existing = vim.tbl_deep_extend('force', existing, template)
-        Core.spit(saveAt, vim.fn.json_encode(existing))
-    end
-end
-
-function Template.saveFromString(pattern, ft, template)
-    local t = {
-        [pattern] = template
-    }
-
-    Template.save(ft, t)
-end
-
-Template.saveFromString('nvim', 'lua', 'local Utils = require("doom-utils")')
-
-function Template.new()
-    Kbd.new({
-        leader = false,
-        keys = 'gx',
-        help = 'Save template',
-        pattern = vim.fn.expand('%'),
-        event = 'BufEnter',
-        exec = function ()
-            local userInput = Utils.getUserInput({
-                regex = {'Lua regex pattern to match', true},
-            })
-
-            local buffer = BufUtils.getSubstring(0, {fromRow = 0, toRow = -1, concat = true})
-
-            if #buffer > 0 then
-                Template.saveFromString(userInput.regex, vim.bo.filetype, buffer)
-            end
-        end
-    })
-end
-
-function Template.splitEdit(buffer, opts)
-    buffer = buffer or 0
-    opts = opts or {}
-    local previousBufferFt = opts.ft or vim.bo.filetype
-
-    BufUtils.loadTemporaryBuffer(
-    buffer,
-    opts.direction or 'sp',
-    {
-        reverse = false,
-        hook = opts.hook or function ()
-            vim.bo.filetype = previousBufferFt
-            Template.new()
-        end
-    })
-end
-
-function Template.vsplitEdit(buffer, opts)
-    opts = opts or {}
-    opts.direction = 'vsp'
-    Template.splitEdit(buffer, opts)
-end
-
-function Template.makeKeybindings()
-    Kbd.new({
-        leader = 'l',
-        keys = '&ts',
-        help = 'Create a new template',
-        exec = Template.splitEdit,
-    },
-    {
-        leader = 'l',
-        keys = '&tv',
-        help = 'Create a new template [vsp]',
-        exec = Template.vsplitEdit,
-    })
-end
-
-function Template.autoInsert(ft)
+function template.save(ft, pat, s)
     ft = ft or vim.bo.filetype
-    local templatePath = Path(savePath, ft .. '.json')
-    local currentFilePath = vim.fn.expand('%:p')
+    local save = path(template.dir, ft .. '.json')
+    local current = path.exists(save) and jslurp(save) or {}
+    current[pat] = s
 
-    if Path.exists(templatePath) then
-        for pattern, str in pairs(vim.fn.json_decode(Core.slurp(templatePath))) do
-           if currentFilePath:match(pattern) then
-               local lines = vim.split(str, "[\n\r]+")
-               BufUtils.setSubstring(0, lines, {fromRow = 0, toRow = #lines})
-           end
+    jspit(save, current)
+end
+
+function template.new(split)
+    local ft = vim.bo.filetype
+    local b = buffer()
+    b:setopts {filetype=ft}
+    local fname = path(template.dir, ft .. '.json')
+    split = split or 's'
+
+    b:set_keymap('n', 'gs', function()
+        buffer.hide_by_winnr(vim.fn.winnr())
+
+        local s = b:read({})
+
+        if #s > 0 then
+            local pattern, new_ft = unpack(gets('%', true, {'Template filename (lua) pattern'}, {'Filetype', ft}))
+            if new_ft == 'n' then new_ft = ft end
+
+            template.save(new_ft, pattern, s)
+        else
+            error({'No template string provided in buffer: ' .. self.index})
+        end
+    end, false, 'Save current template', 'BufEnter')
+
+    if split == 's' then
+        b:split()
+    elseif split == 'v' then
+        b:vsplit()
+    else
+        b:to_win() 
+    end
+
+    b:delete()
+end
+
+function template.load()
+    local fts = {}
+
+    for fn, ftype in fs.dir(Doom.template.dir) do
+        if ftype == 'file' and match(fn, 'json$') then
+            local ft = split(path.name(fn), '%.')
+            pop(ft)
+            ft = join(ft, '.')
+            fts[ft] = jslurp(fn)
         end
     end
+
+    Doom.template.templates = fts
+
+    return fts
 end
 
-function Template.startInsertion()
-    Au.autocmd('Global', 'BufEnter', '*', Template.autoInsert)
+function template.enable()
+    if not Doom.template.templates then return end
+
+    local autocmd_groups = {}
+
+    each(function(ft)
+        autocmd_groups[ft] = {}
+
+        each(function (pat)
+            local t = Doom.template.templates[ft][pat]
+            local a = au(false, 'Template for filename pattern: ' .. pat)
+
+            a:add('BufNew', '*' .. ft, function()
+                if lmatch(vim.fn.expand('%:p'), pat) then
+                    vim.api.nvim_buf_set_lines(vim.fn.bufnr(), 0, 0, false, t)
+                end
+            end)
+
+            a:enable()
+
+            autocmd_groups[ft][pat] = a
+        end, keys(Doom.template.templates[ft]))
+    end, keys(Doom.template.templates))
+
+    return autocmd_groups
 end
 
-return Template
+return template

@@ -376,7 +376,7 @@ tu.assoc = function (dict, ks, create, transform)
             end
         elseif not utils.table_p(v) then
             if transform then 
-                assert(func_p(transform), 'Transformer must be a callable')
+                assert(callable(transform), 'Transformer must be a callable')
                 t[key] = transform(v, t, key, last_t, last_key)
             end
 
@@ -390,7 +390,9 @@ tu.assoc = function (dict, ks, create, transform)
     return last_t[last_key], last_key, last_t, dict
 end
 
-tu.update = tu.assoc
+function tu.update(dict, ks, replacement)
+    return tu.assoc(dict, ks, replacement, function(...) return replacement end)
+end
 
 -- if table is passed then it will be sent to tu.assoc
 tu.get = function(arr, ...)
@@ -555,9 +557,12 @@ tu.vec = function (index, n, gen, param, state)
                 tu.push(acc, out[index] or false)
             end
         else
-            for _, i in ipairs(index) do
-                tu.push(acc, out[i])
+            local t = {}
+            for _, i in ipairs(utils.to_list(index)) do
+                tu.push(t, out[i] or false)
             end
+
+            tu.push(acc, t)
         end
 
         return true, s
@@ -623,8 +628,14 @@ tu.some = function(t)
 end
 
 tu.union = function(t1, t2)
-    local a = tu.to_dict(t1, true)
-    local b = tu.to_dict(t2, true)
+    assert(t1 ~= nil)
+    assert(t2 ~= nil)
+
+    t1 = utils.to_list(t1)
+    t2 = utils.to_list(t2)
+
+    local a = tu.list_to_dict(t1)
+    local b = tu.list_to_dict(t2)
 
     for k, _ in pairs(b) do
         if not a[k] then
@@ -632,10 +643,16 @@ tu.union = function(t1, t2)
         end
     end
 
-    return 
+    return tu.keys(a)
 end
 
 tu.intersection = function(t1, t2)
+    assert(t1 ~= nil)
+    assert(t2 ~= nil)
+
+    t1 = utils.to_list(t1)
+    t2 = utils.to_list(t2)
+
     local a = tu.list_to_dict(t1)
     local b = tu.list_to_dict(t2)
 
@@ -649,8 +666,14 @@ tu.intersection = function(t1, t2)
 end
 
 tu.difference = function(t1, t2)
-    local a = tu.to_dict(t1, true)
-    local b = tu.to_dict(t2, true)
+    assert(t1 ~= nil)
+    assert(t2 ~= nil)
+
+    t1 = utils.to_list(t1)
+    t2 = utils.to_list(t2)
+
+    local a = tu.list_to_dict(t1, true)
+    local b = tu.list_to_dict(t2, true)
 
     for k, _ in pairs(a) do
         if b[k] then
@@ -662,10 +685,16 @@ tu.difference = function(t1, t2)
 end
 
 tu.subset_p = function(t1, t2)
+    assert(t1 ~= nil)
+    assert(t2 ~= nil)
+
+    t1 = utils.to_list(t1)
+    t2 = utils.to_list(t2)
+
     local found = 0
     local t1_len = #t1
-    t1 = tu.to_dict(t1)
-    t2 = tu.to_dict(t2)
+    t1 = tu.list_to_dict(t1)
+    t2 = tu.list_to_dict(t2)
 
     for k, v in pairs(t2) do
         if t1[k] then
@@ -697,6 +726,12 @@ end
 tu.to_callable = function(f)
     assert(utils.func_p(f), 'Only functions can be used in callable tables')
     return setmetatable({}, {__call = function(_, ...) f(...) end})
+end
+
+tu.len = function(param)
+    if type(param) == 'table' or type(param) == 'string' then
+        return #param
+    end
 end
 
 return tu

@@ -167,8 +167,6 @@ function buffer:__init(name, scratch)
     local bufnr
     local is_temp
 
-    assert_type(name, 'string', 'number')
-
     if scratch then
         name = with_data_path('temp', 'doom-scratch-buffer' .. '.' .. vim.bo.filetype)
         bufnr = vim.fn.bufadd(name)
@@ -451,18 +449,16 @@ end
 
 function buffer:set_keymap(mode, keys, f, attribs, doc, event)
     assert(mode)
-    assert(key)
+    assert(keys)
     assert(f)
     assert(doc)
 
     assoc(self, {'keymaps', mode, keys}, {})
-    keys = keys or self.keys
-    mode = mode or 'n'
     event = event or 'BufEnter'
     attribs = attribs or 'buffer'
     local doc = 'Keybinding for buffer: ' .. self.index
     local pattern = sprintf('<buffer=%d>', self.index)
-    local k =  kbd(mode, keys, f, attribs, doc, event, pattern)
+    local k = kbd(mode, keys, f, attribs, doc, event, pattern)
     self.keymaps[mode][keys] = k
     k:enable()
 end

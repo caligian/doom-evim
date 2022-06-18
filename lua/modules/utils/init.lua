@@ -243,7 +243,11 @@ utils.with_config_lua_path = function(...)
 end
 
 utils.with_user_config_path = function(...)
-    return path(os.getenv('HOME'), '.vdoom.d', 'lua', ...)
+    return path(os.getenv('HOME'), '.vdoom.d', ...)
+end
+
+utils.with_user_config_lua_path = function(...)
+    return utils.with_user_config_path('lua', ...)
 end
 
 utils.with_stdpath = function (what, ...)
@@ -282,17 +286,6 @@ utils.globalize = function (mod, ks)
             end
         end
     end
-end
-
-utils.system = function(cmd)
-    local out = vim.fn.system(cmd)
-    local t = {}
-
-    for index, s in ipairs(vim.split(out, "[\n\r]")) do
-        t[index] = s
-    end
-
-    return t
 end
 
 utils.chomp = function(s)
@@ -340,7 +333,5 @@ function utils.with_tempfile(mode, f)
 
     return false
 end
-
-utils.add_global(iter, 'iter')
 
 return utils

@@ -1,5 +1,89 @@
 local lsp = {}
 
+function lsp.setup_nvim_cmp()
+    local cmp = require("cmp")
+    vim.opt.completeopt = "menu,menuone,noselect"
+
+    local lsp_symbols = {
+        Text = "   (Text) ",
+        Method = "   (Method)",
+        Function = "   (Function)",
+        Constructor = "   (Constructor)",
+        Field = " ﴲ  (Field)",
+        Variable = "[] (Variable)",
+        Class = "   (Class)",
+        Interface = " ﰮ  (Interface)",
+        Module = "   (Module)",
+        Property = " 襁 (Property)",
+        Unit = "   (Unit)",
+        Value = "   (Value)",
+        Enum = " 練 (Enum)",
+        Keyword = "   (Keyword)",
+        Snippet = "   (Snippet)",
+        Color = "   (Color)",
+        File = "   (File)",
+        Reference = "   (Reference)",
+        Folder = "   (Folder)",
+        EnumMember = "   (EnumMember)",
+        Constant = " ﲀ  (Constant)",
+        Struct = " ﳤ  (Struct)",
+        Event = "   (Event)",
+        Operator = "   (Operator)",
+        TypeParameter = "   (TypeParameter)"
+    }
+
+    cmp.setup({
+        snippet = {
+            expand = function(args)
+                vim.fn["vsnip#anonymous"](args.body)
+            end
+        },
+        mapping = {
+            ["<C-p>"] = cmp.mapping.select_prev_item(),
+            ["<C-n>"] = cmp.mapping.select_next_item(),
+            ["<C-d>"] = cmp.mapping.scroll_docs(-4),
+            ["<C-f>"] = cmp.mapping.scroll_docs(4),
+            ["<C-Space>"] = cmp.mapping.complete(),
+            ["<C-e>"] = cmp.mapping.close(),
+            ["<CR>"] = cmp.mapping.confirm {
+                behavior = cmp.ConfirmBehavior.Replace,
+                select = true
+            }
+        },
+        formatting = {
+            format = function(entry, item)
+                item.kind = lsp_symbols[item.kind] .. " " .. item.kind
+                -- set a name for each source
+                item.menu =
+                ({
+                    spell = "[Spell]",
+                    buffer = "[Buffer]",
+                    calc = "[Calc]",
+                    emoji = "[Emoji]",
+                    nvim_lsp = "[LSP]",
+                    path = "[Path]",
+                    look = "[Look]",
+                    treesitter = "[treesitter]",
+                    nvim_lua = "[Lua]",
+                    latex_symbols = "[Latex]",
+                    cmp_tabnine = "[Tab9]"
+                })[entry.source.name]
+                return item
+            end
+        },
+        sources = {
+            {name = "nvim_lsp"},
+            {name = "conjure"},
+            {name = "vsnip"},
+            {name = "path"},
+            {name = "buffer"},
+            {name = "nvim_lua"},
+            {name = "treesitter"},
+            {name = "spell"}
+        }
+    })
+end
+
 function lsp.on_attach(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
     vim.cmd('command! Format execute lua vim.lsp.buf.formatting()')
@@ -37,37 +121,36 @@ function lsp.setup_lua()
 end
 
 function lsp.setup_servers()
+    vim.lsp.handlers["textDocument/publishDiagnostics"] = function() end
     local cmp_nvim_lsp = require('cmp_nvim_lsp')
     local nvim_lsp = require('lspconfig')
+    assert(cmp_nvim_lsp)
+    assert(nvim_lsp)
 
     each(function (lang)
-        local conf = Doom.langs[lang]
-        local server = conf.lsp
+        local server = assoc(Doom.langs, {lang, 'lsp'})
 
-        if server then
-            conf = server
+        if not server then return end
 
-            if table_p(server) then
-                server = server[1]
+        server = to_list(server)
+        local server_name = first(server)
+
+        if server.manual then
+            if server_name == 'sumneko_lua' then
+                lsp.setup_lua()
+            elseif callable(server.manual) then
+                server.manual()
+            elseif str_p(server.manual) then
+                system(server.manual)
             end
+        else
+            server.config = server.config or {
+                on_attach = lsp.on_attach,
+                capabilities = cmp_nvim_lsp.update_capabilities(vim.lsp.protocol.make_client_capabilities())
+            }
 
-            if nvim_lsp[server] then
-                if conf.manual then
-                    if server == 'sumneko_lua' then
-                        lsp.setup_lua()
-                    else
-                        conf.manual()
-                    end
-                else
-                    conf = conf.config or {
-                        on_attach = lsp.on_attach,
-                        capabilities = cmp_nvim_lsp.update_capabilities(vim.lsp.protocol.make_client_capabilities())
-                    }
-
-                    if nvim_lsp[server] then
-                        nvim_lsp[server].setup(conf)
-                    end
-                end
+            if nvim_lsp[server_name] then
+                nvim_lsp[server_name].setup(server.config)
             end
         end
     end, keys(Doom.langs))

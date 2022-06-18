@@ -78,12 +78,18 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
     assert_type(f, 'string', 'callable')
     assert_type(attribs, 'string', 'table', 'boolean')
     assert_type(event, 'string', 'table')
-    assert_type(pattern, 'string', 'table')
+    assert_type(pattern, 'string', 'table', 'number')
 
     attribs = attribs or defaults.attribs
     attribs = to_list(attribs)
 
     if event then event = to_list(event) end
+
+    if pattern and num_p(pattern) then
+        assert(vim.fn.bufnr(pattern) ~= -1, 'Invalid bufnr provided: ' .. pattern)
+        pattern = sprintf('<buffer=%d>', pattern) 
+    end
+
     if pattern then pattern = to_list(pattern) end
 
     self.noremap = find(attribs, 'noremap')
@@ -157,26 +163,27 @@ function kbd:enable(force)
 
     if self.event or self.pattern then
         self.event =  self.event or 'BufEnter'
-        self.pattern = self.pattern or '*.' .. vim.bo.filetype
-        local bufnr = match(self.pattern, '<buffer=(%d+)>') or vim.fn.bufnr()
-        bufnr = tonumber(bufnr)
+        self.pattern = self.pattern or sprintf('<buffer=%d>', vim.fn.bufnr())
+
         self.au = au('doom_kbd_' .. #Doom.au.status, sprintf('Augroup for keybinding: [%s] %s', self.mode, self.keys))
 
         self.global = false
         self.mapped = true
 
+        assoc(self, {'buffers'}, {})
+
         self.au:add(self.event, self.pattern, function()
             local cmd = ''
 
             if self.noremap then
-                cmd = sprintf('%snoremap %s %s %s', self.mode, attribs, self.keys, self.f)
+                cmd = sprintf('%snoremap %s %s %s', self.mode, self.attribs_s, self.keys, self.f)
             else
-                cmd = sprintf('%smap %s %s %s', self.mode, attribs, self.keys, self.f)
+                cmd = sprintf('%smap %s %s %s', self.mode, self.attribs_s, self.keys, self.f)
             end
 
-            bufnr = bufnr or vim.fn.bufnr()
+            local bufnr = vim.fn.bufnr()
             kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
-            assoc(self, {'buffers'}, {})
+
             push(self.buffers, bufnr)
             vim.cmd(cmd)
         end)
@@ -192,7 +199,7 @@ function kbd:enable(force)
             cmd = sprintf('%smap %s %s %s', self.mode, self.attribs_s, self.keys, self.f)
         end
 
-        kbd.wk_register(self.mode, self.keys, self.doc, bufnr)
+        kbd.wk_register(self.mode, self.keys, self.doc)
 
         self.global = true
         self.mapped = self.mapped + 1

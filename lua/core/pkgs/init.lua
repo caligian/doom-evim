@@ -39,7 +39,6 @@ Combinations of keys that can be supplied:
 - event & pattern & rocks
 - event & rocks
 - pattern & rocks
-- cond & rocks
 
 keys    string|table[string]
 Load package after pressing these keys. 
@@ -52,9 +51,6 @@ Load package after this event.
 
 pattern string|table[string]
 Load package if pattern is true for buffer, files, etc.
-
-cond    callable
-If cond returns true, load the package
 
 rocks   string|table[string]
 Luarocks required for the plugin
@@ -185,19 +181,24 @@ local function parse_specs(spec, opt)
         end
     elseif event or pattern then
         local a = au(spec[1], 'Oneshot autocmd for plugin: ' .. spec[1])
-        local cmd = get_pkgs_loader_cmd(spec[1], false, true)
+        local cmd = get_pkgs_loader_cmd(spec[1], true)
 
         if not event then event = 'BufEnter' end
         if not pattern then pattern = '*' end
-
-        if not cmd then cmd = ':packadd ' .. path.name(spec[1]) end
 
         a:add(event, pattern, cmd, {once=true})
         a:enable()
 
         spec.augroup = a
+    elseif cond then
+        if callable(cond) then
+            if cond() then
+                local cmd = get_pkgs_loader_cmd(spec[1], true)
+                cmd()
+            end
+        end
     else
-        local cmd = get_pkgs_loader_cmd(spec[1], false, false)
+        local cmd = get_pkgs_loader_cmd(spec[1], false)
         if cmd then cmd() end
     end
 
@@ -207,7 +208,7 @@ local function parse_specs(spec, opt)
 end
 
 function pkgs.load_plugins(force)
-    if pkgs.paq and not force then return end
+    if Doom.pkgs.init then return Doom.pkgs.plugins end
 
     local specs = pkgs.plugin_specs
 
@@ -227,14 +228,12 @@ function pkgs.load_plugins(force)
         push(t, parse_specs(p, true)) 
     end
 
-    if not Doom.pkgs.init then
-        paq(t)
+    paq(t)
 
-        pkgs.plugins = t
-        pkgs.paq = paq
-        Doom.pkgs.paq = paq
-        Doom.pkgs.plugins = t
-    end
+    pkgs.plugins = t
+    pkgs.paq = paq
+    Doom.pkgs.paq = paq
+    Doom.pkgs.plugins = t
 
     Doom.pkgs.init = true
 

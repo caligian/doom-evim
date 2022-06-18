@@ -28,15 +28,16 @@ end
 function au:__init(name, doc)
     assert_s(doc)
 
-    self.name = name:gsub('[^%w_]+', '')
+    if not name then
+        self.name = sprintf('doom_group_%d', len(au.status) + 1)
+    else
+        self.name = name:gsub('[^%w_]+', '')
+    end
+
     self.doc = doc
     self.autocmds = {}
 
-    if not self.name then
-        self.name = sprintf('doom_group_%d', len(au.status) + 1)
-    end
-
-    assert_s(name)
+    assert_s(self.name)
 end
 
 --[[
@@ -121,28 +122,35 @@ function au:disable(pat, event)
 
         if self.autocmds[k] and self.autocmds[k].enabled then
             self.autocmds[k].enabled = false
+            pcall(function()
+                vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
+            end)
         end
-
-        vim.cmd(sprintf('autocmd! %s %s %s', self.name, event, pat))
     elseif pat then
         for aupat, value in pairs(self.autocmds) do
             if aupat:match(pat) and value.enabled then
                 value.enabled = false
             end
         end
-        vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
+        pcall(function()
+            vim.cmd(sprintf('autocmd! %s * %s', self.name, pat))
+        end)
     elseif event then
         for auevent, value in pairs(self.autocmds) do
             if auevent:match(event) then
                 value.enabled = false
             end
         end
-        vim.cmd(sprintf('autocmd! %s %s', self.name, event))
+        pcall(function ()
+            vim.cmd(sprintf('autocmd! %s %s', self.name, event))
+        end)
     else
         for auevent, value in pairs(self.autocmds) do
             value.enabled = false
         end
-        vim.cmd(sprintf('autocmd! %s', self.name))
+        pcall(function()
+            vim.cmd(sprintf('autocmd! %s', self.name))
+        end)
     end
 end
 

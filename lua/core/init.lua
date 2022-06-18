@@ -16,8 +16,13 @@ add_global(require('path.fs'), 'fs')
 add_global(require('classy'), 'class')
 add_global(require('fun'), 'iter')
 
+local class = require('classy')
+add_global(class, 'class')
+add_global(class.multimethod, 'multimethod')
+add_global(class.overload, 'overload')
+
 -- This is for convenience - global logger
-require('core.exceptions')
+add_global(require('core.exceptions'), 'ex')
 require('core.log')
 
 -- Load user overrides
@@ -33,6 +38,11 @@ add_global(require('core.telescope'), 'ts')
 add_global(require('core.pkgs'), 'pkgs')
 add_global(require('core.notify'), 'notify')
 add_global(require('core.buffers'), 'buffer')
+
+local lsp = require('core.lsp')
+
+lsp.setup_nvim_cmp()
+lsp.setup_servers()
 
 -- Load extras from builtin modules
 ts.font_switcher = require('core.telescope.font_switcher')

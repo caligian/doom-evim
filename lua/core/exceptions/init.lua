@@ -1,7 +1,20 @@
-add_global(function(test, fmt, ...)
-    if not test then 
-        error(sprintf(fmt, ...))
-    else
-        return true
+local exception = {}
+
+function exception.throw(fmt, ...)
+    assert_s(fmt)
+    error(sprintf(fmt, ...))
+end
+
+function exception.throw_if(test, fmt, ...)
+    if callable(test) then
+        test = test()
     end
-end, 'oblige')
+
+    if not test then
+        exception.throw(fmt, ...)
+    end
+
+    return test
+end
+
+return exception
