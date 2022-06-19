@@ -1,0 +1,8 @@
+local tp = require('core.templates')
+kbd('n', '<leader>&ts', tp.new, false, 'Edit a new template in split'):enable()
+kbd('n', '<leader>&tv', tp.new, false, 'Edit a new template in vsplit'):enable()
+kbd('n', '<leader>&tf', tp.new, false, 'Edit a new template in floating win'):enable()
+kbd('n', '<leader>&te', function ()
+    tp.load()
+    tp.enable()
+end, false, 'Enable template insertion'):enable()

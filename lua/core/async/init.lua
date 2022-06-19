@@ -42,8 +42,11 @@ end
 
 function job:send(s)
     if not self.running then return false end
+    
+    assert(s)
+    assert_type(s, 'string', 'table')
 
-    if type(s) == 'table' then s = join(s, "\n") end
+    if table_p(s) then s = join(s, "\n") end
     s = s .. "\n"
 
     return vim.fn.chansend(self.id, s)
@@ -51,6 +54,7 @@ end
 
 function job:sync(timeout, tries, inc, sched)
     if not self.running then return false end
+
     assert(self.persistent ~= true, 'Cannot wait for output from a persistent terminal session')
 
     wait = wait or 2

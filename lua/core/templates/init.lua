@@ -78,9 +78,14 @@ function template.enable()
 
         each(function (pat)
             local t = Doom.template.templates[ft][pat]
+
+            if template.au then
+                template.au:disable()
+            end
+
             local a = au(false, 'Template for filename pattern: ' .. pat)
 
-            a:add('BufNew', '*' .. ft, function()
+            a:add('BufNewFile', '*' .. ft, function()
                 if lmatch(vim.fn.expand('%:p'), pat) then
                     vim.api.nvim_buf_set_lines(vim.fn.bufnr(), 0, 0, false, t)
                 end
@@ -92,7 +97,9 @@ function template.enable()
         end, keys(Doom.template.templates[ft]))
     end, keys(Doom.template.templates))
 
-    return autocmd_groups
+    template.au = autocmd_groups
+
+    return template.au
 end
 
 return template

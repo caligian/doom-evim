@@ -37,7 +37,7 @@ function snippet.new(split)
 
     b:set_keymap('n', 'gs', function()
         buffer.hide_by_winnr(vim.fn.winnr())
-        local s = buffer('%'):read({})
+        local s = b:read({})
 
         if #s > 0 then
             local name, prefix, new_ft = unpack(gets('%', true, {'Snippet name'}, {'Snippet prefix'}, {'Filetype', ft}))

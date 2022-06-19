@@ -24,6 +24,7 @@ return {
         },
 
         lua = {
+            format = {'luafmt', manual=true};
             lsp = {"sumneko_lua", manual=true},
             compile = 'lua5.1',
             repl = 'lua5.1'
