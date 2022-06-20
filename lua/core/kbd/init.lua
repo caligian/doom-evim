@@ -158,7 +158,7 @@ function kbd:enable(force)
     self:backup_previous()
 
     if callable(self.f) then
-        self.f = au.register(partial(self.f, self), true)
+        self.f = au.register(partial(self.f, self), 'key')
     end
 
     if self.event or self.pattern then
@@ -304,13 +304,15 @@ function kbd.oneshot(mode, keys, f, attribs)
     local new_f = false
 
     new_f = au.register(function()
-        pcall(function() vim.cmd(sprintf('%sunmap %s', mode, keys)) end)
+        pcall(function() 
+            vim.cmd(sprintf('%sunmap %s', mode, keys)) 
+        end)
         if str_p(f) then 
             vim.cmd(f)
         else
             f()
         end
-    end, true)
+    end, 'key')
 
     local cmd = ''
 

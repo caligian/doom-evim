@@ -5,6 +5,8 @@ function format.format_buffer(ft, bufnr)
     bufnr = bufnr or vim.fn.bufnr()
 
     assert_n(bufnr)
+    :xa
+    quit
     assert_s(ft)
 
     local f = assoc(Doom.langs, {ft, "format"})

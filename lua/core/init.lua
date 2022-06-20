@@ -40,7 +40,6 @@ add_global(require('core.notify'), 'notify')
 add_global(require('core.buffers'), 'buffer')
 
 local lsp = require('core.lsp')
-
 lsp.setup_nvim_cmp()
 lsp.setup_servers()
 
@@ -50,8 +49,8 @@ kbd.load_prefixes()
 
 -- Require keybindings
 require('core.buffers.keybindings')
-local default_keybindings = require('core.kbd.defaults')
-default_keybindings.set()
+require('core.kbd.defaults').set()
+require('core.utils.keybindings')
 
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
 pkgs.load_plugins()

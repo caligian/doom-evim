@@ -444,6 +444,12 @@ function buffer:add_hook(event, f, opts)
 end
 
 function buffer:delete()
+    pcall(function ()
+        vim.cmd('bwipeout ' .. self:exec(function ()
+            return vim.fn.expand('%:p')
+        end))
+    end)
+
     self.status[self.index] = nil
 end
 

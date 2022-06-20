@@ -5,24 +5,32 @@ local au = class('doom-augroup')
 au.status = Doom.au.status
 au.refs = Doom.au.refs
 
-function au.func2ref(f, for_keybinding)
+function au.func2ref(f, style)
     assert(f, ex.no_f())
+
     assert_type(f, 'string', 'callable')
+    assert_s(style)
+
+    style = style or 'call'
 
     if str_p(f) then
         return f
     else
-        if not for_keybinding then
-            return sprintf('lua Doom.au.refs[%d]()', #au.refs)
-        else
+        if match(style, 'index') then
+            return #au.refs
+        elseif match(style, 'key') then
             return sprintf(':lua Doom.au.refs[%d]()<CR>', #au.refs)
+        elseif match(style, 'call') then
+            return sprintf(':lua Doom.au.refs[%d]()', #au.refs)
+        else
+            return sprintf('Doom.au.refs[%d]', #au.refs)
         end
     end
 end
 
-function au.register(f, for_keybinding)
+function au.register(f, style)
     if callable(f) then push(au.refs, f) end
-    return au.func2ref(f, for_keybinding)
+    return au.func2ref(f, style)
 end
 
 function au:__init(name, doc)

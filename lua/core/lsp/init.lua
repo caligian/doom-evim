@@ -121,11 +121,14 @@ function lsp.setup_lua()
 end
 
 function lsp.setup_servers()
-    vim.lsp.handlers["textDocument/publishDiagnostics"] = function() end
-    local cmp_nvim_lsp = require('cmp_nvim_lsp')
     local nvim_lsp = require('lspconfig')
-    assert(cmp_nvim_lsp)
-    assert(nvim_lsp)
+    local cmp_nvim_lsp = require('cmp_nvim_lsp')
+    
+    vim.diagnostic.config {
+        virtual_text = false,
+        signs = false,
+        underline = false,
+    }
 
     each(function (lang)
         local server = assoc(Doom.langs, {lang, 'lsp'})
@@ -155,5 +158,7 @@ function lsp.setup_servers()
         end
     end, keys(Doom.langs))
 end
+
+lsp.setup_servers()
 
 return lsp

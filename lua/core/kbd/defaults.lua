@@ -1,6 +1,6 @@
 local keybindings = {}
 local kbd = require('core.kbd')
-local attribs = {'noremap', 'nowait'}
+local attribs = false
 
 keybindings.tabs = {
     {'n', '<leader>tt', ":tabnew <CR>", attribs, 'Open a new tab'};
@@ -24,10 +24,9 @@ keybindings.terminal = {
     {'n', '<localleader>V', ":vsplit term://bash <CR>", attribs, 'Open bash in terminal in vsplit'};
 }
 keybindings.files = {
-    {'n', '<leader>fv', ':luafile %<CR>', attribs, 'Save and source lua buffer'};
-    {'n', '<leader>fV', ":source %<CR>", attribs, 'Source current buffer'};
-    {'n', '<leader>fs', ":w %<CR>", attribs, 'Save current buffer'};
+    {'n', '<leader>fs', ':w<CR>', attribs, 'Save file'};
 }
+
 
 keybindings.buffers = {
     {'n', '<leader>bR', ":if &modifiable == 1 <bar> set nomodifiable <bar> else <bar> set modifiable <bar> endif <CR>", attribs, 'Make current buffer readonly'};
