@@ -186,20 +186,19 @@ function buffer:__init(name, scratch)
         bufnr = vim.fn.bufadd(name)
     end
 
-    self.index = bufnr
-    self.name = name
+    if self.status[bufnr] then
+        merge(self, self.status[bufnr])
+    else
+        self.index = bufnr
+        self.name = name
+        self.status[bufnr] = self
+        self.status[self.name] = self
+    end
+
     if is_temp then
         self:setopts({buftype='nofile', swapfile=false, buflisted=false})
     elseif scratch then
         self:setopts({buflisted=false, swapfile=false, filetype=vim.bo.filetype})
-    end
-
-    if self.status[bufnr] then
-        return self.status[bufnr]
-    else
-        self.status[bufnr] = self
-        self.status[self.name] = self
-        return self
     end
 end
 

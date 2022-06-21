@@ -16,7 +16,7 @@ return {
         ruby = {
             repl = 'irb',
             lsp = "solargraph",
-            compile = 'irb',
+            compile = 'ruby',
             debug = 'ruby -r rdebug',
             test = 'rspec',
             build = 'rake',

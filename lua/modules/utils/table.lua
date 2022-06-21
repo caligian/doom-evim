@@ -359,7 +359,7 @@ tu.assoc = function (dict, ks, create, transform)
         local v = t[key]
 
         if not v then
-            if create then
+            if create and create ~= 'd' then
                 if index == n then
                     if create == true then
                         t[key] = {}
@@ -375,12 +375,18 @@ tu.assoc = function (dict, ks, create, transform)
                 return false, last_key, last_t, dict
             end
         elseif not utils.table_p(v) then
-            if transform then 
-                assert(callable(transform), 'Transformer must be a callable')
-                t[key] = transform(v, t, key, last_t, last_key)
-            end
+            if create == 'd' then
+                local out = copy(t[key])
+                t[key] = nil
+                return out, last_key, last_t, dict
+            else
+                if transform then 
+                    assert(callable(transform), 'Transformer must be a callable')
+                    t[key] = transform(v, t, key, last_t, last_key)
+                end
 
-            return t[key], last_key, last_t, dict
+                return t[key], last_key, last_t, dict
+            end
         end
 
         last_t = t
@@ -393,6 +399,11 @@ end
 function tu.update(dict, ks, replacement)
     return tu.assoc(dict, ks, replacement, function(...) return replacement end)
 end
+
+function tu.remove(dict, ks)
+    return tu.assoc(dict, ks, 'd')
+end
+
 
 -- if table is passed then it will be sent to tu.assoc
 tu.get = function(arr, ...)

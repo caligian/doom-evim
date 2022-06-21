@@ -21,21 +21,56 @@ function job:__init(name, cmd, opts)
     self.name = name
     self.opts = opts
     self.running = false
+    self.opts = opts or {}
 
     self.status[self.name] = self
 end
 
+function job:repr()
+    print(sprintf([[
+%10s: %s
+%10s: %s
+%10s: %s
+%10s: %s
+%10s: %s
+%10s: %s
+%10s: %s]], 
+    'Name', self.name, 
+    'Command', self.cmd,
+    'Filetype', self.filetype or false,
+    'Status', self.running and 'RUNNING' or 'NOT STARTED',
+    'Done', self.done and 'DONE' or 'NOT DONE',
+    'Channel', tostring(self.id),
+    'Options', dump(self.opts or {})))
+end
+
 function job:kill()
     if self.done then return false end
-    vim.fn.chanclose(self.id)
     self.done = true
     self.running = false
+
+    pcall(function ()
+        vim.fn.chanclose(self.id)
+    end)
+end
+
+function job:delete()
+    job:kill()
+    remove(Doom.async.job.status, self.name)
 end
 
 function job.killall()
     for key, value in pairs(job.status) do
         if value.running then
             value:kill()
+        end
+    end
+end
+
+function job.delall()
+    for key, value in pairs(job.status) do
+        if value.running then
+            value:del()
         end
     end
 end
@@ -72,6 +107,8 @@ function job:sync(timeout, tries, inc, sched)
 end
 
 function job:open(opts)
+    if self.running then return end
+
     opts = opts or self.opts or {}
 
     if not opts.on_exit then
@@ -140,13 +177,13 @@ function job:open(opts)
         self.buffer = buf(self.name)
 
         if self.persistent then
-            local _, temp_file = with_open(false, 'w', function(fh)
+            local _, temp_file = with_tempfile('w', function(fh)
                 if str_p(self.cmd) then
                     self.cmd = split(self.cmd, "\n\r")
                 end
 
                 map(function(s) fh:write(s .. "\n") end, self.cmd)
-            end)
+            end, true)
 
             self.cmd = shell .. ' ' .. temp_file
         end

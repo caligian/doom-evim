@@ -3,6 +3,24 @@ local yaml = require('yaml')
 local iter = require('modules.fun')
 local utils = {}
 
+utils.system = function(cmd)
+    local out, t = false, {}
+
+    if vimz then
+        local out = vim.fn.system(cmd)
+    else
+        local fh = io.popen(cmd, 'r')
+        out = fh:read('a')
+        fh:close()
+    end
+
+    for index, s in ipairs(vim.split(out, "[\n\r]")) do
+        t[index] = s
+    end
+
+    return t
+end
+
 utils.boolean_p = function(e)
     return type(e) == 'boolean'
 end
@@ -319,7 +337,7 @@ utils.with_open = function(dst, mode, f)
     return false, dst
 end
 
-function utils.with_tempfile(mode, f)
+function utils.with_tempfile(mode, f, keep)
     mode = mode or 'w'
     local tf = utils.tempfile()
     local fh = io.open(tf, mode) 
@@ -327,8 +345,15 @@ function utils.with_tempfile(mode, f)
     if fh then
         local out = f(fh)
         fh:close()
-        utils.system('rm ' .. tf)
-        return out or true
+
+        if not keep then
+            utils.system('rm ' .. tf)
+            return  out
+        end
+
+        out = out or false
+
+        return out, tf
     end
 
     return false

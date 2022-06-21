@@ -1,69 +1,64 @@
-local job = require('core.async')
+-- local job = require('core.async')
+local job = dofile(with_config_lua_path('core', 'async', 'init.lua'))
+local repl = class('doom-repl', job)
 local buffer = require('core.buffers')
-local repl = {}
 
-function repl:__init(ft, cmd, job_opts)
-    assert(name)
-    assert_s(name)
-
-    assert(cmd)
-    assert_s(cmd)
+function repl:__init(name, job_opts, ft, cmd)
+    assert_type(name, 'boolean', 'string')
+    assert_type(cmd, 'boolean', 'string')
+    assert_type(job_opts, 'boolean', 'table')
+    assert_type(ft, 'boolean', 'string')
 
     job_opts = job_opts or {}
-    assert_t(job_opts)
+    ft = ft or vim.bo.filetype
+    cmd = cmd or assoc(Doom.langs, {ft, 'repl'})
+
+    assert(cmd, 'No command found for filetype: ' .. vim.bo.filetype)
+    name = ft .. '-repl'
+
+    local existing_job = assoc(Doom.async.job.status, name)
+
+    if existing_job and job_opts.force then
+        local j = existing_job
+        j:delete()
+    elseif existing_job then
+        if existing_job.running then
+            merge(self, existing_job)
+            return self
+        else
+            existing_job:delete()
+        end
+    end
 
     job_opts.terminal = true
     job_opts.persistent = true
     job_opts.on_stdout = false
     job_opts.on_stderr = false
 
-    local ft = ft or vim.bo.filetype
-    assert_s(ft)
+    self.filetype = ft
+    self.connected_buffers = {}
 
-    local cmd = assoc(Doom.langs, {ft, 'repl'})
-    assert(cmd, 'No command found for filetype: ' .. vim.bo.filetype)
-    
-    local name = ft .. '-repl'
-    local j = job(name, cmd, job_opts)
-
-    self.job = j
-    self.cmd = cmd
-    self.name = name
-end
-
-function repl:open(opts)
-    self.job:open(opts)
-    self.buffer = self.job.buffer
+    job.__init(self, name, cmd, job_opts)
 end
 
 -- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
 -- @param s string If s is given then method is ignored and s is simply chansend()
-function repl:send(method, s, no_ft_check)
-    assert(method)
-    assert_s(method)
-    assert_type(s, 'string', 'table')
-
-    if s then
-        self.job:send(s)
-        return
-    end
-
-    if not no_ft_check and vim.bo.filetype ~= self.filetype then return false end
-
-    local current_buffer = false
-    local bufnr = vim.fn.bufnr()
-    if not self.buffers[bufnr] then
-        current_buffer = buffer(bufnr)
-    else
-        current_buffer = self.buffers[bufnr]
-    end
-
-    if not current_buffer:is_visible() then return false end
+function repl:send_from_buffer(method)
+    assert_type(method, 'string', 'boolean')
 
     local pos = {}
     method = method or '.'
     method = strip(method)
-    local curpos = current_buffer:getcurpos()
+    local bufname = vim.fn.expand('%')
+
+    if match(bufname, '^tmp\\.', '^term://') or not vim.bo.filetype == self.filetype then 
+        return 
+    end
+
+    local buf = buffer.find_by_bufnr(vim.fn.bufnr()) or buffer('%')
+
+    self.connected_buffers[buf.index] = buf
+    local curpos = buf:getcurpos()
 
     if method == '.' then
         if vim.v.count > 0 then
@@ -76,14 +71,11 @@ function repl:send(method, s, no_ft_check)
     elseif method == '~' then
         pos = { start_row=0, end_row=-1 }
     elseif method == 'v' then
-        pos = current_buffer:getvcurpos()
+        pos = buf:getvcurpos()
     end
 
-    local s = current_buffer:read(pos)
-
-    self.job:send(s)
+    local s = buf:read(pos)
+    self:send(s)
 end
-
-
 
 return repl
