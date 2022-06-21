@@ -33,11 +33,9 @@ function job:repr()
 %10s: %s
 %10s: %s
 %10s: %s
-%10s: %s
 %10s: %s]], 
     'Name', self.name, 
     'Command', self.cmd,
-    'Filetype', self.filetype or false,
     'Status', self.running and 'RUNNING' or 'NOT STARTED',
     'Done', self.done and 'DONE' or 'NOT DONE',
     'Channel', tostring(self.id),
@@ -51,6 +49,10 @@ function job:kill()
 
     pcall(function ()
         vim.fn.chanclose(self.id)
+
+        if self.buffer then
+            self.buffer:wipeout()
+        end
     end)
 end
 
@@ -168,7 +170,10 @@ function job:open(opts)
         self.done = false
     else
         self.persistent = opts.persistent == true
-        local shell = opts.shell or 'bash'
+        local shell = opts.shell or Doom.langs.shell
+        if shell == true then
+            shell = Doom.langs.shell
+        end
 
         opts.terminal = nil
         opts.persistent = nil

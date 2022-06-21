@@ -1,7 +1,15 @@
 -- local job = require('core.async')
 local job = dofile(with_config_lua_path('core', 'async', 'init.lua'))
-local repl = class('doom-repl', job)
 local buffer = require('core.buffers')
+
+local repl = class('doom-repl', job)
+assoc(Doom, {'repl', 'status'}, {})
+repl.status = Doom.repl.status
+
+function repl.find_job(ft)
+    ft = ft or vim.bo.filetype
+    return assoc(Doom.async.job.status, ft .. '-repl')
+end
 
 function repl:__init(name, job_opts, ft, cmd)
     assert_type(name, 'boolean', 'string')
@@ -13,8 +21,25 @@ function repl:__init(name, job_opts, ft, cmd)
     ft = ft or vim.bo.filetype
     cmd = cmd or assoc(Doom.langs, {ft, 'repl'})
 
+    if not cmd and job_opts.shell then
+        if str_p(job_opts.shell) then
+            cmd = job_opts.shell 
+        else
+            cmd = Doom.langs.shell
+        end
+
+        self.shell = true
+        ft = false
+        job_opts.shell = nil
+    end
+
     assert(cmd, 'No command found for filetype: ' .. vim.bo.filetype)
-    name = ft .. '-repl'
+
+    if ft then
+        name = ft .. '-repl'
+    else
+        name = 'shell-repl'
+    end
 
     local existing_job = assoc(Doom.async.job.status, name)
 
@@ -37,6 +62,7 @@ function repl:__init(name, job_opts, ft, cmd)
 
     self.filetype = ft
     self.connected_buffers = {}
+    self.status[name] = self
 
     job.__init(self, name, cmd, job_opts)
 end
@@ -51,7 +77,7 @@ function repl:send_from_buffer(method)
     method = strip(method)
     local bufname = vim.fn.expand('%')
 
-    if match(bufname, '^tmp\\.', '^term://') or not vim.bo.filetype == self.filetype then 
+    if match(bufname, '^tmp\\.', '^term://') or not self.shell and not vim.bo.filetype == self.filetype  then 
         return 
     end
 
@@ -76,6 +102,12 @@ function repl:send_from_buffer(method)
 
     local s = buf:read(pos)
     self:send(s)
+end
+
+function repl.killall()
+    for _, value in pairs(repl.status) do
+        value:delete()
+    end
 end
 
 return repl

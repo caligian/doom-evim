@@ -18,11 +18,11 @@ keybindings.misc = {
     {'n', '<leader><leader>', ":noh <CR>", attribs, 'Disable highlighting'};
 }
 
-keybindings.terminal = {
-    {'n', '<localleader>t', ":tabnew term://bash <CR>", attribs, 'Open bash in terminal in new tab'};
-    {'n', '<localleader>S', ":split term://bash <CR>", attribs, 'Open bash in terminal in split'};
-    {'n', '<localleader>V', ":vsplit term://bash <CR>", attribs, 'Open bash in terminal in vsplit'};
-}
+--keybindings.terminal = {
+    --{'n', '<localleader>t', ":tabnew term://bash <CR>", attribs, 'Open bash in terminal in new tab'};
+    --{'n', '<localleader>S', ":split term://bash <CR>", attribs, 'Open bash in terminal in split'};
+    --{'n', '<localleader>V', ":vsplit term://bash <CR>", attribs, 'Open bash in terminal in vsplit'};
+--}
 keybindings.files = {
     {'n', '<leader>fs', ':w<CR>', attribs, 'Save file'};
 }

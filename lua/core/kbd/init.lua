@@ -158,7 +158,7 @@ function kbd:enable(force)
     self:backup_previous()
 
     if callable(self.f) then
-        self.f = au.register(partial(self.f, self), 'key')
+        self.f = au.register(self.f, 'key')
     end
 
     if self.event or self.pattern then

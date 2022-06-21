@@ -452,6 +452,8 @@ function buffer:delete()
     self.status[self.index] = nil
 end
 
+buffer.wipeout = buffer.delete
+
 function buffer:set_keymap(mode, keys, f, attribs, doc, event)
     assert(mode)
     assert(keys)

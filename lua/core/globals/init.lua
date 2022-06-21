@@ -4,6 +4,8 @@ return {
     },
 
     langs = {
+        shell = 'bash',
+
         python = {
             lsp = "pyright",
             compile = 'python3',
