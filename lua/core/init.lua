@@ -4,7 +4,6 @@ require('modules.utils').globalize()
 globalize(require('modules.utils.table'))
 globalize(require('modules.utils.string'))
 globalize(require('modules.utils.function'))
-globalize(require('modules.utils.nvim'))
 globalize(require('modules.utils.param'))
 
 -- Import globals
@@ -51,6 +50,7 @@ kbd.load_prefixes()
 require('core.buffers.keybindings')
 require('core.kbd.defaults').set()
 require('core.utils.keybindings')
+require('core.repl.keybindings')
 
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
 pkgs.load_plugins()

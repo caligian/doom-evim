@@ -1,6 +1,5 @@
 local kbd = require('core.kbd')
---local repl = require('core.repl')
-local repl = dofile('init.lua')
+local repl = require('core.repl')
 
 local function start_job(d, is_shell)
     if not is_shell and not assoc(Doom.langs, {vim.bo.filetype, 'repl'}) then
@@ -18,16 +17,7 @@ local function start_job(d, is_shell)
     end
 
     if j and j.running then
-        if d == 's' then
-            j.buffer:split()
-        elseif d == 'v' then
-            j.buffer:vsplit()
-        elseif d == 't' then
-            j.buffer:tabnew()
-        else
-            j.buffer:to_win()
-        end
-
+        j.buffer:split(d)
         return j
     end
 
@@ -38,21 +28,12 @@ local function start_job(d, is_shell)
     end
 
     j:open()
-
-    if d == 's' then
-        j.buffer:split()
-    elseif d == 'v' then
-        j.buffer:vsplit()
-    elseif d == 't' then
-        j.buffer:tabnew()
-    else
-        j.buffer:to_win()
-    end
+    j.buffer:split(d)
 
     return j
 end
 
-local function _kill(_, is_shell)
+local function kill_repl(is_shell)
     if not is_shell and not assoc(Doom.langs, {vim.bo.filetype, 'repl'}) then
         to_stderr('No repl defined for filetype %s in Doom.langs', vim.bo.filetype)
         return
@@ -62,10 +43,11 @@ local function _kill(_, is_shell)
     if is_shell then
         j = Doom.repl.status['shell-repl']
     else
-        j = assoc(Doom.repl.status, vim.bo.filetype .. '-repl')
+        j = repl.find_job(vim.bo.filetype)
     end
 
     if j and j.running then
+        j:kill()
         j:delete()
         to_stderr('Killed REPL for filetype ' .. vim.bo.filetype)
     end
@@ -83,7 +65,7 @@ local function send_string(method, is_shell)
     if is_shell then
         j = Doom.repl.status['shell-repl']
     else
-        j = assoc(Doom.repl.status, vim.bo.filetype .. '-repl')
+        j = repl.find_job(vim.bo.filetype)
     end
 
     if j and j.running then
@@ -111,10 +93,10 @@ kbd('n', '<localleader>t~', partial(send_string, '~.', Doom.langs.shell), false,
 kbd('n', '<localleader>tb', partial(send_string, '~.', Doom.langs.shell), false, 'Send everything till line to REPL'):enable()
 kbd('n', '<localleader>t.', partial(send_string, '.', Doom.langs.shell), false, 'Start buffer to REPL'):enable()
 
-kbd('n', '<localleader>ts', partial(start_job, 's', true), false, 'Start REPL for buffer in split'):enable()
-kbd('n', '<localleader>tv', partial(start_job, 'v', true), false, 'Start REPL for buffer in vsplit'):enable()
-kbd('n', '<localleader>tt', partial(start_job, 't', true), false, 'Start REPL for buffer in tab'):enable()
-kbd('n', '<localleader>tf', partial(start_job, 'f', true), false, 'Start REPL for buffer in floating win'):enable()
+kbd('n', '<localleader>ts', partial(start_job, 's', true), false, 'Start shell in split'):enable()
+kbd('n', '<localleader>tv', partial(start_job, 'v', true), false, 'Start shell in vsplit'):enable()
+kbd('n', '<localleader>tt', partial(start_job, 't', true), false, 'Start shell in tab'):enable()
+kbd('n', '<localleader>tf', partial(start_job, 'f', true), false, 'Start shell in floating win'):enable()
 
 kbd('n', '<localleader>,s', partial(start_job, 's'), false, 'Start REPL for buffer in split'):enable()
 kbd('n', '<localleader>,v', partial(start_job, 'v'), false, 'Start REPL for buffer in vsplit'):enable()
@@ -122,5 +104,5 @@ kbd('n', '<localleader>,t', partial(start_job, 't'), false, 'Start REPL for buff
 kbd('n', '<localleader>,f', partial(start_job, 'f'), false, 'Start REPL for buffer in floating win'):enable()
 
 kbd('n', '<localleader>,K', repl.killall, false, 'Kill all REPLs'):enable()
-kbd('n', '<localleader>,k', _kill, false, 'Kill buffer REPL'):enable()
+kbd('n', '<localleader>,k', kill_repl, false, 'Kill buffer REPL'):enable()
 kbd('n', '<localleader>tk', partial(_kill, true), false, 'Kill shell REPL'):enable()

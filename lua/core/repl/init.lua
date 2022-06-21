@@ -1,5 +1,4 @@
--- local job = require('core.async')
-local job = dofile(with_config_lua_path('core', 'async', 'init.lua'))
+local job = require('core.async')
 local buffer = require('core.buffers')
 
 local repl = class('doom-repl', job)
@@ -8,7 +7,7 @@ repl.status = Doom.repl.status
 
 function repl.find_job(ft)
     ft = ft or vim.bo.filetype
-    return assoc(Doom.async.job.status, ft .. '-repl')
+    return assoc(repl.status, ft .. '-repl')
 end
 
 function repl:__init(name, job_opts, ft, cmd)
@@ -28,9 +27,8 @@ function repl:__init(name, job_opts, ft, cmd)
             cmd = Doom.langs.shell
         end
 
-        self.shell = true
+        self.shell = cmd
         ft = false
-        job_opts.shell = nil
     end
 
     assert(cmd, 'No command found for filetype: ' .. vim.bo.filetype)

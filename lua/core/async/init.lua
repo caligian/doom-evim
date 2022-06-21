@@ -57,7 +57,7 @@ function job:kill()
 end
 
 function job:delete()
-    job:kill()
+    self:kill()
     remove(Doom.async.job.status, self.name)
 end
 
@@ -72,10 +72,13 @@ end
 function job.delall()
     for key, value in pairs(job.status) do
         if value.running then
-            value:del()
+            value:delete()
         end
     end
 end
+
+job.deleteall = job.delall
+job.delete_all = job.deleteall
 
 function job:send(s)
     if not self.running then return false end
@@ -89,23 +92,24 @@ function job:send(s)
     return vim.fn.chansend(self.id, s)
 end
 
-function job:sync(timeout, tries, inc, sched)
+function job:sync(opts)
     if not self.running then return false end
 
     assert(self.persistent ~= true, 'Cannot wait for output from a persistent terminal session')
+    local opts = opts or {}
 
-    wait = wait or 2
-    tries = tries or 10
-    inc = inc or 10
-    sched = sched == nil and true
+    opts.wait = opts.wait or 2
+    opts.tries = opts.tries or 10
+    opts.inc = opts.inc or 10
+    opts.sched = opts.sched == nil and true
 
-    return wait(timeout, tries, inc, sched, function()
+    return wait(function()
         if self.done then
             return true
         else
             return false
         end
-    end)
+    end, opts)
 end
 
 function job:open(opts)

@@ -221,7 +221,7 @@ function buffer:to_win(opts)
 
     if opts.relative then
         opts.row = 0
-        opts.col = opts.col or -1
+        opts.col = opts.col or 0
     end
 
     opts.border = 'solid'
@@ -230,18 +230,19 @@ function buffer:to_win(opts)
     return vim.api.nvim_open_win(self.index, true, opts)
 end
 
-function buffer:exec(f, sched, timeout, tries, inc)
+function buffer:exec(f, args, opts)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
     local result = false
     local id = self:to_win()
     local tabnr = vim.fn.tabpagenr()
 
-    timeout = timeout or 10
-    tries = tries or 5
-    inc = inc or 5
-    sched = sched == nil and false
-    result = wait(timeout, tries, inc, sched, f)
+    opts = opts or {}
+    opts.timeout = opts.timeout or 10
+    opts.tries = opts.tries or 5
+    opts.inc = opts.inc or 5
+    opts.sched = opts.sched == nil and false
+    result = wait(f, args or {}, opts)
     local current_tabnr = vim.fn.tabpagenr()
 
     if tabnr ~= current_tabnr then
@@ -518,34 +519,70 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
     self:to_win(win_opts)
 end
 
-function buffer:split(reverse)
+function buffer:split(direction, opts)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
+    assert_type(direction, 'string', 'boolean')
 
-    reverse = reverse == nil and false
+    direction = direction or 's'
+    direction = strip(direction)
+    direction = match('^([svtf])', direction)
+    opts = opts or {}
+    opts.reverse = opts.reverse == nil and false
 
-    if reverse then
-        vim.cmd(sprintf(':split | b %d', self.index))
-    else
-        vim.cmd(sprintf(':split | wincmd j | b %d', self.index))
+    assert_t(opts)
+
+    local cmd = ''
+
+    if direction == 's' then
+        if opts.reverse then
+            cmd = sprintf(':split | b %d', self.index)
+        else
+            cmd = sprintf(':split | wincmd j | b %d', self.index)
+        end
+    elseif direction == 'v' then
+        if opts.reverse then
+            cmd = sprintf(':vsplit | b %d', self.index)
+        else
+            cmd = sprintf(':vsplit | wincmd l | b %d', self.index)
+        end
+    elseif direction == 't' then
+        cmd = sprintf(':tabnew | b %d', self.index)
+    elseif direction == 'f' then
+        return self:to_win(opts)
     end
+
+    vim.cmd(cmd)
+
+    local winnr = vim.fn.winnr()
+    local height = vim.o.lines
+    local width = vim.o.columns
+    assoc(opts, {'resize', 'height'},  height / 3.5)
+    assoc(opts, {'resize', 'width'}, width / 4)
+
+    opts.force_resize = opts.force_resize == nil and true
+    local height = opts.resize.height
+    local width = opts.resize.width
+    local n = self:get_line_count()
+    height = n == 0 and not opts.force_resize and 5 or height
+    width = n == 0 and not opts.force_resize and 5 or width
+    height = math.floor(height)
+    width = math.floor(width)
+
+    if direction == 's' then
+        vim.cmd(':resize ' .. height)
+    elseif direction == 'v' then
+        vim.cmd(':vertical resize ' .. width)
+    end
+
+    return vim.fn.winnr()
 end
 
-function buffer:vsplit(reverse)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
-    reverse = reverse == nil and false
-
-    if reverse then
-        vim.cmd(sprintf(':vsplit | b %d', self.index))
-    else
-        vim.cmd(sprintf(':vsplit | wincmd l | b %d', self.index))
-    end
+function buffer.tabnew(reverse)
+    return buffer.split('t', reverse)
 end
 
-function buffer:tabnew()
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
-    vim.cmd(sprintf(':tabnew | b %d', self.index))
+function buffer.vsplit(reverse)
+    return buffer.split('v', reverse)
 end
 
 function buffer:save(where)
@@ -555,7 +592,40 @@ function buffer:save(where)
 
     self:exec(function() 
         vcmd('w ' .. where)
-    end)
+    end, true)
+end
+
+function buffer.source_buffer(bufnr, opts)
+    opts = opts or {}
+    bufnr = bufnr or vim.fn.bufnr()
+    assert_n(bufnr)
+    assert(vim.fn.bufnr(bufnr) ~= -1, 'Invalid bufnr provided')
+
+    vim.cmd(':buffer ' .. bufnr)
+
+    ft = ft or vim.bo.filetype
+    cmd = assoc(Doom.langs, {ft, 'compile'})
+    if not cmd then return false end
+    local fullpath = vim.fn.expand('%:p')
+    local is_nvim_buffer = match(fullpath, vim.fn.stdpath('config') .. '.+(lua|vim)$')
+
+    if not is_nvim_buffer then
+        local out = system(cmd .. ' ' .. fullpath)
+    elseif is_nvim_buffer == 'lua' then
+        out = wait(vcmd, {':luafile ' .. fullpath, true}, {sched=true, timeout=1, tries=10, inc=2}) 
+    elseif is_nvim_buffer == 'vim' then
+        out = vcmd(':source %s', fullpath) 
+    end
+
+    local b = buffer()
+
+    if out then
+        b:write({start_row=0, end_row=0}, out)
+    end
+
+    b:split()
+
+    return out, b
 end
 
 return buffer
