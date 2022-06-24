@@ -9,20 +9,10 @@ keybindings.tabs = {
     {'n', '<leader>tp', ":tabprev <CR>", attribs, 'Previous tab'};
 }
 
-keybindings.quit = {
-    {'n', '<leader>qq', ":qa! <CR>", attribs, 'Quit unconditionally'};
-    {'n', '<leader>qw', ":xa! <CR>", attribs, 'Save buffers and quit'};
-}
-
 keybindings.misc = {
     {'n', '<leader><leader>', ":noh <CR>", attribs, 'Disable highlighting'};
 }
 
---keybindings.terminal = {
-    --{'n', '<localleader>t', ":tabnew term://bash <CR>", attribs, 'Open bash in terminal in new tab'};
-    --{'n', '<localleader>S', ":split term://bash <CR>", attribs, 'Open bash in terminal in split'};
-    --{'n', '<localleader>V', ":vsplit term://bash <CR>", attribs, 'Open bash in terminal in vsplit'};
---}
 keybindings.files = {
     {'n', '<leader>fs', ':w<CR>', attribs, 'Save file'};
 }
@@ -37,7 +27,9 @@ keybindings.buffers = {
     {'n', '<leader>br', ":e % <CR>", attribs, 'Reload current buffer'};
 }
 
-function keybindings.set(overrides)
+update(Doom.kbd, 'defaults', keybindings)
+
+if not Doom.kbd.loaded then
     if not overrides then
         local overrides_p = with_user_config_path('lua', 'user', 'kbd', 'defaults.lua')
         if path.exists(overrides_p) then
@@ -56,9 +48,9 @@ function keybindings.set(overrides)
 
     for k, v in pairs(keybindings) do
         if table_p(v) then
-            each(function(_k) kbd(unpack(_k)):enable() end, v)
+            each(function(_k) kbd.new(unpack(_k)):enable() end, v)
         end
     end
-end
 
-return keybindings
+    Doom.kbd.loaded = true
+end

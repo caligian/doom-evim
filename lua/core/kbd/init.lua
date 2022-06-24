@@ -65,8 +65,19 @@ function kbd.load_prefixes()
     Doom.kbd.prefixes_loaded = true
 end
 
+function kbd:__init(mode, keys, f, attribs, attribs_s, doc, event, pattern)
+    self.mode = mode
+    self.keys = keys
+    self.f = f
+    self.attribs = attribs
+    self.attribs_s = attribs_s
+    self.doc = doc
+    self.event = event
+    self.pattern = pattern
+    self.mapped = false
+end
 
-function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
+function kbd.new(mode, keys, f, attribs, doc, event, pattern)
     assert(mode, ex.no_mode())
     assert(keys, ex.no_keys())
     assert(doc, ex.no_doc())
@@ -92,29 +103,23 @@ function kbd:__init(mode, keys, f, attribs, doc, event, pattern)
 
     if pattern then pattern = to_list(pattern) end
 
-    self.noremap = find(attribs, 'noremap')
+    local noremap = find(attribs, 'noremap')
+    if noremap then attribs[noremap] = nil end
 
-    if self.noremap then attribs[self.noremap] = nil end
-
-    self.attribs = vals(attribs)
-    self.noremap = self.noremap ~= nil and true
-    self.mode = mode
-    self.keys = keys
-    self.f = f 
-    self.attribs_s = join(map(function(s)
+    noremap = noremap ~= nil and true
+    local attribs_s = join(map(function(s)
         if str_p(s) then
             return sprintf('<%s>', s)
         else
             return ''
         end
-    end, self.attribs), ' ')
-    self.doc = doc
-    self.event = event
-    self.pattern = pattern
-    self.mapped = 0
+    end, attribs), ' ')
 
+    local self = kbd(mode, keys, f, attribs, attribs_s, doc, event, pattern)
     assoc(self.status, {mode, keys}, {})
     push(self.status[mode][keys], self)
+
+    return self
 end
 
 function kbd:backup_previous()
@@ -153,7 +158,7 @@ function kbd:backup_previous()
 end
 
 function kbd:enable(force)
-    if not force and self.mapped ~= 0 then return end
+    if not force and self.mapped then return end
 
     self:backup_previous()
 
@@ -164,9 +169,7 @@ function kbd:enable(force)
     if self.event or self.pattern then
         self.event =  self.event or 'BufEnter'
         self.pattern = self.pattern or sprintf('<buffer=%d>', vim.fn.bufnr())
-
-        self.au = au('doom_kbd_' .. #Doom.au.status, sprintf('Augroup for keybinding: [%s] %s', self.mode, self.keys))
-
+        self.au = au.new('doom_kbd_' .. #Doom.au.status, sprintf('Augroup for keybinding: [%s] %s', self.mode, self.keys))
         self.global = false
         self.mapped = true
 
@@ -202,7 +205,7 @@ function kbd:enable(force)
         kbd.wk_register(self.mode, self.keys, self.doc)
 
         self.global = true
-        self.mapped = self.mapped + 1
+        self.mapped = true
         self.cmd = cmd
         vim.cmd(cmd)
 

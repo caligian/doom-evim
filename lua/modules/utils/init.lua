@@ -157,8 +157,8 @@ utils.echo = function(fmt, ...)
     vim.api.nvim_echo({{utils.sprintf(fmt, ...)}}, false, {})
 end
 
-utils.to_stderr = function(fmt, ...)
-    vim.api.nvim_err_writeln(utils.sprintf(fmt, ...))
+utils.to_stderr = function(s)
+    vim.api.nvim_err_writeln(s)
 end
 
 --
@@ -238,7 +238,26 @@ end
 --
 -- Misc
 --
-utils.copy = vim.deepcopy
+utils.deepcopy = vim.deepcopy
+
+-- Shallow copy
+utils.copy = function (src_t)
+    local dst_t = {}
+
+    local function copy_level(src, dst)
+        for index, value in pairs(src) do
+            if utils.table_p(value) then
+                dst[index] = {}
+                copy_level(value, dst[index])
+            else
+                dst[index] = value
+            end
+        end
+    end
+
+    copy_level(src_t, dst_t)
+    return dst_t
+end
 
 utils.vcmd = function (fmt, ...)
     local out = vim.api.nvim_exec(sprintf(fmt, ...), true)

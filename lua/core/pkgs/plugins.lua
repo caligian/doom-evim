@@ -1,6 +1,7 @@
 return {
     start = {
         { "savq/paq-nvim" };
+        {'ggandor/lightspeed.nvim'};
         { "ryanoasis/vim-devicons" };
         { "folke/which-key.nvim" };
         { "svermeulen/vimpeccable" };
@@ -60,7 +61,7 @@ return {
         };
         {
             "nvim-neorg/neorg";
-            keys = {{'n'; "<leader>oo", ':NeorgStart', false, 'Initialize neorg'}};
+            pattern = '*norg';
         };
         {
             "tpope/vim-fugitive";
@@ -72,15 +73,19 @@ return {
         };
         { 
             "godlygeek/tabular";
-            keep_keys = true;
-            keys = {
+            keep_keys           = true;
+            keys                = {
                 {"n", '<leader>=', function()
-                    local pat = gets('%', true, {'Align using', '/=/'})
-                    vim.cmd(':Tabularize ' .. first(pat))
+                    local pat   = gets('%', false, {'Align using', '/ = /'})
+                    if pat[1] then
+                        vim.cmd(':Tabularize ' .. first(pat))
+                    end
                 end, false, "Tabulate strings"}; 
                 {"v", '<leader>=', function()
-                    local pat = gets('%', true, {'Align using', '/=/'})
-                    vim.cmd(":'<,'>Tabularize " .. first(pat))
+                    local pat = gets('%', false, {'Align using', '/=/'})
+                    if pat[1] then
+                        vim.cmd(":'<,'>Tabularize " .. first(pat))
+                    end
                 end, false, "Tabulate strings"}};
         };
         { 
@@ -105,6 +110,7 @@ return {
                 t.setup {extensions={project=merge(copy(ts.defaults.opts), {hijack_netrw=true})}}
                 t.extensions.project.project(ts.defaults.opts)
             end, false, 'Open projects'}};
+            keep_keys = true,
         };
         { 
             "kyazdani42/nvim-tree.lua"; 

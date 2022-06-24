@@ -7,7 +7,9 @@ local regex = require('rex_pcre2')
 local param = {}
 
 function param.assert_boolean(b)
-    assert(b == true or b == false, u.sprintf('Param `%s` is not a boolean', b))
+    if b ~= nil then
+        assert(b == true or b == false, u.sprintf('Param `%s` is not a boolean', b))
+    end
 end
 
 param.assert_bool = param.assert_boolean

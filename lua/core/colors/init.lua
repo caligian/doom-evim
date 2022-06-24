@@ -1,5 +1,15 @@
 local color = {}
 
+function color.get_highlight_colors(hi)
+    local c = {}
+    each(function (s)
+        local a, hex = unpack(split(s, '='))
+        c[a] = hex or false
+    end, slice(split(vcmd(':hi ' .. hi), ' +'), 3))
+
+    return c
+end
+
 function color.hex2rgb(hex)
     hex = hex:gsub("#","")
     return tonumber("0x"..hex:sub(1,2)), tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6))

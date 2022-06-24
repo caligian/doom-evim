@@ -163,7 +163,52 @@ buffer.not_equals = buffer.nequals
 buffer.__eq = buffer.equals
 buffer.__neq = buffer.nequals
 
+function buffer:wincall(f, ...)
+    assert(self:exists())
+    assert(f)
+    assert_s(f)
+    
+    local api = vim.api[f]
+    local vimfn = vim.fn[f]
+
+    if not api and not vimfn then
+        error('Invalid function provided to call: ' .. fn)
+    end
+
+    local caller = api and api or vimfn and vimfn
+    local id = vim.fn.bufwinid(self.index)
+
+    if id ~= -1 then
+        return caller(vim.fn.bufwinid(self.index), ...)
+    end
+end
+
+function buffer:call(f, ...)
+    assert(self:exists())
+    assert(f)
+    assert_s(f)
+    
+    local api = vim.api[f]
+    local vimfn = vim.fn[f]
+
+    if not api and not vimfn then
+        error('Invalid function provided to call: ' .. fn)
+    end
+
+    local caller = api and api or vimfn and vimfn
+    return caller(self.index, ...)
+end
+
 function buffer:__init(name, scratch)
+    assert(name)
+    assert_s(name)
+    assert_boolean(scratch)
+
+    self.name = name
+    self.scratch = scratch and true or false
+end
+
+function buffer.new(name, scratch)
     local bufnr
     local is_temp
 
@@ -186,20 +231,24 @@ function buffer:__init(name, scratch)
         bufnr = vim.fn.bufadd(name)
     end
 
-    if self.status[bufnr] then
-        merge(self, self.status[bufnr])
-    else
-        self.index = bufnr
-        self.name = name
-        self.status[bufnr] = self
-        self.status[self.name] = self
+    if buffer.status[bufnr] then
+        return buffer.status[bufnr]
     end
 
+    local self = buffer(name, scratch)
+
+    self.index = bufnr
+    self.name = name
+    self.scratch = scratch and true or false
+    self.status[bufnr] = self
+    self.status[self.name] = self
     if is_temp then
         self:setopts({buftype='nofile', swapfile=false, buflisted=false})
     elseif scratch then
         self:setopts({buflisted=false, swapfile=false, filetype=vim.bo.filetype})
     end
+    
+    return self
 end
 
 function buffer:get_line_count()
@@ -213,45 +262,29 @@ function buffer:to_win(opts)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
     opts = opts or {}
-    opts.relative = opts.relative or 'win'
+    opts.relative = opts.relative or 'cursor'
     local current_height = vim.o.lines
-    local current_width = math.ceil(vim.o.columns/2) 
+    local current_width = vim.o.columns
     opts.width = opts.width or current_width
     opts.height = opts.height or current_height
-
-    if opts.relative then
-        opts.row = 0
-        opts.col = opts.col or 0
-    end
-
-    opts.border = 'solid'
+    opts.row = opts.row or 0
+    opts.col = opts.col or 0
+    opts.border = 'double'
     opts.style = opts.style or 'minimal'
+    opts.height = math.floor(opts.height/2)
+    opts.width = math.ceil(opts.width/2)
 
     return vim.api.nvim_open_win(self.index, true, opts)
 end
 
-function buffer:exec(f, args, opts)
+function buffer:exec(f, ...)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
-    local result = false
-    local id = self:to_win()
-    local tabnr = vim.fn.tabpagenr()
+    local args = {...}
 
-    opts = opts or {}
-    opts.timeout = opts.timeout or 10
-    opts.tries = opts.tries or 5
-    opts.inc = opts.inc or 5
-    opts.sched = opts.sched == nil and false
-    result = wait(f, args or {}, opts)
-    local current_tabnr = vim.fn.tabpagenr()
-
-    if tabnr ~= current_tabnr then
-        vim.cmd(sprintf('normal %dgt', tabnr))
-    end
-
-    buffer.hide_by_winid(id)
-
-    return result
+    return vim.api.nvim_buf_call(self.index, function()
+        return f(unpack(args))
+    end)
 end
 
 function buffer:read(pos, concat)
@@ -367,50 +400,45 @@ function buffer:put(s, prepend, _type, _follow)
 
     local bufnr = self.index
     prepend = prepend and 'P' or 'p'
+    prepend = prepend == 'p' and true or false
     _type = not _type and 'c' or _type
     _follow = _follow == nil and true or _follow
 
     if str_p(s) then s = split(s, "\n\r") end
 
-    sched = sched == nil and false
-    timeout = timeout or 10
-    tries = tries or 5
-    inc = inc or 5
-    local f = partial(vim.api.nvim_put, to_list(s), _type, prepend, _follow), 
-
-    self:exec(f, sched, timeout, tries, inc)
+    return self:exec(vim.api.nvim_put, s, _type, prepend, _follow)
 end
 
 function buffer:getcurpos()
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
-    local row, col, curswant
-    local id = self:to_win()
-    bufnr, row, col, curswant = unpack(vim.fn.getcurpos(winnr))
-    buffer.hide_by_winid(id)
-
-    return {
-        winid = id,
-        row = row - 1,
-        col = col - 1,
-        curswant = curswant,
-    }
+    return self:exec(function ()
+        local row, col, curswant
+        bufnr, row, col, curswant = unpack(vim.fn.getcurpos(vim.fn.winnr()))
+        return {
+            winid = id,
+            row = row - 1,
+            col = col - 1,
+            curswant = curswant,
+        }
+    end)
 end
 
 function buffer:getpos(expr)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
-    expr = expr or '.'
-    local id = self:to_win()
-    local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
-    buffer.hide_by_winid(id)
+    return self:exec(function ()
+        expr = expr or '.'
+        local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
+        buffer.hide_by_winid(id)
 
-    return {
-        winid = id,
-        row = row-1,
-        curswant = off,
-        col = col-1,
-    }
+        return {
+            winid = id,
+            row = row-1,
+            curswant = off,
+            col = col-1,
+        }
+    end)
 end
 
 function buffer:getvcurpos()
@@ -437,7 +465,7 @@ function buffer:add_hook(event, f, opts)
     local au 
 
     if not self.au then
-        au = augroup(name, 'Doom buffer augroup for ' .. bufnr)
+        au = augroup.new(name, 'Doom buffer augroup for ' .. bufnr)
     end
 
     au:add(event, sprintf('<buffer=%d>', bufnr), f, opts)
@@ -466,7 +494,7 @@ function buffer:set_keymap(mode, keys, f, attribs, doc, event)
     attribs = attribs or 'buffer'
     local doc = 'Keybinding for buffer: ' .. self.index
     local pattern = sprintf('<buffer=%d>', self.index)
-    local k = kbd(mode, keys, f, attribs, doc, event, pattern)
+    local k = kbd.new(mode, keys, f, attribs, doc, event, pattern)
     self.keymaps[mode][keys] = k
     k:enable()
 end
@@ -527,7 +555,6 @@ function buffer:split(direction, opts)
     direction = strip(direction)
     direction = match('^([svtf])', direction)
     opts = opts or {}
-    opts.reverse = opts.reverse == nil and false
 
     assert_t(opts)
 
@@ -548,41 +575,55 @@ function buffer:split(direction, opts)
     elseif direction == 't' then
         cmd = sprintf(':tabnew | b %d', self.index)
     elseif direction == 'f' then
-        return self:to_win(opts)
+        opts.reverse = nil
+        opts.force_resize = nil
     end
 
-    vim.cmd(cmd)
+    local height, width = -1, -1
+    if not opts.resize then
+        width = self:call('winwidth')
+        height = self:call('winheight')
+        width = width == -1 and 30 or width
+        height = height == -1 and 20 or height
+    else
+        assert_t(opts.resize)
+        assert(opts.resize.height or opts.resize.width)
+        assert_n(opts.resize.height)
+        assert_n(opts.resize.width)
 
-    local winnr = vim.fn.winnr()
-    local height = vim.o.lines
-    local width = vim.o.columns
-    assoc(opts, {'resize', 'height'},  height / 3.5)
-    assoc(opts, {'resize', 'width'}, width / 4)
+        height = opts.resize.height
+        width = opts.resize.width
+    end
 
-    opts.force_resize = opts.force_resize == nil and true
-    local height = opts.resize.height
-    local width = opts.resize.width
-    local n = self:get_line_count()
-    height = n == 0 and not opts.force_resize and 5 or height
-    width = n == 0 and not opts.force_resize and 5 or width
-    height = math.floor(height)
-    width = math.floor(width)
+    self:load()
+    local lines = self:read({})
+    lines = filter(function (s) return #s > 0 end, lines)
+    n = #lines
 
-    if direction == 's' then
-        vim.cmd(':resize ' .. height)
-    elseif direction == 'v' then
-        vim.cmd(':vertical resize ' .. width)
+    if n == 0 and opts.force_resize == false then
+        return
+    else
+        vim.cmd(cmd)
+        if direction == 's' then
+            height = n > 0 and n < height and n or height
+            height = math.ceil(height)
+            height = height + 3
+            vim.cmd(':resize ' .. height)
+        elseif direction == 'v' then
+            width = math.ceil(width)
+            vim.cmd(':vertical resize ' .. width)
+        end
     end
 
     return vim.fn.winnr()
 end
 
-function buffer.tabnew(reverse)
-    return buffer.split('t', reverse)
+function buffer:tabnew(opts)
+    return self:split('t', opts)
 end
 
-function buffer.vsplit(reverse)
-    return buffer.split('v', reverse)
+function buffer:vsplit(opts)
+    return self:split('v', opts)
 end
 
 function buffer:save(where)
@@ -592,7 +633,7 @@ function buffer:save(where)
 
     self:exec(function() 
         vcmd('w ' .. where)
-    end, true)
+    end)
 end
 
 function buffer.source_buffer(bufnr, opts)
@@ -617,15 +658,9 @@ function buffer.source_buffer(bufnr, opts)
         out = vcmd(':source %s', fullpath) 
     end
 
-    local b = buffer()
-
     if out then
-        b:write({start_row=0, end_row=0}, out)
+        to_stderr(out)
     end
-
-    b:split()
-
-    return out, b
 end
 
 return buffer

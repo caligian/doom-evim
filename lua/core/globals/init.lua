@@ -57,13 +57,36 @@ return {
     },
 
     treesitter = {
-        ensure = {"python", "norg", "fennel", "json", "javascript", "c", "lua", "perl", "ruby"},
+        defaults = {
+            ensure_installed = {
+                "python",
+                "norg",
+                "fennel",
+                "json",
+                "javascript",
+                "c",
+                "perl",
+                "ruby",
+                'lua',
+            };
+            hightlight = {
+                enable = true;
+                --            disable = {'lua'};
+            };
+            indent = {
+                enable = true;
+                --            disable = {'lua'};
+            }
+        };
     },
 
     telescope = {
         font_switcher = {
-            include = '(Mono|Hack|Monoid|NF|Nerd Font|Terminus|Tamzen)',
-        }
+            include = '(Nerd Font|NF|Mono)';
+            keys = '<leader>hf';
+            default_height = 13;
+        };
+        defaults = {},
     },
 
     templates = {

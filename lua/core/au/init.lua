@@ -34,18 +34,28 @@ function au.register(f, style)
 end
 
 function au:__init(name, doc)
-    assert_s(doc)
-
-    if not name then
-        self.name = sprintf('doom_group_%d', len(au.status) + 1)
-    else
-        self.name = name:gsub('[^%w_]+', '')
-    end
-
+    self.name = name
     self.doc = doc
     self.autocmds = {}
+end
 
-    assert_s(self.name)
+function au.new(name, doc)
+    assert_type(name, 'boolean', 'string')
+    assert(doc, 'No documentation provided for augroup')
+    assert_s(doc)
+
+    if name == false then
+        name = sprintf('doom_group_%d', len(au.status) + 1)
+    else
+        name = name:gsub('[^%w_]+', '')
+    end
+
+    local self = false
+    if au.status[name] then
+        return au.status(name) 
+    end
+
+    return au(name, doc)
 end
 
 --[[

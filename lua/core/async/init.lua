@@ -5,25 +5,33 @@ local job = class('doom-async-job')
 
 job.status = Doom.async.job.status
 
--- Same args as `jobstart() or termopen()`
--- Make a job object but don't start the job.
--- @param name string Name of the job
--- @param cmd string Command to run
--- @param opts table Contains all the options for jobstart() and current job
 function job:__init(name, cmd, opts)
-    assert(name)
-    assert(cmd)
-
-    opts = opts or {}
-
+    self.status[self.name] = self
     self.id = -1
     self.cmd = cmd
     self.name = name
     self.opts = opts
     self.running = false
     self.opts = opts or {}
+end
 
-    self.status[self.name] = self
+-- Same args as `jobstart() or termopen()`
+-- Make a job object but don't start the job.
+-- @param name string Name of the job
+-- @param cmd string Command to run
+-- @param opts table Contains all the options for jobstart() and current job
+function job.new(name, cmd, opts)
+    assert(name)
+    assert(cmd)
+    assert_s(name)
+    assert_s(cmd)
+    assert_t(opts)
+
+    if job.status[name] then
+        return job.status[name]
+    end
+
+    return job(name, cmd, opts)
 end
 
 function job:repr()

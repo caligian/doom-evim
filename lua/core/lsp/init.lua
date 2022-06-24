@@ -5,31 +5,31 @@ function lsp.setup_nvim_cmp()
     vim.opt.completeopt = "menu,menuone,noselect"
 
     local lsp_symbols = {
-        Text = "   (Text) ",
-        Method = "   (Method)",
-        Function = "   (Function)",
-        Constructor = "   (Constructor)",
-        Field = " ﴲ  (Field)",
-        Variable = "[] (Variable)",
-        Class = "   (Class)",
-        Interface = " ﰮ  (Interface)",
-        Module = "   (Module)",
-        Property = " 襁 (Property)",
-        Unit = "   (Unit)",
-        Value = "   (Value)",
-        Enum = " 練 (Enum)",
-        Keyword = "   (Keyword)",
-        Snippet = "   (Snippet)",
-        Color = "   (Color)",
-        File = "   (File)",
-        Reference = "   (Reference)",
-        Folder = "   (Folder)",
-        EnumMember = "   (EnumMember)",
-        Constant = " ﲀ  (Constant)",
-        Struct = " ﳤ  (Struct)",
-        Event = "   (Event)",
-        Operator = "   (Operator)",
-        TypeParameter = "   (TypeParameter)"
+        Text = "(Text)",
+        Method = "(Method)",
+        Function = "(Function)",
+        Constructor = "(Constructor)",
+        Field = "(Field)",
+        Variable = "(Variable)",
+        Class = "(Class)",
+        Interface = "(Interface)",
+        Module = "(Module)",
+        Property = "(Property)",
+        Unit = "(Unit)",
+        Value = "(Value)",
+        Enum = "(Enum)",
+        Keyword = "(Keyword)",
+        Snippet = "(Snippet)",
+        Color = "(Color)",
+        File = "(File)",
+        Reference = "(Reference)",
+        Folder = "(Folder)",
+        EnumMember = "(EnumMember)",
+        Constant = "(Constant)",
+        Struct = "(Struct)",
+        Event = "(Event)",
+        Operator = "(Operator)",
+        TypeParameter = "(TypeParameter)"
     }
 
     cmp.setup({
@@ -45,6 +45,10 @@ function lsp.setup_nvim_cmp()
             ["<C-f>"] = cmp.mapping.scroll_docs(4),
             ["<C-Space>"] = cmp.mapping.complete(),
             ["<C-e>"] = cmp.mapping.close(),
+            ["<C-m>"] = cmp.mapping.confirm {
+                behavior = cmp.ConfirmBehavior.Replace,
+                select = true
+            },
             ["<CR>"] = cmp.mapping.confirm {
                 behavior = cmp.ConfirmBehavior.Replace,
                 select = true
@@ -63,7 +67,7 @@ function lsp.setup_nvim_cmp()
                     nvim_lsp = "[LSP]",
                     path = "[Path]",
                     look = "[Look]",
-                    treesitter = "[treesitter]",
+                    treesitter = "[Treesitter]",
                     nvim_lua = "[Lua]",
                     latex_symbols = "[Latex]",
                     cmp_tabnine = "[Tab9]"
@@ -86,7 +90,6 @@ end
 
 function lsp.on_attach(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-    vim.cmd('command! Format execute lua vim.lsp.buf.formatting()')
 end
 
 function lsp.setup_lua()
@@ -160,7 +163,5 @@ function lsp.setup_servers()
         end
     end, keys(Doom.langs))
 end
-
-lsp.setup_servers()
 
 return lsp

@@ -5,7 +5,7 @@ neorg.setup({
         ['core.keybinds'] =  {
             config =  {
                 default_keybinds =  true,
-                neorg_leader =  "<Leader>o",
+                neorg_leader =  "<leader>o",
             },
         },
 
@@ -23,8 +23,6 @@ neorg.setup({
         ['core.defaults'] = {},
 
         ['core.norg.concealer'] =  {config =  {}},
-
-        ['core.presenter'] =  {config =  {}},
 
         ['core.norg.qol.toc'] =  {config =  {}},
 

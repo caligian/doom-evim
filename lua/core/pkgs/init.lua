@@ -105,12 +105,8 @@ local function get_pkgs_loader_cmd(plugin, opt)
         req_path = sprintf("core.pkgs.configs.%s", name)
 
         cmd = function()
-            if opt then 
-                vim.api.nvim_exec(':packadd ' .. plugin, true) 
-            end
-
+            if opt then vim.api.nvim_exec(':packadd ' .. plugin, true) end
             require(req_path)
-
             Doom.pkgs.loaded[plugin] = true
         end
     elseif opt then
@@ -174,13 +170,13 @@ local function parse_specs(spec, opt)
             end
 
             if keep_keys then
-                kbd(_mode, _keys, cmd, _attribs, _doc):enable()
+                kbd.new(_mode, _keys, cmd, _attribs, _doc):enable()
             else
                 kbd.oneshot(_mode, _keys, cmd, _attribs)
             end
         end
     elseif event or pattern then
-        local a = au(spec[1], 'Oneshot autocmd for plugin: ' .. spec[1])
+        local a = au.new(spec[1], 'Oneshot autocmd for plugin: ' .. spec[1])
         local cmd = get_pkgs_loader_cmd(spec[1], true)
 
         if not event then event = 'BufEnter' end

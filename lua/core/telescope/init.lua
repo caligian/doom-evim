@@ -11,7 +11,11 @@ local ex = require('core.telescope.exception')
 
 ts.defaults = assoc(Doom, {'telescope', 'defaults'}, {})
 ts.defaults.opts = require('telescope.themes').get_ivy({layout_config={height=0.37}})
-ts.defaults.sorter = 'fzy_index'
+ts.defaults.opts.borderchars.prompt = { "", " ", " ", " ", " ", " ", " ", " " }
+ts.defaults.opts.previewer = false
+ts.defaults.opts.sorter = sorters.get_generic_fuzzy_sorter()
+ts.defaults.opts.disable_devicons = true
+update(Doom.telescope.defaults, ts.defaults)
 
 -- How entry is parsed
 -- Either {value => value, display => value.display, ordinal => value.ordinal}
@@ -53,87 +57,68 @@ function ts.entry_maker(entry)
     return t
 end
 
-ts.defaults.entry_maker = ts.entry_maker
+function ts.new(opts, global_opts)
+    assert(opts, 'No args given')
+    assert_t(opts)
+    assert_t(global_opts)
 
--- @tparam title string Title of the Telescope buffer
--- @tparam results table[string]|function]|table[table[string]] 
--- @tparam[optional] entry_maker function 
--- @tparam[optional] sorter string
--- @tparam mappings table[string,string,function]
-function ts:__init(title, results, entry_maker, sorter, mappings, opts)
+    global_opts = global_opts or ts.defaults.opts
+    local title, results, mappings, entry_maker, sorter
+    title = opts.title
+    results = opts.results
+    mappings = opts.mappings
+    entry_maker = opts.entry_maker
+    sorter = opts.sorter
+    results = opts.results
+    opts = merge(ts.defaults.opts, opts)
+    sorter = sorter or 'fzy_index'
+    entry_maker = opts.entry_maker or ts.entry_maker
+    local picker = require('telescope.pickers')
+    local telescope = require('telescope')
+
     assert(title, ex.picker.missing_title())
     assert(results, ex.picker.missing_results())
     assert(mappings, ex.picker.missing_mappings())
 
-    local picker = require('telescope.pickers')
-    local telescope = require('telescope')
-
+    assert_type(sorter, 'callable', 'boolean', 'string')
+    assert_callable(opts.entry_maker)
     assert_s(title)
     assert_t(results)
     assert_type(mappings, 'callable', 'table')
-    assert_t(opts)
 
-    local default_opts = copy(ts.defaults.opts)
+    if sorter and str_p(sorter) then
+        sorter = strip(sorter)
+        if sorter:match('^generic_fzy') then
+            sorter = sorters.get_generic_fuzzy_sorter()
+        elseif sorter:match('^fzy_file') then
+            sorter = sorters.get_fuzzy_file()
+        elseif sorter:match('^fzy_index') then
+            sorter = sorters.fuzzy_with_index_bias()
+        elseif sorter:match('^highlighter') then
+            sorter = sorters.highlighter_only()
+        elseif sorter:match('^fzy') then
+            sorter = sorters.get_fzy_sorter()
+        end
+    end
 
-    if not opts then 
-        opts = default_opts
-    else
-        merge(default_opts, opts)
+    -- Currently callable results are not working
+    if callable(results) then
+        results = finders.new_job(results, entry_maker)
+    elseif table_p(results) then
+        results = finders.new_table({results=results, entry_maker=entry_maker})
+    elseif str_p(results) then
+        results = finders.new_oneshot_job({results, entry_maker=entry_maker})
     end
 
     mappings = to_list(mappings)
-    sorter = sorter or 'fzy_index'
-    sorter = strip(sorter)
 
-    if sorter:match('^generic_fzy') then
-        sorter = sorters.get_generic_fuzzy_sorter()
-    elseif sorter:match('^fzy_file') then
-        sorter = sorters.get_fuzzy_file()
-    elseif sorter:match('^fzy_index') then
-        sorter = sorters.fuzzy_with_index_bias()
-    elseif sorter:match('^highlighter') then
-        sorter = sorters.highlighter_only()
-    elseif sorter:match('^fzy') then
-        sorter = sorters.get_fzy_sorter()
-    end
-
-    if entry_maker then
-        assert_callable(entry_maker)
-    else 
-        entry_maker = ts.entry_maker
-    end
-
-    self.sorter = sorter
-    self.entry_maker = entry_maker
-    self.mappings = mappings
-    self.opts = opts
-    self.results = results
-    self.title = title
-end
-
-function ts:new(opts)
-    assert_t(opts)
-
-    opts = opts or self.opts
-
-    -- Currently callable results are not working
-    if callable(self.results) then
-        self.results = finders.new_job(self.results, entry_maker)
-    elseif table_p(self.results) then
-        self.results = finders.new_table({results=self.results, entry_maker=entry_maker})
-    elseif str_p(self.results) then
-        self.results = finders.new_oneshot_job({self.results, entry_maker=entry_maker})
-    end
-
-    opts.mappings = opts.mappings or self.mappings
-
-    self.picker = pickers.new(opts, {
-        prompt_title = self.title,
-        finder = self.results,
-        sorter = self.sorter,
+    local args = {
+        prompt_title = title,
+        finder = results,
+        sorter = sorter,
         attach_mappings = function(prompt_bufnr, map)
             actions.select_default:replace(function()
-                local f = opts.mappings[1]
+                local f = mappings[1]
                 if table_p(f) then f = f[3] end
                 actions.close(prompt_bufnr)
                 local sel = action_state.get_selected_entry()
@@ -142,13 +127,8 @@ function ts:new(opts)
                 return true
             end)
 
-            if #opts.mappings < 2 then return true end
-
-            shift(opts.mappings)
-
-            for index, k in ipairs(opts.mappings) do
-                local mode, keys, f, doc, transform = unpack(k)
-                print(mode, keys, f, doc, transform)
+            for i=2,#mappings do
+                local mode, keys, f, doc, transform = unpack(mappings[i])
                 transform = transfrom == nil and false
 
                 assert(mode)
@@ -165,7 +145,7 @@ function ts:new(opts)
                     local entry = action_state.get_selected_entry()
                     action_state.get_current_picker(prompt_bufnr)
                     actions.close(prompt_bufnr)
-                    opts.mappings[index][3](entry, bufnr)
+                    mappings[index][3](entry, bufnr)
                 end
 
                 local final_action = false
@@ -181,35 +161,9 @@ function ts:new(opts)
 
             return true
         end
-    })
+    }
 
-    return self.picker
-end
-
-function ts:update(title, results, entry_maker, sorter, mappings, opts)
-    self.title = title
-    self.results = results
-    self.entry_maker = entry_maker
-    self.sorter = sorter
-    self.mappings = mappings
-    self.opts = opts
-    self.previous_picker = self.picker
-
-    return self:new()
-end
-
-function ts:find(opts)
-    if not self.picker then self:new(opts) end
-    assert(self.picker)
-    self.picker:find()
-end
-
-function ts.quick(title, results, mappings, opts)
-    assert(title)
-    assert(results)
-    assert(mappings)
-
-    return ts(title, results, ts.entry_maker, ts.defaults.sorter, mappings, opts or ts.defaults.opts)
+    return pickers.new(global_opts or {}, args)
 end
 
 return ts

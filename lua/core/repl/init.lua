@@ -10,7 +10,7 @@ function repl.find_job(ft)
     return assoc(repl.status, ft .. '-repl')
 end
 
-function repl:__init(name, job_opts, ft, cmd)
+function repl.new(name, job_opts, ft, cmd)
     assert_type(name, 'boolean', 'string')
     assert_type(cmd, 'boolean', 'string')
     assert_type(job_opts, 'boolean', 'table')
@@ -27,7 +27,6 @@ function repl:__init(name, job_opts, ft, cmd)
             cmd = Doom.langs.shell
         end
 
-        self.shell = cmd
         ft = false
     end
 
@@ -42,15 +41,9 @@ function repl:__init(name, job_opts, ft, cmd)
     local existing_job = assoc(Doom.async.job.status, name)
 
     if existing_job and job_opts.force then
-        local j = existing_job
-        j:delete()
-    elseif existing_job then
-        if existing_job.running then
-            merge(self, existing_job)
-            return self
-        else
-            existing_job:delete()
-        end
+        existing_job:delete()
+    elseif existing_job and not existing_job.done then
+        return existing_job
     end
 
     job_opts.terminal = true
@@ -58,11 +51,13 @@ function repl:__init(name, job_opts, ft, cmd)
     job_opts.on_stdout = false
     job_opts.on_stderr = false
 
+    local self = job.new(self, name, cmd, job_opts)
     self.filetype = ft
     self.connected_buffers = {}
-    self.status[name] = self
+    self.shell = job_opts.shell or false
+    update(repl.status, name, self)
 
-    job.__init(self, name, cmd, job_opts)
+    return self
 end
 
 -- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range

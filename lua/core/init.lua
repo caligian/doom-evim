@@ -44,13 +44,17 @@ lsp.setup_servers()
 
 -- Load extras from builtin modules
 ts.font_switcher = require('core.telescope.font_switcher')
+require('core.telescope.font_switcher.keybindings')
 kbd.load_prefixes()
 
 -- Require keybindings
 require('core.buffers.keybindings')
-require('core.kbd.defaults').set()
+require('core.kbd.defaults')
 require('core.utils.keybindings')
 require('core.repl.keybindings')
+
+-- Require autocmds of modules
+require('core.telescope.au')
 
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
 pkgs.load_plugins()

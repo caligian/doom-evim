@@ -83,7 +83,7 @@ function template.enable()
                 template.au:disable()
             end
 
-            local a = au(false, 'Template for filename pattern: ' .. pat)
+            local a = au.new(false, 'Template for filename pattern: ' .. pat)
 
             a:add('BufNewFile', '*' .. ft, function()
                 if lmatch(vim.fn.expand('%:p'), pat) then
