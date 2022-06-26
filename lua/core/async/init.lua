@@ -6,13 +6,13 @@ local job = class('doom-async-job')
 job.status = Doom.async.job.status
 
 function job:__init(name, cmd, opts)
-    self.status[self.name] = self
     self.id = -1
     self.cmd = cmd
     self.name = name
     self.opts = opts
     self.running = false
     self.opts = opts or {}
+    job.status[self.name] = self
 end
 
 -- Same args as `jobstart() or termopen()`
@@ -23,14 +23,24 @@ end
 function job.new(name, cmd, opts)
     assert(name)
     assert(cmd)
+
     assert_s(name)
     assert_s(cmd)
     assert_t(opts)
 
-    if job.status[name] then
-        return job.status[name]
+    local existing_job = get(job.status, name)
+
+    if existing_job then
+        if opts.force and existing_job.running then
+            existing_job:delete()
+        elseif not existing_job.running then
+            existing_job:delete()
+        elseif existing_job.running then
+            return existing_job
+        end
     end
 
+    opts.force = nil
     return job(name, cmd, opts)
 end
 
@@ -51,22 +61,30 @@ function job:repr()
 end
 
 function job:kill()
-    if self.done then return false end
-    self.done = true
+    if not self.running then return false end
+    self.buffer:delete()
     self.running = false
-
-    pcall(function ()
-        vim.fn.chanclose(self.id)
-
-        if self.buffer then
-            self.buffer:wipeout()
-        end
-    end)
+    self.done = true
+    self.buffer = nil
+    vim.fn.jobstop(self.id)
 end
 
 function job:delete()
     self:kill()
-    remove(Doom.async.job.status, self.name)
+    Doom.async.job.status[self.name] = nil
+end
+
+function job:show(direction)
+    if not self.buffer:exists() then
+        to_stderr('REPL was killed by user: ' .. self.cmd)
+        self:delete()
+    else
+        if self.running then
+            self.buffer:split(direction)
+        else
+            to_stderr('Job has already been stopped for ' .. self.cmd)
+        end
+    end
 end
 
 function job.killall()
@@ -118,6 +136,11 @@ function job:sync(opts)
             return false
         end
     end, opts)
+end
+
+function job:wait()
+    if not self.running then return false end
+    return vim.fn.jobwait(self.id)
 end
 
 function job:open(opts)
@@ -174,42 +197,34 @@ function job:open(opts)
         opts.stdout_buffered = true
     end
 
+    self.opts = opts
+
     local job = false
     if not opts.terminal then
         job = vim.fn.jobstart(self.cmd, opts)
         self.id = job
         self.running = true
         self.done = false
+        self.pid = vim.fn.jobpid(self.id)
     else
         self.persistent = opts.persistent == true
-        local shell = opts.shell or Doom.langs.shell
-        if shell == true then
-            shell = Doom.langs.shell
-        end
-
+        if opts.shell then self.cmd = Doom.langs.shell end
         opts.terminal = nil
         opts.persistent = nil
         opts.shell = nil
         self.terminal = true
-        self.buffer = buf(self.name)
 
-        if self.persistent then
-            local _, temp_file = with_tempfile('w', function(fh)
-                if str_p(self.cmd) then
-                    self.cmd = split(self.cmd, "\n\r")
-                end
+        vcmd('tabnew | term')
+        vim.fn.chansend(vim.b.terminal_job_id, self.cmd .. "\n")
 
-                map(function(s) fh:write(s .. "\n") end, self.cmd)
-            end, true)
+        self.buffer = buf.new(vim.fn.bufnr())
+        self.buffer:setopts {buflisted=false}
+        self.id = vim.b.terminal_job_id
+        self.pid = vim.fn.terminal_job_pid
+        self.running = true
+        self.done = false
 
-            self.cmd = shell .. ' ' .. temp_file
-        end
-
-        self.buffer:exec(function()
-            self.id = vim.fn.termopen(self.cmd, opts)
-            self.running = true
-            self.done = false
-        end)
+        vcmd('tabclose')
     end
 end
 

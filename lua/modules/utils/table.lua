@@ -387,6 +387,8 @@ tu.assoc = function (dict, ks, create, transform)
 
                 return t[key], last_key, last_t, dict
             end
+        elseif create == 'd'  then
+            t[key] = nil
         end
 
         last_t = t
@@ -403,7 +405,6 @@ end
 function tu.remove(dict, ks)
     return tu.assoc(dict, ks, 'd')
 end
-
 
 -- if table is passed then it will be sent to tu.assoc
 tu.get = function(arr, ...)
@@ -455,10 +456,6 @@ end
 
 -- misc operations
 --
-tu.globalize = function (ks)
-    utils.globalize(tu, ks)
-end
-
 tu.imap = function (f, ...)
     local arrs = {...}
     local max_len = {}

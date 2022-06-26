@@ -2,85 +2,51 @@ local kbd = require('core.kbd')
 local repl = require('core.repl')
 
 local function start_job(d, is_shell)
-    if not is_shell and not assoc(Doom.langs, {vim.bo.filetype, 'repl'}) then
-        to_stderr('No repl defined for filetype %s in Doom.langs', vim.bo.filetype)
-        return
-    end
-
     d = d or 's'
     local j = false
 
     if is_shell then
-        j = Doom.repl.status['shell-repl']
+        j = repl.new(false, {shell=true})
     else
-        j = repl.find_job(vim.bo.filetype)
+        j = repl.new()
     end
 
-    if j and j.running then
-        j.buffer:split(d)
-        return j
+    if j then
+        if not j.running then
+            j:start()
+        end
+
+        j:show(d)
     end
-
-    if is_shell then
-        j = repl(false, {shell=true}, false, false)
-    else
-        j = repl(false, {}, false, false)
-    end
-
-    j:open()
-    j.buffer:split(d)
-
-    return j
 end
 
 local function kill_repl(is_shell)
-    if not is_shell and not assoc(Doom.langs, {vim.bo.filetype, 'repl'}) then
-        to_stderr('No repl defined for filetype %s in Doom.langs', vim.bo.filetype)
-        return
-    end
-
     local j = false
     if is_shell then
-        j = Doom.repl.status['shell-repl']
+        j = repl.find('shell')
     else
-        j = repl.find_job(vim.bo.filetype)
+        j = repl.find(vim.bo.filetype)
     end
 
     if j and j.running then
-        j:kill()
         j:delete()
         to_stderr('Killed REPL: ' .. j.cmd)
     end
 end
 
 local function send_string(method, is_shell)
-    if not is_shell and not assoc(Doom.langs, {vim.bo.filetype, 'repl'}) then
-        to_stderr('No repl defined for filetype %s in Doom.langs', vim.bo.filetype)
-        return
-    end
-
     method = method or '.'
     local j = false
 
     if is_shell then
-        j = Doom.repl.status['shell-repl']
+        j = repl.new(false, {shell=true})
     else
-        j = repl.find_job(vim.bo.filetype)
+        j = repl.new()
     end
 
-    if j and j.running then
+    if j then
         j:send_from_buffer(method)
-        return
     end
-
-    if is_shell then
-        j = repl(false, {shell=true}, false)
-    else
-        j = repl(false, {}, false)
-    end
-
-    j:open()
-    j:send_from_buffer(method)
 end
 
 kbd.new('v', '<localleader>,.', partial(send_string, 'v'), false, 'Send visual range to ' .. Doom.langs.shell):enable()
@@ -103,6 +69,6 @@ kbd.new('n', '<localleader>,v', partial(start_job, 'v'), false, 'Start REPL for 
 kbd.new('n', '<localleader>,t', partial(start_job, 't'), false, 'Start REPL for buffer in tab'):enable()
 kbd.new('n', '<localleader>,f', partial(start_job, 'f'), false, 'Start REPL for buffer in floating win'):enable()
 
-kbd.new('n', '<localleader>,K', repl.killall, false, 'Kill all REPLs'):enable()
+kbd.new('n', '<localleader>,K', repl.delall, false, 'Kill all REPLs'):enable()
 kbd.new('n', '<localleader>,k', kill_repl, false, 'Kill buffer REPL'):enable()
 kbd.new('n', '<localleader>tk', partial(kill_repl, true), false, 'Kill shell REPL'):enable()

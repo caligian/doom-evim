@@ -5,9 +5,74 @@ local repl = class('doom-repl', job)
 assoc(Doom, {'repl', 'status'}, {})
 repl.status = Doom.repl.status
 
-function repl.find_job(ft)
+function repl.find(ft)
     ft = ft or vim.bo.filetype
     return assoc(repl.status, ft .. '-repl')
+end
+
+function repl.delall()
+    for _, value in pairs(repl.status) do
+        if value.running  then
+            value:delete()
+        end
+    end
+end
+
+-- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
+-- @param s string If s is given then method is ignored and s is simply chansend()
+local function send_from_buffer(self, method)
+    assert_type(method, 'string', 'boolean')
+
+    if not self.running then
+        local r = repl.new(self.name, self.opts)
+        if not r then return false end
+        merge(self, r)
+    end
+    
+    if r then
+        local pos = {}
+        method = method or '.'
+        method = strip(method)
+        local bufname = vim.fn.expand('%')
+
+        if match(bufname, '^tmp\\.', '^term://') or not self.shell and not vim.bo.filetype == self.filetype  then 
+            return 
+        end
+
+        local buf = buffer.find_by_bufnr(vim.fn.bufnr()) or buffer('%')
+
+        self.connected_buffers[buf.index] = buf
+        local curpos = buf:getcurpos()
+
+        if method == '.' then
+            if vim.v.count > 0 then
+                pos = { start_row=curpos.row, end_row=curpos.row + vim.v.count, }
+            else
+                pos = { start_row=curpos.row, end_row=curpos.start_row, }
+            end
+        elseif method == '~.' then
+            pos = { start_row=0, end_row=curpos.row }
+        elseif method == '~' then
+            pos = { start_row=0, end_row=-1 }
+        elseif method == 'v' then
+            pos = buf:getvcurpos()
+        end
+
+        local s = buf:read(pos)
+        self:send(s)
+    else
+        to_stderr('No REPL found')
+    end
+end
+
+function repl:__init(name, cmd, job_opts)
+    local j = job.new(name, cmd, job_opts)
+
+    if j then
+        merge(self, j)
+    end
+
+    return self
 end
 
 function repl.new(name, job_opts, ft, cmd)
@@ -20,30 +85,16 @@ function repl.new(name, job_opts, ft, cmd)
     ft = ft or vim.bo.filetype
     cmd = cmd or assoc(Doom.langs, {ft, 'repl'})
 
-    if not cmd and job_opts.shell then
-        if str_p(job_opts.shell) then
-            cmd = job_opts.shell 
-        else
-            cmd = Doom.langs.shell
-        end
-
+    if job_opts.shell then
+        cmd = Doom.langs.shell
+        job_opts.shell = nil
         ft = false
-    end
-
-    assert(cmd, 'No command found for filetype: ' .. vim.bo.filetype)
-
-    if ft then
-        name = ft .. '-repl'
-    else
         name = 'shell-repl'
-    end
-
-    local existing_job = assoc(Doom.async.job.status, name)
-
-    if existing_job and job_opts.force then
-        existing_job:delete()
-    elseif existing_job and not existing_job.done then
-        return existing_job
+    elseif not cmd then
+        to_stderr('No REPL command found for: ' .. vim.bo.filetype)
+        return false
+    else
+        name = ft .. '-repl'
     end
 
     job_opts.terminal = true
@@ -51,56 +102,11 @@ function repl.new(name, job_opts, ft, cmd)
     job_opts.on_stdout = false
     job_opts.on_stderr = false
 
-    local self = job.new(self, name, cmd, job_opts)
+    local self = repl(name, cmd, job_opts)
     self.filetype = ft
-    self.connected_buffers = {}
-    self.shell = job_opts.shell or false
     update(repl.status, name, self)
 
     return self
-end
-
--- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
--- @param s string If s is given then method is ignored and s is simply chansend()
-function repl:send_from_buffer(method)
-    assert_type(method, 'string', 'boolean')
-
-    local pos = {}
-    method = method or '.'
-    method = strip(method)
-    local bufname = vim.fn.expand('%')
-
-    if match(bufname, '^tmp\\.', '^term://') or not self.shell and not vim.bo.filetype == self.filetype  then 
-        return 
-    end
-
-    local buf = buffer.find_by_bufnr(vim.fn.bufnr()) or buffer('%')
-
-    self.connected_buffers[buf.index] = buf
-    local curpos = buf:getcurpos()
-
-    if method == '.' then
-        if vim.v.count > 0 then
-            pos = { start_row=curpos.row, end_row=curpos.row + vim.v.count, }
-        else
-            pos = { start_row=curpos.row, end_row=curpos.start_row, }
-        end
-    elseif method == '~.' then
-        pos = { start_row=0, end_row=curpos.row }
-    elseif method == '~' then
-        pos = { start_row=0, end_row=-1 }
-    elseif method == 'v' then
-        pos = buf:getvcurpos()
-    end
-
-    local s = buf:read(pos)
-    self:send(s)
-end
-
-function repl.killall()
-    for _, value in pairs(repl.status) do
-        value:delete()
-    end
 end
 
 return repl

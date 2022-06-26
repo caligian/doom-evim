@@ -91,7 +91,7 @@ end
 buffer.loaded_p = buffer.is_loaded
 
 function buffer:load()
-    vim.fn.bufload(self.name)
+    return vim.fn.bufload(self.index) ~= 0
 end
 
 function buffer:setvars(vars)
@@ -573,10 +573,12 @@ function buffer:split(direction, opts)
             cmd = sprintf(':vsplit | wincmd l | b %d', self.index)
         end
     elseif direction == 't' then
-        cmd = sprintf(':tabnew | b %d', self.index)
+        vim.cmd(sprintf(':tabnew | b %d', self.index))
+        return vim.fn.winnr()
     elseif direction == 'f' then
         opts.reverse = nil
         opts.force_resize = nil
+        return self:to_win(opts)
     end
 
     local height, width = -1, -1
