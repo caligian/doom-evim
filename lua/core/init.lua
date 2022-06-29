@@ -50,7 +50,6 @@ kbd.load_prefixes()
 -- Require keybindings
 require('core.buffers.keybindings')
 require('core.kbd.defaults')
-require('core.utils.keybindings')
 require('core.repl.keybindings')
 
 -- Misc setup

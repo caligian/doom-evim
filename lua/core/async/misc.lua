@@ -1,7 +1,5 @@
 local kbd = require('core.kbd')
-local a = require('core.async')
 local misc = {}
-a.misc = misc
 
 function misc.source_buffer(bufnr, opts)
     opts = opts or {}

@@ -1,4 +1,4 @@
-local job = require('core.async')
+local job = require('core.async.vim-job')
 local buffer = require('core.buffers')
 
 local repl = class('doom-repl', job)
