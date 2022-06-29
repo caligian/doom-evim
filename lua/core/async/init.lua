@@ -214,6 +214,7 @@ function job:open(opts)
         opts.shell = nil
         self.terminal = true
 
+        -- Sadly termopen() acts up after a kill signal is sent
         vcmd('tabnew | term')
         vim.fn.chansend(vim.b.terminal_job_id, self.cmd .. "\n")
 

@@ -638,31 +638,4 @@ function buffer:save(where)
     end)
 end
 
-function buffer.source_buffer(bufnr, opts)
-    opts = opts or {}
-    bufnr = bufnr or vim.fn.bufnr()
-    assert_n(bufnr)
-    assert(vim.fn.bufnr(bufnr) ~= -1, 'Invalid bufnr provided')
-
-    vim.cmd(':buffer ' .. bufnr)
-
-    ft = ft or vim.bo.filetype
-    cmd = assoc(Doom.langs, {ft, 'compile'})
-    if not cmd then return false end
-    local fullpath = vim.fn.expand('%:p')
-    local is_nvim_buffer = match(fullpath, vim.fn.stdpath('config') .. '.+(lua|vim)$')
-
-    if not is_nvim_buffer then
-        local out = system(cmd .. ' ' .. fullpath)
-    elseif is_nvim_buffer == 'lua' then
-        out = wait(vcmd, {':luafile ' .. fullpath, true}, {sched=true, timeout=1, tries=10, inc=2}) 
-    elseif is_nvim_buffer == 'vim' then
-        out = vcmd(':source %s', fullpath) 
-    end
-
-    if out then
-        to_stderr(out)
-    end
-end
-
 return buffer

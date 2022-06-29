@@ -3,19 +3,19 @@ local yaml = require('yaml')
 local iter = require('modules.fun')
 local utils = {}
 
-utils.system = function(cmd)
-    local out, t = false, {}
+utils.to_stderr = function(s)
+    vim.api.nvim_err_writeln(s)
+end
 
-    if vimz then
-        local out = vim.fn.system(cmd)
-    else
-        local fh = io.popen(cmd, 'r')
-        out = fh:read('a')
-        fh:close()
-    end
+utils.system = function(cmd, opts)
+    local out, t = vim.fn.system(cmd), {}
 
     for index, s in ipairs(vim.split(out, "[\n\r]")) do
         t[index] = s
+    end
+
+    if stderr then
+        utils.to_stderr(table.concat(t, "\n"))
     end
 
     return t
@@ -155,10 +155,6 @@ end
 
 utils.echo = function(fmt, ...)
     vim.api.nvim_echo({{utils.sprintf(fmt, ...)}}, false, {})
-end
-
-utils.to_stderr = function(s)
-    vim.api.nvim_err_writeln(s)
 end
 
 --
