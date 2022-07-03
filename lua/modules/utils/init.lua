@@ -255,6 +255,18 @@ utils.copy = function (src_t)
     return dst_t
 end
 
+utils.vcall = setmetatable({}, {
+    __index = function (self, k)
+        local f = self[k] or vim.fn[k] or partial(vim.call, k)
+
+        if not self[k] then
+            self[k] = f
+        end
+
+        return f
+    end;
+})
+
 utils.vcmd = function (fmt, ...)
     local out = vim.api.nvim_exec(sprintf(fmt, ...), true)
     if out == '' then return false end
