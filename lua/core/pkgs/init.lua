@@ -1,5 +1,6 @@
 local paq = require('paq')
 local plugins = require('core.pkgs.plugins')
+local timer = require('core.async.timer')
 
 --[[
 Simple pkgs loader for plugins that does not rely upon packer
@@ -190,12 +191,12 @@ local function parse_specs(spec, opt)
         if callable(cond) then
             if cond() then
                 local cmd = get_pkgs_loader_cmd(spec[1], true)
-                cmd()
+                vim.schedule(cmd)
             end
         end
     else
         local cmd = get_pkgs_loader_cmd(spec[1], false)
-        if cmd then cmd() end
+        if cmd then vim.schedule(cmd) end
     end
 
     if rocks then each(download_rock, to_list(rocks)) end

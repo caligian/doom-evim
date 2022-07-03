@@ -1,12 +1,48 @@
 local uv = vim.loop
+local sig  = require('core.async.signals')
 local async = class('doom-luv-spawn')
 
 assoc(Doom.async, 'luv_job', {status={}})
 async.status = Doom.async.luv_job.status
 
-function async:__init(cmd, opts)
+function async:__init(name, cmd, opts)
+    self.name = name
     self.cmd = cmd
     merge(self, opts)
+end
+
+function async:close(code, signal)
+    self.exit_code = code
+    self.exit_signal = signal
+
+    local in_pipe, out_pipe, err_pipe = unpack(self.stdio)
+
+    if not self.handle:is_closing() then
+        self.handle:close()
+    end
+
+    if out_pipe then
+        out_pipe:read_stop() 
+        if not out_pipe:is_closing() then
+            out_pipe:close()
+        end
+    end
+
+    if err_pipe then
+        err_pipe:read_stop()
+        if not err_pipe:is_closing() then
+            err_pipe:close()
+        end
+    end
+
+    if in_pipe then
+        uv.shutdown(in_pipe)
+        if not err_pipe:is_closing() then
+            err_pipe:close()
+        end
+    end
+
+    self.done = true
 end
 
 function async.new(name, cmd, opts)
@@ -15,8 +51,10 @@ function async.new(name, cmd, opts)
 
     opts = opts or {}
     local existing_job = assoc(Doom.async.luv_job, name)
-    if existing_job and not existing_job.done and not opts.force then
-        return existing_job
+    if existing_job then
+        if not existing_job.done and not opts.force then
+            return existing_job
+        end
     end
 
     local args = false
@@ -36,6 +74,8 @@ function async.new(name, cmd, opts)
     else
         args = opts.args
     end
+
+    args = to_list(args)
 
     if str_p(cwd) then
         assert(path.exists(cwd), 'Invalid cwd: ' .. cwd)
@@ -68,6 +108,7 @@ function async.new(name, cmd, opts)
 
     assert_t(opts.stdio)
     assert_callable(opts.on_exit)
+    assert_t(opts.signals)
 
     local self_opts = {
         env = env;
@@ -88,45 +129,13 @@ function async.new(name, cmd, opts)
         capture_stdout = opts.stdout ~= nil;
         capture_stderr = opts.stderr ~= nil;
         accepts_stdin = opts.stdin ~= nil;
+        _signals = opts.signals or {};
     }
 
-    local self = async(cmd, self_opts)
+    local self = async(name, cmd, self_opts)
     update(Doom.async.luv_job, name, self)
 
     return self
-end
-
-function async:close(code, signal)
-    self.code = code
-    self.signal = signal
-    local in_pipe, out_pipe, err_pipe = unpack(self.stdio)
-
-    if not self.handle:is_closing() then
-        self.handle:close()
-    end
-
-    if out_pipe then
-        out_pipe:read_stop() 
-        if not out_pipe:is_closing() then
-            out_pipe:close()
-        end
-    end
-
-    if err_pipe then
-        err_pipe:read_stop()
-        if not err_pipe:is_closing() then
-            err_pipe:close()
-        end
-    end
-
-    if in_pipe then
-        uv.shutdown(in_pipe)
-        if not err_pipe:is_closing() then
-            err_pipe:close()
-        end
-    end
-
-    self.done = true
 end
 
 function async:kill()
@@ -166,6 +175,7 @@ function async:start()
     end
 
     self.handle = uv.spawn(self.cmd, self, on_exit)
+    assert(self.handle ~= 0, 'Could not spawn a process using command ' .. self.cmd)
     self.on_exit = on_exit
 
     if self.capture_stdout then
@@ -175,6 +185,39 @@ function async:start()
     if self.capture_stderr then
         err_pipe:read_start(vim.schedule_wrap(self.on_stderr))
     end
+
+    local function default_sig(cb)
+        self:close()
+    end
+
+    local sigs = {}
+    local close_cb = partial(self.close, self)
+    local exit_cb = partial(os.exit)
+    local default = {
+        'SIGHUP';
+        'SIGTERM';
+        'SIGABRT';
+        'SIGKILL';
+        'SIGTERM';
+        'SIGQUIT';
+        'SIGINT';
+    }
+
+    each(function (id)
+        if self._signals[id] then return end
+        local s = sig.new(id, self.handle)
+        s:add_callbacks(close_cb, exit_cb)
+        s:start()
+        sigs[id] = s
+    end, default)
+
+    each(function (id)
+        if sigs[id] then return end
+        local s = sig.new(id, self.handle)
+        s:add_callbacks(close_cb, exit_cb)
+        s:start()
+        sigs[id] = s
+    end, self._signals)
 end
 
 function async:write(s)
@@ -187,7 +230,7 @@ end
 function async:sync_read(opts)
     opts = opts or {}
     opts.inc = opts.inc or 0.1
-    opts.timeout = opts.timeout or 1
+    opts.timeout = opts.timeout or 100
     opts.tries = opts.tries or 10
 
     local function wait(what)
@@ -206,6 +249,17 @@ function async:sync_read(opts)
 
     if self.capture_stdout then wait('stdout_output') end
     if self.capture_stderr then wait('stderr_output') end
+
+    local status = {}
+    if #self.stderr_output.data > 0 then
+        status.stderr = self.stderr_output.data
+    end
+
+    if #self.stdout_output.data > 0 then
+        status.stdout = self.stdout_output.data
+    end
+
+    return status
 end
 
 return async

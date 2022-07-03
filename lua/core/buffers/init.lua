@@ -213,7 +213,11 @@ function buffer.new(name, scratch)
     local is_temp
 
     if scratch then
-        name = with_data_path('temp', 'doom-scratch-buffer' .. '.' .. vim.bo.filetype)
+        name = name or with_data_path('temp', 'doom-scratch-buffer' .. '.' .. vim.bo.filetype)
+        if assoc(Doom.buffer.status, name) then
+            name = name .. '_1'
+        end
+
         bufnr = vim.fn.bufadd(name)
     elseif not name then
         name = sprintf('doom-buffer-%d', #(keys(Doom.buffer.status)))
@@ -230,6 +234,7 @@ function buffer.new(name, scratch)
         end
         bufnr = vim.fn.bufadd(name)
     end
+
 
     if buffer.status[bufnr] then
         return buffer.status[bufnr]
@@ -310,13 +315,12 @@ end
 
 function buffer:write(pos, s)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
-    assert(pos.start_row, exception.no_start_row(pos))
 
     pos = pos or {}
     pos.start_row = pos.start_row or 0
     local bufnr = self.index
 
-    if str_p(s) then s = split(s, "\n\r") end
+    if str_p(s) then s = split(s, "[\n\r]") end
 
     local count = self:get_line_count()
     pos.end_row = pos.end_row or count
@@ -393,7 +397,7 @@ end
 function buffer:put(s, prepend, _type, _follow)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
-    assert_type(s, 'table', string)
+    assert_type(s, 'table', 'string')
     assert_s(prepend)
     assert_s(_type)
     assert_s(_follow)
@@ -548,7 +552,6 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
 end
 
 function buffer:split(direction, opts)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
     assert_type(direction, 'string', 'boolean')
 
     direction = direction or 's'
