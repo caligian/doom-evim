@@ -1,7 +1,7 @@
 local b = dofile('../../buffers/init.lua')
 local kbd = require('core.kbd')
 local a = dofile('../spawn.lua')
-local ts = require('core.telescope')
+local ts = dofile('../../telescope/init.lua')
 local ab = class('doom-async-buffer-utils')
 
 ab.status = {}
@@ -68,10 +68,15 @@ function ab:cleanup()
     end
 end
 
-function ab:show_output(d, win_opts, input)
+function ab:show_output(opts)
+    assert_t(opts)
+    opts = opts or {}
+    opts.direction = opts.direction or opts.d or 's'
+    opts.opts = opts.opts or {}
+    opts.input = opts.input =~ false or opts.input ~= nil and opts.input or false
     self:cleanup()
 
-    local function get_results(sel)
+    local function get_results(d, sel)
         local name = sel.value
         local j = self.jobs[name]
         local s = ''
@@ -83,21 +88,28 @@ function ab:show_output(d, win_opts, input)
         pcall(vim.api.nvim_win_close, j.winnr, true)
 
         if not has_stderr and not has_stdout then
-            assoc(j, 'sync_opts', {inc=10; timeout=100; tries=5})
-            local timeout = 'Timeout: ' .. j.sync_opts.timeout .. 'ms'
-            local inc = 'Increment by: ' .. j.sync_opts.inc .. 'ms'
-            local tries = 'Try N times: ' .. j.sync_opts.tries
+            assoc(j, 'sync_opts', {inc=10; timeout=100; tries=5, current_try=0})
+
+            local timeout = j.sync_opts.timeout
+            local inc = j.sync_opts.inc
+            local tries = j.sync_opts.tries
 
             if input then
-                input = gets('%', {
-                    {"Current values:\nTimeout: %dms"}
-                })
+                timeout, inc, tries = unpack(gets('%', false, {
+                    {'Timeout in ms', '100'};
+                    {'Increment time in ms', '100'};
+                    {'Number of tries', '5'}
+                }))
+
+                j.sync_opts.timeout = timeout
+                j.sync_opts.inc = inc
+                j.sync_opts.tries = tries
             end
 
             status = j:sync_read {
-                inc = 10;
-                timeout = 1000;
-                tries = 10;
+                inc = j.sync_opts.inc;
+                timeout = j.sync_opts.timeout;
+                tries = j.sync_opts.tries;
             }
         end
 
@@ -124,7 +136,7 @@ function ab:show_output(d, win_opts, input)
             d = d or 's'
             win_opts = win_opts or {}
             win_opts.force_resize = true
-            ab.visible = j.buffer:split(d, win_opts)
+            ab.visible = j.buffer:split(d, opts.opts)
             self.winnr = ab.visible 
         end
     end
@@ -140,12 +152,29 @@ function ab:show_output(d, win_opts, input)
             return false
         end, items(self.jobs));
 
-        mappings = get_results;
+        mappings = {
+            lpartial(get_results, opts.direction);
+
+            -- Rerun the job
+            {'n', 'r', function (sel)
+                local j = self.jobs[sel.value]
+                j:restart(true)
+                get_results(opts.direction, sel)
+            end, 'Restart job and get results'};
+
+            {'n', 's', partial(get_results, 's'), 'Show output in split'};
+            {'n', 'v', partial(get_results, 'v'), 'Show output in vsplit'};
+            {'n', 'f', partial(get_results, 'f'), 'Show output in vsplit'};
+            {'n', 't', partial(get_results, 't'), 'Show output in a new tab'};
+
+            {'n', 'd', function (sel)
+                local j = self.jobs[sel.value]
+                to_stderr('Deleting job for buffer: ' .. j.name)
+                if j then j:kill() end
+                self.jobs[sel.value] = nil
+            end, 'Delete job'};
+        };
     }):find()
 end
-
-local test = ab.new()
-test:add_buffer()
-test:show_output()
 
 return ab

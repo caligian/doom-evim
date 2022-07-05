@@ -111,6 +111,8 @@ function async.new(name, cmd, opts)
     assert_t(opts.signals)
 
     local self_opts = {
+        name = name;
+        cmd = cmd;
         env = env;
         cwd = cwd;
         stdio = opts.stdio or {uv.new_pipe(false), uv.new_pipe(false), uv.new_pipe(false)};
@@ -130,12 +132,27 @@ function async.new(name, cmd, opts)
         capture_stderr = opts.stderr ~= nil;
         accepts_stdin = opts.stdin ~= nil;
         _signals = opts.signals or {};
+        opts = opts;
     }
 
     local self = async(name, cmd, self_opts)
     update(Doom.async.luv_job, name, self)
 
     return self
+end
+
+function async:restart(force)
+    if not self.done and not force then
+        return false
+    end
+
+    self.exit_code = nil
+    self.exit_signal = nil
+    self.opts.force = true
+    local s = self.new(self.name, self.cmd, self.opts)
+    s.force = nil
+
+    return s
 end
 
 function async:kill()

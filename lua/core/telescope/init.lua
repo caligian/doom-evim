@@ -145,7 +145,7 @@ function ts.new(opts, global_opts)
                     local entry = action_state.get_selected_entry()
                     action_state.get_current_picker(prompt_bufnr)
                     actions.close(prompt_bufnr)
-                    mappings[index][3](entry, bufnr)
+                    f(entry, bufnr)
                 end
 
                 local final_action = false
