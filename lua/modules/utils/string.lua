@@ -1,6 +1,7 @@
-local str = {}
+local class = require('classy')
 local utils = require('modules.utils')
 local pcre = require('rex_pcre2')
+local str = {}
 
 function str.trim(s)
     return s:match('^%s*(.-)%s*$') or s
@@ -14,6 +15,7 @@ function str.rtrim(s)
     return s:match('(.-)%s*$') or s
 end
 
+str.split = pcre.split
 str.strip = str.trim
 str.lstrip = str.ltrim
 str.rstrip = str.rtrim

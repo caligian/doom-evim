@@ -133,11 +133,13 @@ function ab:show_output(opts)
             local job_buffer = b.new(name .. '_output', true)
             j.buffer = job_buffer
             j.buffer:write(false, s)
-            d = d or 's'
-            win_opts = win_opts or {}
-            win_opts.force_resize = true
+            opts.opts.force_resize = true
             ab.visible = j.buffer:split(d, opts.opts)
             self.winnr = ab.visible 
+        else
+            local i = gets('%', false, {'No output was found. Retry? (Press enter for no)'})
+            if i == false then return end
+            get_results(d, sel)
         end
     end
         

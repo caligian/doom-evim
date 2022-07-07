@@ -3,8 +3,21 @@ local u = require('modules.utils')
 local tu = require('modules.utils.table')
 local fu = require('modules.utils.function')
 local regex = require('rex_pcre2')
-
 local param = {}
+
+function param.typeof(obj)
+    local t = type(obj)
+
+    if t == 'table' then
+        local mt = getmetatable(t)
+        if mt then
+            if not mt.__name then return 'table' end
+            return mt.__name
+        end
+    else
+        return t
+    end
+end
 
 function param.assert_boolean(b)
     if b ~= nil then
@@ -62,11 +75,11 @@ function param.assert_callable(f)
     end
 end
 
-function param.assert_type(param, ...)
-    if param == nil then return end
+function param.assert_type(p, ...)
+    if p == nil then return end
 
     local fail = 0
-    local t_param = type(param)
+    local t_param  = param.typeof(p)
     local failed = {}
 
     local args = {...}
@@ -74,7 +87,7 @@ function param.assert_type(param, ...)
 
     for _, i in ipairs(args) do
         if i == 'callable' then
-            if not u.callable(param) then
+            if not u.callable(p) then
                 fail = fail + 1
                 tu.push(failed, i)
             end
@@ -90,7 +103,7 @@ function param.assert_type(param, ...)
         end
     end
 
-    assert(fail ~= n, dump(failed) .. string.format(' failed to match with param type `%s`', type(param)))
+    assert(fail ~= n, dump(failed) .. string.format(' failed to match with param type `%s`', param.typeof(param)))
 end
 
 function param.assert_equal(a, b)
@@ -98,7 +111,7 @@ function param.assert_equal(a, b)
 end
 
 function param.assert_type_equal(a, b)
-    assert(type(a) == type(b), u.sprintf('Param `%s` is not equal to param `%s`', a, b))
+    assert(param.typeof(a) == param.typeof(b), u.sprintf('Param `%s` is not equal to param `%s`', a, b))
 end
 
 param.assert_eql = param.assert_equal
@@ -109,7 +122,7 @@ function param.assert_class_equal(a, b)
     local cls_b = class.of(b)
 
     if cls_a and cls_b then 
-        assert(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, type(a), type(b)))
+        assert(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, param.typeof(a), param.typeof(b)))
     end
 end
 
@@ -117,7 +130,7 @@ param.assert_cls_equal = param.assert_class_equal
 param.assert_cls_eql = param.assert_cls_eql
 
 function param.compare_type(a, b)
-    return type(a) == type(b)
+    return type(a) == param.typeof(b)
 end
 
 function param.compare_class(a, b)

@@ -130,7 +130,7 @@ utils.dump = function (...)
     local dumped = {}
 
     for _, value in ipairs({...}) do
-        dumped[#dumped+1] = vim.inspect(value)
+        dumped[#dumped+1] = type(value) == 'string' and value or vim.inspect(value)
     end
 
     dumped = #dumped == 1 and first(dumped) or dumped
@@ -486,5 +486,13 @@ utils.gets = function(prompt, loop, ...)
 
     return out
 end
+
+function utils.len(obj)
+    assert(type(obj) == 'string' or type(obj) == 'table', 'Only tables or strings can be passed')
+    return #obj
+end
+
+utils.length = utils.len
+utils.size = utils.len
 
 return utils
