@@ -56,33 +56,33 @@ function m.delegate(c, ...)
             t[key] = function(...)
                 local args = {...}
                 local found = false
-                local index = #args
+                local index = 0
                 local obj = false
-                while not found and index ~= 0 do
+
+                while found == false and index ~= #args+1 do
                     local inst = args[index]
                     if type(inst) == 'table' and inst.__name == c.__name then
                         found = index
+                        break
                     end
-                    index = index - 1
+                    index = index + 1
                 end
 
-                local a = false
-                local i = 1
                 if found then
-                    a = {}
-
-                    for index, value in ipairs(args) do
-                        if index ~= found then
-                            a[i] = value
-                            i = i + 1
-                        end
-                    end
                     obj = args[found]
+                    local first = args[1]
+                    local f_type = type(first)
+
+                    if f_type == 'table' and first.__name and first.__name ~= 'table' then
+                        args[found] = first
+                        args[1] = obj
+                    elseif f_type ~= obj.__name then
+                        args[found] = first
+                        args[1] = obj
+                    end
                 end
 
-                args = a or args
-                local unwrapped = {m.unwrap_objects(getter or false, unpack(args))}
-                return value(m.unwrap_objects(getter, obj), unpack(unwrapped))
+                return value(m.unwrap_objects(getter or false, unpack(args)))
             end
             c[key] = t[key]
         end
@@ -109,7 +109,7 @@ end
 function class.new(name, opts)
     local self = {}
     self.index = self
-    self.__name = name 
+    self.__name = name
 
     for k, v in pairs(opts or {}) do
         self[k] = v

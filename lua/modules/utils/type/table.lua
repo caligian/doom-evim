@@ -1,13 +1,17 @@
--- local class = require('modules.utils.class')
-local class = dofile('../class.lua')
+local class = require('modules.utils.class')
+-- local class = dofile('../class.lua')
 local tu = require('modules.utils.table')
 local param = require('modules.utils.param')
 local common = require('modules.utils.type.common')
-
 local m = {}
 local tbl = {}
-function tbl.new(t)
+
+function tbl.new(t, default)
     t = t or {}
+
+    if default then
+        t = tu.defaultdict(t, default)
+    end
 
     local self = class.new('table', {value=t})
     self:delegate(common, m, 'value')
@@ -21,12 +25,13 @@ local exclude = {
     imap = true;
     reduce = true;
     each = true;
+    defaultdict = true;
     nth = true;
 }
 
 for key, value in pairs(tu) do
     if not exclude[key] then
-        tbl[key] = value
+        m[key] = value
     end
 end
 
@@ -39,11 +44,7 @@ m.filter = function (t, f) return tu.filter(f, t) end
 m.reduce = function (t, f, init) return tu.reduce(f, t, init) end
 m.each = function (t, f, ...) tu.each(f, t, ...) end
 m.nth = function (t, k, ...) return tu.nth(k, t, ...) end
-
-m.__add = function(t, b)
-    tu.push(t, b)
-end
-
+m.__add = tu.push
 m.__concat = function(t, b)
     local m, n = type(t) == 'table', type(b) == 'table'
     if m then
@@ -52,7 +53,7 @@ m.__concat = function(t, b)
     return tu.lextend(b, t)
 end
 m.__div = tu.partition
--- m.__tostring = vim.inspect
+m.__tostring = vim.inspect
 m.__pow = tu.get
 m.__mul = function (t, n)
     assert(type(n) == 'number', 'Need a number')

@@ -29,11 +29,11 @@ end
 tu.arr_to_dict = tu.list_to_dict
 
 tu.partition = function (arr, n)
-    n = n or 2
+    n = n or 1
     local len = #arr
 
     if n == 0 then return false end
-    if n == 1 or n < 1 or n >= len then return arr end
+    if n < 1 or n >= len then return arr end
 
     local q = math.floor(len / n)
     local r = len - (q * n)
@@ -359,7 +359,7 @@ tu.assoc = function (dict, ks, create, transform)
         local v = t[key]
 
         if not v then
-            if create and transform ~= 'd' then
+            if create ~= nil and transform ~= 'd' then
                 if index == n then
                     if create == true then
                         t[key] = {}
@@ -376,7 +376,7 @@ tu.assoc = function (dict, ks, create, transform)
             end
         elseif not utils.table_p(v) then
             if transform == 'd' then
-                local out = copy(t[key])
+                local out = vim.deepcopy(t[key])
                 t[key] = nil
                 return out, last_key, last_t, dict
             else
@@ -590,7 +590,8 @@ tu.vec = function (index, n, gen, param, state)
     return acc
 end
 
-tu.defaultdict = function (default)
+tu.defaultdict = function (t, default)
+    t = t or {}
     local out 
 
     if utils.callable(default) then
@@ -599,7 +600,7 @@ tu.defaultdict = function (default)
         out = default
     end
 
-    local t = setmetatable({}, {
+    t = setmetatable(t, {
         __index = function(t, k) 
             local v = rawget(t, k)
 

@@ -1,4 +1,5 @@
 local class = require('modules.utils.class')
+-- local class = dofile('../class.lua')
 local strutils = require('modules.utils.string')
 local common = require('modules.utils.type.common')
 
@@ -15,66 +16,38 @@ str.new = function (s)
 
     local self = class.new('string')
     self = self:delegate(strutils, 'value')
-    self = self:delegate(m)
+    self = self:delegate(m, 'value')
     self.value = s
 
     return self
 end
 
-local function unwrap(b)
-    if type(b) == 'string' or type(b) == 'number' then
-        return tostring(b)
-    elseif type(b) == 'table' then
-        if b.__name == 'string' then
-            return b.value
-        end
-    else
-        error('No string representation found for ' .. b)
-    end
+m.__mod = function (s, b)
+    return strutils.sed(s, b)
 end
-
-local function get_c(self, b)
-    local m, n = type(self), type(b)
-    if m == 'table' then return self, b end
-    if n == 'table' then return b, self end
+m.__div = function (s, b)
+    return vim.split(s, b)
 end
-
-m.__mod = function (self, b)
-    self, b = get_c(self, b)
-    return str.new(strutils.sed(self.value, unwrap(b)))
+m.__pow = function (s, b)
+    return strutils.match(s, b)
 end
-m.__div = function (self, b)
-    self, b = get_c(self, b)
-    return vim.split(self.value, unwrap(b))
-end
-m.__pow = function (self, b)
-    self, b = get_c(self, b)
-    return str.new(strutils.match(self.value, unwrap(b)) or '')
-end
-m.__eq = function (self, b)
-    self, b = get_c(self, b)
-    return self.value == unwrap(b)
+m.__eq = function (s, b)
+    return s == b
 end
 m.__tostring = function (self)
-    return self.value
+    return s
 end
-m.__ne = function (self, b)
-    self, b = get_c(self, b)
-    return not m.__eq(self, unwrap(b))
+m.__ne = function (s, b)
+    return s ~= b
 end
-m.__concat = function (self, b)
-    if type(self) == 'table' then
-        return str.new(self.value .. unwrap(b))
-    elseif type(b) == 'table' then
-        return str.new(self .. unwrap(b)) 
-    end
+m.__concat = function (s, b)
+    return s .. b
 end
-m.__add = function (self, b)
-    return m.__concat(self, b)
+m.__add = function (s, b)
+    return m.__concat(s, b)
 end
-m.__tostring = function (self)
-    self, b = get_c(self, b)
-    return self.value
+m.__tostring = function (s)
+    return s
 end
 m.__sub = m.__mod
 
