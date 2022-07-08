@@ -1,6 +1,6 @@
 local path = require('path')
 local yaml = require('yaml')
-local iter = require('modules.fun')
+local iter = require('fun')
 local utils = {}
 
 utils.to_stderr = function(s)

@@ -5,10 +5,12 @@ globalize(require('modules.utils.table'))
 globalize(require('modules.utils.string'))
 globalize(require('modules.utils.function'))
 globalize(require('modules.utils.param'))
-globalize(require('modules.utils.classes'))
 
--- Import globals
-assoc(_G, {'Doom'}, require('core.globals'))
+add_global(require('modules.utils.class'), 'class')
+add_global(require('modules.utils.type.callable'), 'callable')
+add_global(require('modules.utils.type.table'), 'dict')
+add_global(require('modules.utils.type.file'), 'file')
+add_global(require('modules.utils.type.string'), 'str')
 
 -- Add some modules as globals
 add_global(require('path'), 'path')
@@ -17,6 +19,10 @@ add_global(require('classy'), 'class')
 add_global(require('fun'), 'iter')
 add_global(class.multimethod, 'multimethod')
 add_global(class.overload, 'overload')
+
+
+-- Import globals
+assoc(_G, {'Doom'}, require('core.globals'))
 
 -- This is for convenience - global logger
 add_global(require('core.exceptions'), 'ex')

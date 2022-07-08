@@ -1,10 +1,20 @@
--- local class = require('modules.utils.class')
-local class = dofile('../class.lua')
+local class = require('modules.utils.class')
 local yaml = require('yaml')
 local common = require('modules.utils.type.common')
 local path = require('path')
 local fl = {}
 local m = {}
+
+local function get_status(handle) 
+    local t = io.type(handle)
+    if t == 'closed file' then
+        return 0
+    elseif t == 'file' then
+        return 1
+    end
+
+    return false
+end
 
 local function slurp(fh)
     fh = fh or false
@@ -14,24 +24,21 @@ local function slurp(fh)
 end
 
 function m.open(self, force)
-    local status = io.type(self.handle)
+    local status = get_status(self.handle)
 
-    if force and status then
-        if status == 'file' then
-            self.handle:close()
-        end
+    if force and status == 1 then
+        self.handle:close()
         self.handle = false
-    elseif status == 'file' then
+    elseif status == 1 then
         return self.handle
     end
 
     local fh = io.open(self.filename, self.mode)
-    if self.filename == 0 then
-        fh = self.handle
-    end
-
     if not fh then
         error('Could not open file handle for filename: ' .. self.filename)
+    end
+    if self.filename == 0 then
+        fh = self.handle
     end
 
     self.handle = fh
@@ -40,12 +47,12 @@ function m.open(self, force)
 end
 
 function m.write(self, s, how)
-    if not self.handle then
+    if get_status(self.handle) ~= 1 then
         return false
     end
 
     assert(s)
-    assert(self.mode:match('w') or self.mode:match('r+'), 'File ' .. self.filename .. ' has not been in write mode')
+    assert(self.mode:match('wa') or self.mode:match('r+'), 'File ' .. self.filename .. ' has not been in write mode')
 
     -- If eval
     if how:match('y') then
@@ -79,33 +86,29 @@ function m.close(self)
 end
 
 function m.read(self, how)
-    if not self.handle then
+    if get_status(self.handle) ~= 1 then
         return false
     end
 
     assert(self.mode:match('r'), 'File has not been opened in read mode')
 
-    local _how = how or '*a'
-    if how:match('[yj]') or how:match('lua') then
-        _how = '*a'
-    end
-
-    local s = self.handle:read(_how)
-    local rest = nil
-
+    how = how or '*a'
+    local s = false
     if how:match('y') then
-        s = yaml.load(s)
+        s = yaml.load(self.handle:read('*a'))
     elseif how:match('j') then
-        s = vim.fn.json_decode(s)
+        s = vim.fn.json_decode(self.handle:read('*a'))
     elseif how:match('lua') then
-        s, rest = load(s)
+        s = load(self.handle:read('*a'))
+    else
+        s = self.handle:read('*a')
     end
 
-    return s, rest
+    return s
 end
 
 function m.flush(self)
-    if not self.handle then
+    if get_status(self.handle) ~= 1 then
         return false
     end
 
@@ -114,23 +117,23 @@ function m.flush(self)
 end
 
 function m.iterread(self)
-    if not self.handle then
+    if get_status(self.handle) ~= 1 then
         return false
     end
 
     assert(self.mode:match('r'), 'File has not been opened in read mode')
 
-    local state = false
+    local state = self.handle:read()
     return function ()
-        if self.handle then
+        if state then
             state = self.handle:read()
             return state
         end
-    end, self.handle or false, state
+    end, self.handle, state
 end
 
 function m.seek(self, whence, offset)
-    if not self.handle then
+    if get_status(self.handle) ~= 1 then
         return false
     end
 
@@ -147,43 +150,57 @@ function m.call(self, f, ...)
 end
 
 -- This method will reopen the file!
-function fl.spit(filename, s, opts)
+function fl.spit(filename, s, how)
     assert(filename)
     assert(s)
 
     local fh = fl.new(filename, 'w')
     fh:open('*a')
-    fh:write(s, opts)
+    fh:write(s, how)
     fh:close()
 
     return true
 end
 
-function fl.slurp(filename, opts)
+function fl.slurp(filename, how)
     local fh = fl.new(filename, 'r')
-    local s = fh:read('*a', opts)
+
+    fh:open()
+    local s = fh:read('*a', how)
     fh:close()
 
     return s
 end
 
 function fl.jslurp(filename)
+    assert(filename)
+
     return fl.slurp(filename, 'j')
 end
 
 function fl.jspit(filename, s)
+    assert(filename)
+    assert(s)
+
     return fl.spit(filename, s, 'j')
 end
 
 function fl.yslurp(filename)
+    assert(filename)
+    assert(s)
+
     return fl.slurp(filename, 'y')
 end
 
 function fl.yspit(filename, s)
+    assert(filename)
+    assert(s)
+
     return fl.spit(filename, s, 'y')
 end
 
 function fl.dump(filename, s)
+    assert(filename)
     assert(s)
 
     s = type(s) ~= 'string' and vim.inspect(s) or s
@@ -191,11 +208,9 @@ function fl.dump(filename, s)
 end
 
 function fl.new(filename, mode)
-    local handle = false
     if filename == false then
-        filename = 0
         mode = 'r+'
-        handle = io.tmpfile()
+        filename = os.tmpname()
     else
         mode = mode or 'r'
         assert(type(filename) == 'string')
@@ -205,8 +220,27 @@ function fl.new(filename, mode)
         end
     end
 
-    local cls = class.new('file', {filename=filename, mode=mode, handle=handle})
+    local cls = class.new('file', {
+        filename = filename,
+        mode = mode, 
+        handle = false,
+    })
+
     class.delegate(cls, m)
+    local old_delete = m.close
+
+    if filename:match('/tmp') then
+        class.delegate(cls, {
+            delete = function (self)
+                vim.fn.system('rm ' .. self.filename)
+            end;
+
+            close = function (self)
+                old_delete(self) 
+                self:delete()
+            end
+        })
+    end
 
     return cls
 end

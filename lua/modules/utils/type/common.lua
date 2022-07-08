@@ -21,7 +21,5 @@ methods.call = function(obj, func) return func(obj) end
 methods.spit = function(obj, dst, mode) u.spit(dst, dump(obj)) end
 methods.yspit = function(obj, dst) u.yspit(dst, obj) end
 methods.jspit = function(obj, dst) u.jspit(dst, obj) end
-methods.t_ne = function(obj, obj1) return class.of(obj) ~= class.of(obj1) end
-methods.t_eq = function(obj, obj1) return class.of(obj) == class.of(obj1) end
 
 return methods

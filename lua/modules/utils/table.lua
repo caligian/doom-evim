@@ -1,4 +1,4 @@
-local iter = require('modules.fun')
+local iter = require('fun')
 local utils = require('modules.utils')
 local tu = {}
 
@@ -359,7 +359,7 @@ tu.assoc = function (dict, ks, create, transform)
         local v = t[key]
 
         if not v then
-            if create and create ~= 'd' then
+            if create and transform ~= 'd' then
                 if index == n then
                     if create == true then
                         t[key] = {}
@@ -375,7 +375,7 @@ tu.assoc = function (dict, ks, create, transform)
                 return false, last_key, last_t, dict
             end
         elseif not utils.table_p(v) then
-            if create == 'd' then
+            if transform == 'd' then
                 local out = copy(t[key])
                 t[key] = nil
                 return out, last_key, last_t, dict
@@ -387,7 +387,7 @@ tu.assoc = function (dict, ks, create, transform)
 
                 return t[key], last_key, last_t, dict
             end
-        elseif create == 'd'  then
+        elseif transform == 'd' then
             t[key] = nil
         end
 
@@ -403,7 +403,7 @@ function tu.update(dict, ks, replacement)
 end
 
 function tu.remove(dict, ks)
-    return tu.assoc(dict, ks, 'd')
+    return tu.assoc(dict, ks, false, 'd')
 end
 
 -- if table is passed then it will be sent to tu.assoc

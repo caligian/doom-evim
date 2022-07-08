@@ -2,10 +2,6 @@ local fun = {}
 local utils = require('modules.utils')
 local tutils = require('modules.utils.table')
 
-function fun.globalize(ks)
-    utils.globalize(ks or fun)
-end
-
 function fun.partial(f, ...)
     local outer = {...}
 

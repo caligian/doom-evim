@@ -1,8 +1,9 @@
+local class = require('modules.utils.class')
 local au = require('core.au')
 local wk = require('which-key')
 local ex = require('core.kbd.exception')
 
-local kbd = class('doom-keybinding')
+local kbd = class.new('doom-keybinding')
 assoc(Doom.kbd, 'status', {})
 assoc(Doom.kbd, 'defaults', {})
 
