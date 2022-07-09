@@ -1,5 +1,5 @@
 local tu = require('modules.utils.table')
-local u = require('modules.utils')
+local u = require('modules.utils.common')
 local class = require('modules.utils.class')
 local methods = {}
 

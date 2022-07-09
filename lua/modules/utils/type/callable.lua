@@ -1,7 +1,7 @@
 local class = require('modules.utils.class')
 local fu = require('modules.utils.function')
 local common = require('modules.utils.type.common')
-local u = require('modules.utils')
+local u = require('modules.utils.common')
 
 common.jdump = nil
 common.ydump = nil

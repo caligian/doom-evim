@@ -1,25 +1,13 @@
 -- All the required modules
-require('modules.utils').globalize()
-
-globalize(require('modules.utils.table'))
-globalize(require('modules.utils.string'))
-globalize(require('modules.utils.function'))
-globalize(require('modules.utils.param'))
-
-add_global(require('modules.utils.class'), 'class')
-add_global(require('modules.utils.type.callable'), 'callable')
-add_global(require('modules.utils.type.table'), 'dict')
-add_global(require('modules.utils.type.file'), 'file')
-add_global(require('modules.utils.type.string'), 'str')
+require('modules.utils')
 
 -- Add some modules as globals
 add_global(require('path'), 'path')
 add_global(require('path.fs'), 'fs')
-add_global(require('classy'), 'class')
 add_global(require('fun'), 'iter')
+add_global(require('classy'), 'class')
 add_global(class.multimethod, 'multimethod')
 add_global(class.overload, 'overload')
-
 
 -- Import globals
 assoc(_G, {'Doom'}, require('core.globals'))

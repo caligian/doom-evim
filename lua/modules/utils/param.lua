@@ -1,5 +1,5 @@
 local class = require('classy')
-local u = require('modules.utils')
+local u = require('modules.utils.common')
 local tu = require('modules.utils.table')
 local fu = require('modules.utils.function')
 local regex = require('rex_pcre2')

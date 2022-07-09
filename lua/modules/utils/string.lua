@@ -1,5 +1,5 @@
 local class = require('classy')
-local utils = require('modules.utils')
+local utils = require('modules.utils.common')
 local pcre = require('rex_pcre2')
 local str = {}
 

@@ -1,5 +1,4 @@
 local class = {}
-local pcre = require('rex_pcre2')
 local m = {}
 
 function m.name(c)

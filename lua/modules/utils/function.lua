@@ -1,5 +1,5 @@
 local fun = {}
-local utils = require('modules.utils')
+local utils = require('modules.utils.common')
 local tutils = require('modules.utils.table')
 
 function fun.partial(f, ...)

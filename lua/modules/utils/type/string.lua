@@ -1,5 +1,4 @@
 local class = require('modules.utils.class')
--- local class = dofile('../class.lua')
 local strutils = require('modules.utils.string')
 local common = require('modules.utils.type.common')
 

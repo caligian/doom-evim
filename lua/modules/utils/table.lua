@@ -1,5 +1,5 @@
 local iter = require('fun')
-local utils = require('modules.utils')
+local utils = require('modules.utils.common')
 local tu = {}
 
 tu.to_dict = function(...)
