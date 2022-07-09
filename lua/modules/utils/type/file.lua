@@ -227,7 +227,7 @@ function fl.new(filename, mode)
     local old_close = m.close
 
     if filename:match('/tmp') then
-        self:delegate(false, {
+        self:delegate({
             delete = function (self)
                 vim.fn.system('rm ' .. self.filename)
             end;
@@ -236,7 +236,7 @@ function fl.new(filename, mode)
                 old_close(self) 
                 self:delete()
             end
-        })
+        }, false)
     end
 
     return cls
