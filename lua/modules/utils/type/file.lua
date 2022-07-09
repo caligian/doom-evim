@@ -37,9 +37,6 @@ function m.open(self, force)
     if not fh then
         error('Could not open file handle for filename: ' .. self.filename)
     end
-    if self.filename == 0 then
-        fh = self.handle
-    end
 
     self.handle = fh
 
@@ -230,7 +227,7 @@ function fl.new(filename, mode)
     local old_close = m.close
 
     if filename:match('/tmp') then
-        class.delegate(cls, {
+        self:delegate(false, {
             delete = function (self)
                 vim.fn.system('rm ' .. self.filename)
             end;
