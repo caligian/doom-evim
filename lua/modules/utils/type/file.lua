@@ -101,7 +101,7 @@ function m.read(self, how)
     elseif how:match('lua') then
         s = load(self.handle:read('*a'))
     else
-        s = self.handle:read('*a')
+        s = self.handle:read(how)
     end
 
     return s
@@ -227,7 +227,7 @@ function fl.new(filename, mode)
     })
 
     class.delegate(cls, m)
-    local old_delete = m.close
+    local old_close = m.close
 
     if filename:match('/tmp') then
         class.delegate(cls, {
@@ -236,7 +236,7 @@ function fl.new(filename, mode)
             end;
 
             close = function (self)
-                old_delete(self) 
+                old_close(self) 
                 self:delete()
             end
         })
