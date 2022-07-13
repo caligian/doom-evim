@@ -1,11 +1,6 @@
 local class = {}
-local m = {}
 
-function m.name(c)
-    return c.__name
-end
-
-function m.unwrap_objects(getter, ...)
+function class.unwrap_method_args(getter, ...)
     local args = {...}
 
     if getter and type(getter) == 'string' or type(getter) == 'number' then
@@ -34,7 +29,7 @@ function m.unwrap_objects(getter, ...)
     return unpack(args)
 end
 
-function m.delegate(c, ...)
+function class.delegate(c, ...)
     assert(c)
 
     local methods = {...}
@@ -81,7 +76,7 @@ function m.delegate(c, ...)
                     end
                 end
 
-                return value(m.unwrap_objects(getter or false, unpack(args)))
+                return value(class.unwrap_method_args(getter or false, unpack(args)))
             end
             c[key] = t[key]
         end
@@ -89,20 +84,6 @@ function m.delegate(c, ...)
 
     t.__index = c
     return setmetatable(c, t)
-end
-
-function m.nequals(c1, c2)
-    if c1.__name == c2.__name then
-        return false
-    end
-    return true
-end
-
-function m.equals(c1, c2)
-    if c1.__name == c2.__name then
-        return true
-    end
-    return false
 end
 
 function class.new(name, opts)
@@ -113,11 +94,6 @@ function class.new(name, opts)
     for k, v in pairs(opts or {}) do
         self[k] = v
     end
-
-    self.delegate = m.delegate
-    self.equals = m.equals
-    self.nequals = m.nequals
-    self.get_name = m.name
 
     return self
 end
