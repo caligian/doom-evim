@@ -614,9 +614,6 @@ function buffer:split(direction, opts)
             height = math.ceil(height)
             height = height + 3
             vim.cmd(':resize ' .. height)
-        elseif direction == 'v' then
-            width = math.ceil(width)
-            vim.cmd(':vertical resize ' .. width)
         end
     end
 

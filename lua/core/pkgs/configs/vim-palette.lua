@@ -1,1 +1,1 @@
-vim.cmd [[ color solarized8 ]]
+vim.cmd [[ color solarized8_dark ]]
