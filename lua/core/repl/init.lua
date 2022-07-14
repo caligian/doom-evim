@@ -1,7 +1,7 @@
 local job = require('core.async.vim-job')
 local buffer = require('core.buffers')
 
-local repl = class('doom-repl', job)
+local repl = class('doom-repl')
 assoc(Doom, {'repl', 'status'}, {})
 repl.status = Doom.repl.status
 
@@ -20,58 +20,50 @@ end
 
 -- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
 -- @param s string If s is given then method is ignored and s is simply chansend()
-local function send_from_buffer(self, method)
+function repl:send(method)
     assert_type(method, 'string', 'boolean')
 
+    local pos = {}
+    method = method or '.'
+    method = strip(method)
+    local bufname = vim.fn.expand('%')
+
+    if match(bufname, '^tmp\\.', '^term://') or not self.shell and not vim.bo.filetype == self.filetype  then 
+        return 
+    end
+
     if not self.running then
-        local r = repl.new(self.name, self.opts)
-        if not r then return false end
-        merge(self, r)
+        self.job:start()
     end
-    
-    if r then
-        local pos = {}
-        method = method or '.'
-        method = strip(method)
-        local bufname = vim.fn.expand('%')
 
-        if match(bufname, '^tmp\\.', '^term://') or not self.shell and not vim.bo.filetype == self.filetype  then 
-            return 
+    local buf = buffer.find_by_bufnr(vim.fn.bufnr()) or buffer.new('%')
+    assoc(self, {'connected'}, {})
+    self.connected[buf.index] = buf
+    local curpos = buf:getcurpos()
+
+    if method == '.' then
+        if vim.v.count > 0 then
+            pos = { start_row=curpos.row, end_row=curpos.row + vim.v.count, }
+        else
+            pos = { start_row=curpos.row, end_row=curpos.row, }
         end
-
-        local buf = buffer.find_by_bufnr(vim.fn.bufnr()) or buffer('%')
-
-        self.connected_buffers[buf.index] = buf
-        local curpos = buf:getcurpos()
-
-        if method == '.' then
-            if vim.v.count > 0 then
-                pos = { start_row=curpos.row, end_row=curpos.row + vim.v.count, }
-            else
-                pos = { start_row=curpos.row, end_row=curpos.start_row, }
-            end
-        elseif method == '~.' then
-            pos = { start_row=0, end_row=curpos.row }
-        elseif method == '~' then
-            pos = { start_row=0, end_row=-1 }
-        elseif method == 'v' then
-            pos = buf:getvcurpos()
-        end
-
-        local s = buf:read(pos)
-        self:send(s)
-    else
-        to_stderr('No REPL found')
+    elseif method == '~.' then
+        pos = { start_row=0, end_row=curpos.row }
+    elseif method == '~' then
+        pos = { start_row=0, end_row=-1 }
+    elseif method == 'v' then
+        pos = buf:getvcurpos()
     end
+
+    local s = buf:read(pos)
+    self.job:send(s)
+
+    return s
 end
 
 function repl:__init(name, cmd, job_opts)
-    local j = job.new(name, cmd, job_opts)
-
-    if j then
-        merge(self, j)
-    end
-
+    self.job = job.new(name, cmd, job_opts)
+    self.connected = {}
     return self
 end
 
@@ -108,5 +100,22 @@ function repl.new(name, job_opts, ft, cmd)
 
     return self
 end
+
+function repl:start()
+    self.job:start()
+end
+
+function repl:kill(...)
+    self.job:kill(...)
+end
+
+function repl:delete()
+    self.job:delete()
+end
+
+function repl:show(...)
+    self.job:show(...)
+end
+
 
 return repl

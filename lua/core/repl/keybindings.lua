@@ -12,10 +12,7 @@ local function start_job(d, is_shell)
     end
 
     if j then
-        if not j.running then
-            j:start()
-        end
-
+        j:start()
         j:show(d)
     end
 end
@@ -28,9 +25,8 @@ local function kill_repl(is_shell)
         j = repl.find(vim.bo.filetype)
     end
 
-    if j and j.running then
-        j:delete()
-        to_stderr('Killed REPL: ' .. j.cmd)
+    if j then
+        j:kill()
     end
 end
 
@@ -45,7 +41,7 @@ local function send_string(method, is_shell)
     end
 
     if j then
-        j:send_from_buffer(method)
+        j:send(method)
     end
 end
 
