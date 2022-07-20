@@ -71,11 +71,11 @@ return {
             };
             hightlight = {
                 enable = true;
-                --            disable = {'lua'};
+                disable = {'lua'};
             };
             indent = {
                 enable = true;
-                --            disable = {'lua'};
+                disable = {'lua', 'ruby'};
             }
         };
     },
