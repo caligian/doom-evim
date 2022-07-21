@@ -18,11 +18,11 @@ vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
 vim.o.foldmethod = "indent"
-vim.o.guifont = 'Ubuntu Mono NF:h14'
 vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
+vim.g.guifont = 'Liberation Mono:h16'
 
 -- leader key
 vim.g.mapleader = " "
@@ -49,6 +49,25 @@ package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/init.lua'
 
 -- cpaths
 package.cpath = package.cpath .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.so'
+
+if vim.fn.exists('g:fvim_loaded') then
+    cmds = {
+        FVimCursorSmoothMove = 'v:true',
+        FVimCursorSmoothBlink = 'v:true',
+        FVimAntiAlias = 'v:true',
+        FVimFontHintLevel = 'full',
+        FVimFontSubPixel = 'v:true',
+        FVimFontAutoSnap = 'v:true',
+        FVimFontNormalWeight = '100',
+        FVimCursorSmoothMove = 'v:true',
+        FVimCursorSmoothMove = 'v:true',
+        FVimCursorSmoothMove = 'v:true',
+    }
+
+    for key, value in ipairs(cmds) do
+        vim.cmd(k .. ' ' .. v)
+    end
+end
 
 -- Load doom
 require('core')

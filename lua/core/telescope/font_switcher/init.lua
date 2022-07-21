@@ -7,16 +7,16 @@ local tf = assoc(Doom.telescope, 'font_switcher') or {
 
 function tf.get_fonts()
     include = include or tf.include
-    local fonts = {}
+    local fonts = tbl
 
     each(function(f)
         if match(f, include) then
             if match(f, ',') then
                 for _, i in ipairs(split(f, ',')) do
-                    push(fonts, i)
+                    fonts[i] = true
                 end
             else
-                push(fonts, f)
+               fonts[f] = true 
             end
         end
     end, system('fc-list -f "%{family}\n" :spacing=100 | uniq'))
@@ -50,7 +50,6 @@ function tf.new()
             mappings = function (height)
                 tf.set_font(sel.value, tonumber(height.value))
             end,
-            default_text = '13',
         }
         t:find()
 

@@ -1,6 +1,6 @@
-local class = {}
+local module = {}
 
-function class.unwrap_method_args(getter, ...)
+function module.unwrap(getter, ...)
     local args = {...}
 
     if getter and type(getter) == 'string' or type(getter) == 'number' then
@@ -29,7 +29,7 @@ function class.unwrap_method_args(getter, ...)
     return unpack(args)
 end
 
-function class.delegate(c, ...)
+function module.delegate(c, ...)
     assert(c)
 
     local methods = {...}
@@ -76,7 +76,7 @@ function class.delegate(c, ...)
                     end
                 end
 
-                return value(class.unwrap_method_args(getter or false, unpack(args)))
+                return value(module.unwrap(getter or false, unpack(args)))
             end
             c[key] = t[key]
         end
@@ -86,11 +86,10 @@ function class.delegate(c, ...)
     return setmetatable(c, t)
 end
 
-function class.new(name, opts)
+function module.new(name, opts)
     local self = {}
     self.index = self
     self.__name = name
-
     for k, v in pairs(opts or {}) do
         self[k] = v
     end
@@ -98,4 +97,4 @@ function class.new(name, opts)
     return self
 end
 
-return class
+return module

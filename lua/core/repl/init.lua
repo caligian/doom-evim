@@ -10,10 +10,10 @@ function repl.find(ft)
     return assoc(repl.status, ft .. '-repl')
 end
 
-function repl.delall()
+function repl.killall()
     for _, value in pairs(repl.status) do
         if value.running  then
-            value:delete()
+            value:kill()
         end
     end
 end

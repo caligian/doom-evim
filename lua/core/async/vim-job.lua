@@ -32,9 +32,7 @@ function job.new(name, cmd, opts)
 
     if existing_job then
         if opts.force and existing_job.running then
-            existing_job:delete()
-        elseif not existing_job.running then
-            existing_job:delete()
+            existing_job:kill()
         elseif existing_job.running then
             return existing_job
         end
@@ -69,15 +67,9 @@ function job:kill()
     vim.fn.jobstop(self.id)
 end
 
-function job:delete()
-    self:kill()
-    Doom.async.job.status[self.name] = nil
-end
-
 function job:show(direction)
     if not self.buffer:exists() then
         to_stderr('REPL was killed by user: ' .. self.cmd)
-        self:delete()
     else
         if self.running then
             self.buffer:split(direction)
@@ -94,17 +86,6 @@ function job.killall()
         end
     end
 end
-
-function job.delall()
-    for key, value in pairs(job.status) do
-        if value.running then
-            value:delete()
-        end
-    end
-end
-
-job.deleteall = job.delall
-job.delete_all = job.deleteall
 
 function job:send(s)
     if not self.running then return false end

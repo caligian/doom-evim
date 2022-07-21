@@ -1,6 +1,6 @@
 return {
     ui = {
-        theme = 'everforest',
+        theme = 'base16-gruvbox-dark-hard',
     },
 
     langs = {

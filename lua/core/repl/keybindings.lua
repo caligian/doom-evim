@@ -65,6 +65,6 @@ kbd.new('n', '<localleader>,v', partial(start_job, 'v'), false, 'Start REPL for 
 kbd.new('n', '<localleader>,t', partial(start_job, 't'), false, 'Start REPL for buffer in tab'):enable()
 kbd.new('n', '<localleader>,f', partial(start_job, 'f'), false, 'Start REPL for buffer in floating win'):enable()
 
-kbd.new('n', '<localleader>,K', repl.delall, false, 'Kill all REPLs'):enable()
+kbd.new('n', '<localleader>,K', repl.killall, false, 'Kill all REPLs'):enable()
 kbd.new('n', '<localleader>,k', kill_repl, false, 'Kill buffer REPL'):enable()
 kbd.new('n', '<localleader>tk', partial(kill_repl, true), false, 'Kill shell REPL'):enable()

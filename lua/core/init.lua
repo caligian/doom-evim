@@ -53,5 +53,7 @@ require('core.telescope.au')
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
 pkgs.load_plugins()
 
+vim.cmd('colorscheme ' .. Doom.ui.theme)
+
 -- Load post-initialization user config
 if path.exists(with_user_config_path('lua', 'user', 'config.lua')) then require('user.config') end
