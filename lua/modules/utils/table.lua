@@ -228,6 +228,10 @@ tu.nth = function (k, ...)
     return params
 end
 
+function tu.nth_(t, k, ...)
+    return tu.nth(k, t, ...)
+end
+
 tu.merge = function(dicta, dictb, depth, f)
     depth = depth or -1
     local cached = {}
@@ -399,11 +403,13 @@ tu.assoc = function (dict, ks, create, transform)
 end
 
 function tu.update(dict, ks, replacement)
-    return tu.assoc(dict, ks, replacement, function(...) return replacement end)
+    tu.assoc(dict, ks, replacement, function(...) return replacement end)
+    return dict
 end
 
 function tu.remove(dict, ks)
-    return tu.assoc(dict, ks, false, 'd')
+    tu.assoc(dict, ks, false, 'd')
+    return dict
 end
 
 -- if table is passed then it will be sent to tu.assoc
@@ -492,6 +498,14 @@ tu.map = function (f, ...)
     return out
 end
 
+tu.map_ = function (t, f, ...)
+    return tu.map(f, t, ...)
+end
+
+tu.imap_ = function (t, f, ...)
+    return tu.imap(f, t, ...)
+end
+
 tu.each = function (f, ...)
     local arrs = {...}
     local max_len = {}
@@ -507,6 +521,10 @@ tu.each = function (f, ...)
     end
 end
 
+function tu.each_(t, f, ...)
+    return tu.each(f, t, ...)
+end
+
 tu.reduce = function (f, arr, init)
     init = init or false
 
@@ -515,6 +533,10 @@ tu.reduce = function (f, arr, init)
     end
 
     return init
+end
+
+function tu.reduce_(arr, f, init)
+    return tu.reduce(f, arr, init)
 end
 
 tu.filter = function (f, t)
@@ -533,6 +555,10 @@ tu.filter = function (f, t)
     end
 
     return correct
+end
+
+function tu.filter_(t, f)
+    return tu.filter(f, t)
 end
 
 -- iterator operations
@@ -635,6 +661,16 @@ tu.some = function(t)
         return e ~= nil and e ~= false
     end, v)) > 0
 end
+
+tu.blank_p = function (obj)
+    if not type(obj) == 'string' or type(obj) == 'table' then
+        return
+    end
+
+    return #obj == 0
+end
+
+tu.is_blank = tu.blank_p
 
 tu.union = function(t1, t2)
     assert(t1 ~= nil)

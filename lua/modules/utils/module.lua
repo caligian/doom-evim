@@ -11,29 +11,34 @@ local function readonly_table(t)
     })
 end
 
+local function unwrap(getter)
+    if getter == true then
+        return function (self)
+            return self
+        end
+    elseif getter == false then
+        return false
+    elseif not u.callable(getter) then
+        return function (self)
+            return self.__vars[getter]
+        end
+    else
+        return function (self)
+            return getter(self)
+        end
+    end
+end
+
 -- If getter is true then simply return partial(callback(self, ...))
 -- If getter is false then return callback(...)
-local function unwrap_for_method(self, getter, callback)
+local function unwrap_for_method(getter, callback)
     assert(getter ~= nil)
     assert(callback)
     pu.assert_type(getter, 'string', 'callable', 'number', 'boolean')
 
-    local f = callback
-    if getter == true then
-        return function (...)
-            return f(self, ...)
-        end
-    elseif getter == false then
-        return callback
-    elseif not u.callable(getter) then
-        getter = self.__vars[getter]
-        return function (...)
-            return f(getter, ...)
-        end
-    else
-        return function (...)
-            return f(getter(self), ...)
-        end
+    return function (self, ...)
+        local out = unwrap(getter)(self)
+        return callback(unwrap(getter)(self), ...)
     end
 end
 
@@ -53,35 +58,71 @@ function module.on_operator(self, op, callback, getter)
         ['^'] = '__pow',
         ['%'] = '__mod',
         ['..'] = '__concat',
+        ['s'] = '__tostring',
     }
 
     if not operators[op] then
         error('Invalid operator provided: ' .. op)
     end
+    op = operators[op]
 
-    local lhs, rhs = false, false
-    if u.table_p(callback) and not u.callable(callback) then
-        assert(#callback == 2, 'Need a callback for when self is on LHS and when self on RHS')
-        pu.assert_callable(callback[1])
-        pu.assert_callable(callback[2])
-        lhs = callback[1]
-        rhs = callback[2]
-    else
-        lhs = callback
-    end
-
-    callback = function (cls, cls1)
-        if cls == self then
-            return lhs(cls, cls1)
-        elseif cls1 == self and rhs then
-            return rhs(cls1, cls)
+    if op ~= '__tostring' then
+        local lhs, rhs = false, false
+        if u.table_p(callback) and not u.callable(callback) then
+            assert(#callback == 2, 'Need a callback for when self is on LHS and when self on RHS')
+            pu.assert_callable(callback[1])
+            pu.assert_callable(callback[2])
+            lhs = callback[1]
+            rhs = callback[2]
+        else
+            lhs = callback
         end
+
+        callback = function (cls, cls1)
+            local l,r,f = false, false, false
+
+            if type(cls) == 'table' and type(cls1) == 'table' then
+                local m, n = getmetatable(cls), getmetatable(cls1)
+                if m and n and m.__name == n.__name then
+                    if cls == self then
+                        l = unwrap(getter or false)(cls)
+                        r = unwrap(getter or false)(cls1)
+                        f = lhs
+                    else
+                        r = unwrap(getter or false)(cls)
+                        l = unwrap(getter or false)(cls1)
+                        f = rhs or lhs
+                    end
+                elseif cls == self then
+                    l = cls
+                    r = cls1
+                    f = lhs
+                else
+                    l = cls1
+                    r = cls
+                    f = lhs or rhs
+                end
+            elseif cls == self or cls1 == self then
+                if cls == self then
+                    l = cls
+                    r = cls1
+                    f = unwrap_for_method(getter, lhs)
+                else
+                    l = cls1
+                    r = cls
+                    f = unwrap_for_method(getter, rhs)
+                end
+            end
+
+            return f(l, r)
+        end
+    else
+        callback = unwrap_for_method(getter, callback)
     end
 
     getter = getter or false
-    callback = unwrap_for_method(self, getter, callback)
     local mt = getmetatable(self)
-    mt[operators[op]] = callback
+    mt[op] = callback
 
     return callback
 end
@@ -132,7 +173,7 @@ function module.define_method(self, name, callback, getter)
     pu.assert_callable(callback)
 
     getter = getter or false
-    callback = unwrap_for_method(self, getter, callback)
+    callback = unwrap_for_method(getter, callback)
     self.__methods[name] = callback
 
     return callback
@@ -238,8 +279,8 @@ function module.new(name, vars, methods)
     return setmetatable(self, {
         __name = name,
         __index = index,
-        __newindex = function (...)
-            error('Attempting to edit a read-only table')
+        __newindex = function (cls, k, v)
+            cls:set_instance_variable(k, v)
         end,
     })
 end
