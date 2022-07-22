@@ -215,14 +215,17 @@ local function new(name, vars, methods)
     self['new'] = nil
     local index = function (cls, k)
         local is_v = module.instance_variable_get(cls, k)
-        local is_c = module.const_get(cls, k)
-        local is_m = module.instance_method_get(cls, k)
+        if is_v then
+            return is_v
+        end
 
+        local is_c = module.const_get(cls, k)
         if is_c then
             return is_c
-        elseif is_v then
-            return is_v
-        elseif is_m then
+        end
+
+        local is_m = module.instance_method_get(cls, k)
+        if is_m then
             return is_m
         end
     end
