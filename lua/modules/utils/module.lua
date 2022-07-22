@@ -146,20 +146,20 @@ function module.include(self, methods, getter)
     end
 end
 
-function module.instance_variable_set(self, key, value)
+function module.set_instance_variable(self, key, value)
     self.__vars[key] = value
 end
 
-function module.const_set(self, key, value)
+function module.set_constant(self, key, value)
     key = key:upper()
     self.__constants[key] = value
 end
 
-function module.const_get(self, key)
+function module.get_constant(self, key)
     return self.__constants[key:upper()]
 end
 
-function module.instance_variable_get(self, key)
+function module.get_instance_variable(self, key)
     return self.__vars[key]
 end
 
@@ -171,11 +171,11 @@ function module.instance_methods(self)
     return tu.keys(self.__methods)
 end
 
-function module.instance_method_get(self, name)
+function module.get_instance_method(self, name)
     return self.__methods[name]
 end
 
-function module.bound_instance_method_get(self, name)
+function module.get_bound_instance_method(self, name)
     local f = self.__methods[name]
     if f then
         return function (...)
@@ -184,15 +184,21 @@ function module.bound_instance_method_get(self, name)
     end
 end
 
-local function new(name, vars, methods)
-    local self = { __vars = {}, __methods = module, __constants = {} }
+function module.new(name, vars, methods)
+    local self = { __vars = {}, __methods = {}, __constants = {} }
     vars = vars or {}
     methods = methods or {}
+
+    for key, value in pairs(module) do
+        if key ~= 'new' then
+            self.__methods[key] = value
+        end
+    end
 
     if vars.constants then
         pu.assert_t(vars.constants)
         for key, value in pairs(vars.constants) do
-            module.const_set(self, key, value)
+            module.set_constant(self, key, value)
         end
     end
 
@@ -201,7 +207,7 @@ local function new(name, vars, methods)
     if vars.vars then
         pu.assert_t(vars.vars)
         for key, value in pairs(vars.vars) do
-            module.instance_variable_set(self, key, value)
+            module.set_instance_variable(self, key, value)
         end
     end
 
@@ -213,17 +219,17 @@ local function new(name, vars, methods)
     end
 
     local index = function (cls, k)
-        local is_v = module.instance_variable_get(cls, k)
+        local is_v = module.get_instance_variable(cls, k)
         if is_v then
             return is_v
         end
 
-        local is_c = module.const_get(cls, k)
+        local is_c = module.get_constant(cls, k)
         if is_c then
             return is_c
         end
 
-        local is_m = module.instance_method_get(cls, k)
+        local is_m = module.get_instance_method(cls, k)
         if is_m then
             return is_m
         end
@@ -238,6 +244,4 @@ local function new(name, vars, methods)
     })
 end
 
-return setmetatable({}, {
-    __call = new;
-})
+return module
