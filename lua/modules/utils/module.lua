@@ -212,7 +212,6 @@ local function new(name, vars, methods)
         end
     end
 
-    self['new'] = nil
     local index = function (cls, k)
         local is_v = module.instance_variable_get(cls, k)
         if is_v then
