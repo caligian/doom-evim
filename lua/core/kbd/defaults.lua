@@ -35,7 +35,7 @@ keybindings.misc = {
         end
 
         if out then
-            to_stderr(out)
+            echo(out)
         end
     end, attribs, 'Source buffer';
     }
@@ -44,7 +44,6 @@ keybindings.misc = {
 keybindings.files = {
     {'n', '<leader>fs', ':w<CR>', attribs, 'Save file'};
 }
-
 
 keybindings.buffers = {
     {'n', '<leader>bR', ":if &modifiable == 1 <bar> set nomodifiable <bar> else <bar> set modifiable <bar> endif <CR>", attribs, 'Make current buffer readonly'};

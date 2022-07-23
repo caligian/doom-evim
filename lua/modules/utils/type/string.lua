@@ -1,24 +1,31 @@
 local tu = require 'modules.utils.table'
+local pu = require 'modules.utils.param'
+local su = require 'modules.utils.string'
+local regex = require 'rex_pcre2'
 local u = require 'modules.utils.common'
 local module = require 'modules.utils.module'
 local yaml = require 'yaml'
 local methods = {}
-local hash = {}
-
+local str = {}
 local exclude = {
     to_dict = true,
     list_to_dict = true,
     arr_to_dict = true,
-    _nth = true,
-    _map = true,
-    _filter = true,
-    _each = true,
-    _reduce = true,
+
+    nth_ = true,
+    map_ = true,
+    imap_ = true,
+    filter_ = true,
+    each_ = true,
+    reduce_ = true,
+
     nth = true,
     map = true,
+    imap = true,
     filter = true,
     each = true,
     reduce = true,
+
     vec = true,
     range = true,
     to_callable = true
@@ -62,17 +69,38 @@ methods.jload = u.jload
 methods.jspit = spit('jspit')
 methods.jslurp = slurp('jslurp')
 
-function hash.new(t)
-    local m = module.new('methods', {vars={value=t}})
-    m:include(methods, 'value')
+for k, v in pairs(methods) do
+    if not k:match('split_pattern') then
+        methods[k] = function (obj, ...)
+            obj = vim.split(obj.value, obj.split_pattern)
+            local out_t = v(obj, ...)
+            return table.concat(out_t, '')
+        end
+    end
+end
+
+function str.new(s, pat)
+    local m = module.new('methods', {vars={value=s, split_pattern=''}})
+    m:include(methods)
+    m:include(su, 'value')
     m:on_operator('s', u.dump, 'value')
-    m:on_operator('+', {methods.push, methods.unshift}, 'value')
-    m:on_operator('-', {methods.pop, methods.shift}, 'value')
-    m:on_operator('..', methods.extend, 'value')
-    m:on_operator('^', methods.filter, 'value')
-    m:on_operator('*', methods.map, 'value')
-    m:on_operator('%', methods.assoc, 'value')
+    m:on_operator('+', {methods.push, methods.unshift})
+    m:on_operator('^', methods.filter)
+    m:on_operator('*', methods.map)
+
+    local sed = function (a, b)
+        return su.sed(a, {b, '', 1})
+    end
+
+    m:on_operator('-', {sed, function (obj, s)
+        return sed(s, obj)
+    end}, 'value')
+
+    m:on_operator('%', function (obj, t)
+        obj = table.concat(vim.split(obj.value, ''), '')
+        return su.sed(obj, t)
+    end, 'value')
     return m
 end
 
-return hash
+return str

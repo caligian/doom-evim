@@ -23,7 +23,7 @@ str.rstrip = str.rtrim
 function str.sed(s, pat_sub, ...)
     assert(s)
     assert(utils.table_p(pat_sub))
-    assert(#pat_sub == 2)
+    assert(#pat_sub >= 2)
 
     local pat, sub, times = unpack(pat_sub)
     local rest = {...}

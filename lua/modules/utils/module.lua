@@ -37,8 +37,11 @@ local function unwrap_for_method(getter, callback)
     pu.assert_type(getter, 'string', 'callable', 'number', 'boolean')
 
     return function (self, ...)
-        local out = unwrap(getter)(self)
-        return callback(unwrap(getter)(self), ...)
+        if not getter then
+            return callback(self, ...)
+        else
+            return callback(unwrap(getter)(self), ...)
+        end
     end
 end
 
