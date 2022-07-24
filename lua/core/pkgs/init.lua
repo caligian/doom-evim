@@ -91,8 +91,8 @@ local function get_pkgs_loader_cmd(plugin, opt)
     assert(plugin)
     assert(opt ~= nil)
 
-    assert_type(plugin, 'string', 'table')
-    assert_bool(opt)
+    claim(plugin, 'string', 'table')
+    claim.boolean(opt)
 
     if boolean_p(config) then config = false end
 
@@ -124,20 +124,27 @@ end
 local function parse_specs(spec, opt)
     assert(spec)
 
-    assert_type(spec, 'string', 'table')
+    claim(spec, 'string', 'table')
     spec = to_list(spec)
 
-    assert_s(spec[1])
+    claim.string(spec[1])
 
     if Doom.pkgs.loaded[spec[1]] then return spec end
 
-    assert_type(spec.keys, 'table', 'string')
-    assert_type(spec.pattern, 'table', 'string')
-    assert_type(spec.rocks, 'table', 'string')
-    assert_type(spec.event, 'table', 'string')
+    if spec.keys then
+        claim(spec.keys, 'table', 'string')
+    end
+    if spec.rocks then
+        claim(spec.rocks, 'table', 'string')
+    end
+    if spec.events then
+        claim(spec.events, 'table', 'string')
+    end
+    if spec.pattern then
+        claim(spec.pattern, 'table', 'string')
+    end
 
     if opt then spec.opt = true end
-
     local keys = spec.keys
     local pattern = spec.pattern
     local event = spec.event
@@ -150,7 +157,7 @@ local function parse_specs(spec, opt)
         for _, i in ipairs(to_list(keys)) do
             local _mode, _keys, _f, _attribs, _doc, cmd = false, false, false, false, ''
 
-            assert_type(i, 'string', 'table')
+            claim(i, 'string', 'table')
 
             if str_p(i) then
                 _mode = 'n'

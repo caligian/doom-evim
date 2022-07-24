@@ -4,7 +4,7 @@ local misc = {}
 function misc.source_buffer(bufnr, opts)
     opts = opts or {}
     bufnr = bufnr or vim.fn.bufnr()
-    assert_n(bufnr)
+    claim.number(bufnr)
     assert(vim.fn.bufnr(bufnr) ~= -1, 'Invalid bufnr provided')
 
     vim.cmd(':buffer ' .. bufnr)

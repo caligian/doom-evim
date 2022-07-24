@@ -14,13 +14,14 @@ keybindings.misc = {
     {'n', '<leader>fv', function (bufnr, opts)
         opts = opts or {}
         bufnr = bufnr or vim.fn.bufnr()
-        assert_n(bufnr)
+        claim.number(bufnr)
         assert(vim.fn.bufnr(bufnr) ~= -1, 'Invalid bufnr provided')
 
         vim.cmd(':buffer ' .. bufnr)
 
         local ft = vim.bo.filetype
         local cmd = assoc(Doom.langs, {ft, 'compile'})
+
         if not cmd then return false end
         local fullpath = vim.fn.expand('%:p')
         local is_nvim_buffer = match(fullpath, vim.fn.stdpath('config') .. '.+(lua|vim)$')
@@ -29,13 +30,14 @@ keybindings.misc = {
         if not is_nvim_buffer then
             out = vim.fn.system(cmd .. ' ' .. fullpath)
         elseif is_nvim_buffer == 'lua' then
-            out = wait(vcmd, {':luafile ' .. fullpath, true}, {sched=true, timeout=1, tries=10, inc=2}) 
+            -- out = wait(vcmd, {':luafile ' .. fullpath, true}, {sched=true, timeout=1, tries=10, inc=2}) 
+            out = vcmd(':luafile %s', fullpath)
         elseif is_nvim_buffer == 'vim' then
             out = vcmd(':source %s', fullpath) 
         end
 
         if out then
-            echo(out)
+            echo("------\n" .. out)
         end
     end, attribs, 'Source buffer';
     }
@@ -55,13 +57,14 @@ keybindings.buffers = {
 }
 
 update(Doom.kbd, 'defaults', keybindings)
+Doom.kbd.loaded = false
 
 if not Doom.kbd.loaded then
     if not overrides then
         local overrides_p = with_user_config_path('lua', 'user', 'kbd', 'defaults.lua')
         if path.exists(overrides_p) then
             overrides = require('user.kbd.defaults')
-            assert_t(overrides)
+            claim.table(overrides)
         end
     end
 

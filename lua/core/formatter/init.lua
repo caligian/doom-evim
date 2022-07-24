@@ -4,17 +4,15 @@ function format.format_buffer(ft, bufnr)
     ft = vim.bo.filetype or ft
     bufnr = bufnr or vim.fn.bufnr()
 
-    assert_n(bufnr)
-    :xa
-    quit
-    assert_s(ft)
+    claim.number(bufnr)
+    claim.string(ft)
 
     local f = assoc(Doom.langs, {ft, "format"})
     if not f then
         error("No formatter defined for current buffer ft: " .. ft)
     end
 
-    assert_type(f, "string", "table")
+    claim(f, "string", "table")
 
     local manual = false
     local cmd = false

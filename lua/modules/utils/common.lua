@@ -133,7 +133,8 @@ utils.dump = function (...)
         dumped[#dumped+1] = type(value) == 'string' and value or vim.inspect(value)
     end
 
-    dumped = #dumped == 1 and first(dumped) or dumped
+    dumped = table.concat(dumped, "\n"):gsub("\n$", '')
+
     return dumped
 end
 

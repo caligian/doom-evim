@@ -46,8 +46,7 @@ function async:close(code, signal)
 end
 
 function async.new(name, cmd, opts)
-    assert(name, 'No ID for job')
-    assert_s(name)
+    claim.string(name)
 
     opts = opts or {}
     local existing_job = assoc(Doom.async.luv_job, name)
@@ -64,7 +63,7 @@ function async.new(name, cmd, opts)
     local stderr, on_stderr
 
     assert(cmd)
-    assert_type(cmd, 'string', 'table')
+    claim(cmd, 'string', 'table')
 
     if table_p(cmd) then
         args = slice(copy(cmd), 2, -1)
@@ -92,23 +91,23 @@ function async.new(name, cmd, opts)
     env = {os.getenv('PATH'), _env}
 
     if opts.stderr then
-        assert_callable(opts.on_stderr)
+        claim.callable(opts.on_stderr)
         on_stderr = opts.on_stderr
     end
     
     if opts.stdout then
-        assert_callable(opts.on_stdout)
+        claim.callable(opts.on_stdout)
         on_stdout = opts.on_stdout
     end
 
     if opts.stdin then
-        assert_callable(opts.on_stdin)
+        claim.callable(opts.on_stdin)
         on_stdin = opts.on_stdin
     end
 
-    assert_t(opts.stdio)
-    assert_callable(opts.on_exit)
-    assert_t(opts.signals)
+    claim.table(opts.stdio)
+    claim.callable(opts.on_exit)
+    claim.table(opts.signals)
 
     local self_opts = {
         name = name;
@@ -238,7 +237,7 @@ function async:start()
 end
 
 function async:write(s)
-    assert_type(s, 'string', 'table')
+    claim(s, 'string', 'table')
     assert(self.accepts_stdin, 'Job does not accept stdin')
 
     uv.write(self.stdio[1], s)

@@ -13,6 +13,8 @@ function ab:__init(ft, cmd)
 end
 
 function ab.new(opts)
+    claim.table(opts)
+
     opts = opts or {}
     ft = opts.ft or vim.bo.filetype
     local obj = assoc(ab.status, ft)
@@ -32,6 +34,8 @@ function ab.new(opts)
 end
 
 function ab:add_buffer(opts)
+    claim.table(opts)
+
     opts = opts or {}
     local fn = false
     opts.bufnr = opts.bufnr or vim.fn.bufnr()
@@ -69,7 +73,7 @@ function ab:cleanup()
 end
 
 function ab:show_output(opts)
-    assert_t(opts)
+    claim.table(opts)
     opts = opts or {}
     opts.direction = opts.direction or opts.d or 's'
     opts.opts = opts.opts or {}

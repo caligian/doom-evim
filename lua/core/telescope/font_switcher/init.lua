@@ -1,13 +1,14 @@
 local ts = require('core.telescope')
+
 local tf = assoc(Doom.telescope, 'font_switcher') or {
-    include = '(Nerd Font|NF|Mono)';
+    include = '[a-z]';
     keys = '<leader>hf';
     default_height = 13;
 }
 
-function tf.get_fonts()
+function tf.get_fonts(include)
     include = include or tf.include
-    local fonts = tbl
+    local fonts = {}
 
     each(function(f)
         if match(f, include) then
@@ -15,27 +16,25 @@ function tf.get_fonts()
                 for _, i in ipairs(split(f, ',')) do
                     fonts[i] = true
                 end
-            else
+            elseif #f > 0 then
                fonts[f] = true 
             end
         end
     end, system('fc-list -f "%{family}\n" :spacing=100 | uniq'))
 
-    return fonts
+    return keys(fonts)
 end
 
 function tf.set_font(font, height)
-    assert(font)
-    assert(height)
-    assert_n(height)
-    assert_s(font)
+    claim.opt_number(height)
+    claim.string(font)
 
     height = height or tf.default_height 
     assert(match(height, '^[0-9]+$'))
     assert(height, 'No default height for font provided')
 
     height = tonumber(height)
-    assert(height > 7)
+    assert(height > 7, 'Height is too small')
 
     vim.o.guifont = font .. ':h' .. height
     return vim.o.guifont

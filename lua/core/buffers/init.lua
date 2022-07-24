@@ -9,7 +9,7 @@ buffer.status = Doom.buffer.status
 
 -- Class methods
 function buffer.find_by_bufnr(bufnr)
-    assert_num(bufnr)
+    claim.number(bufnr)
 
     if vim.fn.bufexists(bufnr) == 0 then return false end
     if Doom.buffer.status[bufnr] then return Doom.buffer.status[bufnr] end
@@ -17,19 +17,19 @@ function buffer.find_by_bufnr(bufnr)
 end
 
 function buffer.find_by_winnr(winnr)
-    assert_num(bufnr)
+    claim.number(bufnr)
 
     return buffer.find_by_bufnr(vim.fn.winbufnr(winnr))
 end
 
 function buffer.find_by_winid(id)
-    assert_num(id)
+    claim.number(id)
 
     return buffer.find_by_bufnr(vim.fn.winbufnr(vim.fn.win_id2win(id)))
 end
 
 function buffer.find_by_bufname(expr)
-    assert_type(expr, 'string', 'number')
+    claim(expr, 'string', 'number')
 
     expr = trim(expr)
 
@@ -44,25 +44,25 @@ function buffer.find_by_bufname(expr)
 end
 
 function buffer.hide_by_winid(id)
-    assert_num(id)
+    claim.number(id)
 
     vim.api.nvim_win_close(id, true)
 end
 
 function buffer.hide_by_winnr(winnr)
-    assert_num(winnr)
+    claim.number(winnr)
 
     buffer.hide_by_winid(vim.fn.win_getid(winnr))
 end
 
 function buffer.focus_by_winid(id)
-    assert_num(id)
+    claim.number(id)
 
     return 0 ~= vim.fn.win_gotoid(id)
 end
 
 function buffer.focus_by_winnr(winnr)
-    assert_num(winnr)
+    claim.number(winnr)
 
     return 0 ~= vim.fn.win_gotoid(vim.fn.win_getid(winnr))
 end
@@ -141,7 +141,7 @@ function buffer:equals(buf2)
         assert(buf2:exists(), exception.bufnr_not_valid(buf2.index))
         return buf1.index == buf2.index
     else
-        assert_num(buf2.index)
+        claim.number(buf2.index)
         return buf1.index == buf2
     end
 end
@@ -154,7 +154,7 @@ function buffer:nequals(buf2)
         assert(buf2:exists(), exception.bufnr_not_valid(buf2.index))
         return buf1.index == buf2.index
     else
-        assert_num(buf2.index)
+        claim.number(buf2.index)
         return buf1.index == buf2
     end
 end
@@ -164,9 +164,9 @@ buffer.__eq = buffer.equals
 buffer.__neq = buffer.nequals
 
 function buffer:wincall(f, ...)
-    assert(self:exists())
-    assert(f)
-    assert_s(f)
+    assert(self:exists(), exception.bufname_not_valid(self.index))
+
+    claim.string(f)
     
     local api = vim.api[f]
     local vimfn = vim.fn[f]
@@ -185,8 +185,8 @@ end
 
 function buffer:call(f, ...)
     assert(self:exists())
-    assert(f)
-    assert_s(f)
+
+    claim.string(f)
     
     local api = vim.api[f]
     local vimfn = vim.fn[f]
@@ -200,9 +200,8 @@ function buffer:call(f, ...)
 end
 
 function buffer:__init(name, scratch)
-    assert(name)
-    assert_s(name)
-    assert_boolean(scratch)
+    claim.string(name)
+    claim.boolean(scratch)
 
     self.name = name
     self.scratch = scratch and true or false
@@ -397,10 +396,10 @@ end
 function buffer:put(s, prepend, _type, _follow)
     assert(self:exists(), exception.bufnr_not_valid(self.index))
 
-    assert_type(s, 'table', 'string')
-    assert_s(prepend)
-    assert_s(_type)
-    assert_s(_follow)
+    claim(s, 'table', 'string')
+    claim.string(prepend)
+    claim.string(_type)
+    claim.string(_follow)
 
     local bufnr = self.index
     prepend = prepend and 'P' or 'p'
@@ -527,11 +526,11 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
     assert(doc, exception.no_doc())
     assert(hook, exception.no_f())
 
-    assert_type(doc, 'string')
-    assert_t(win_opts)
-    assert_s(comment)
-    assert_s(doc)
-    assert_type(hook, 'callable', 'string')
+    claim(doc, 'string')
+    claim.table(win_opts)
+    claim.string(comment)
+    claim.string(doc)
+    claim(hook, 'callable', 'string')
 
     local text = self:read(pos)
     comment = comment or '#'
@@ -552,14 +551,14 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
 end
 
 function buffer:split(direction, opts)
-    assert_type(direction, 'string', 'boolean')
+    claim(direction, 'string', 'boolean')
 
     direction = direction or 's'
     direction = strip(direction)
     direction = match('^([svtf])', direction)
     opts = opts or {}
 
-    assert_t(opts)
+    claim.table(opts)
 
     local cmd = ''
 
@@ -591,10 +590,9 @@ function buffer:split(direction, opts)
         width = width == -1 and 30 or width
         height = height == -1 and 20 or height
     else
-        assert_t(opts.resize)
+        claim.table(opts.resize)
         assert(opts.resize.height or opts.resize.width)
-        assert_n(opts.resize.height)
-        assert_n(opts.resize.width)
+        claim.number(opts.resize.width)
 
         height = opts.resize.height
         width = opts.resize.width
@@ -629,7 +627,7 @@ function buffer:vsplit(opts)
 end
 
 function buffer:save(where)
-    assert_s(where)
+    claim.string(where)
 
     if not where then where = self.name end
 

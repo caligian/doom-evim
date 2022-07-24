@@ -1,9 +1,148 @@
 local class = require('classy')
 local u = require('modules.utils.common')
 local tu = require('modules.utils.table')
-local fu = require('modules.utils.function')
-local regex = require('rex_pcre2')
 local param = {}
+
+local claim = function (test, msg)
+    assert(test ~= nil)
+
+    if type(test) == 'function' then
+        assert(test(), msg)
+    else
+        assert(test, msg)
+    end
+end
+
+param.claim = {
+    ['function'] = function (obj)
+        claim(type(obj) == 'function', 'Object is not a function: ' .. u.dump(obj))
+    end;
+
+    number = function (obj)
+        claim(type(obj) == 'number', 'Object is not a number: ' .. u.dump(obj))
+    end,
+
+    boolean = function (obj)
+        claim(type(obj) == 'boolean', 'Object is not a boolean: ' .. u.dump(obj))
+    end,
+
+    table = function (obj)
+        claim(type(obj) == 'table', 'Object is not a table: ' .. u.dump(obj))
+    end,
+
+    userdata = function (obj)
+        claim(type(obj) == 'userdata', 'Object is not userdata: ' .. u.dump(obj))
+    end,
+
+    callable = function (obj)
+        claim(function ()
+            if type(obj) ~= 'table' and type(obj) ~= 'function' then
+                return false
+            end
+
+            if type(obj) == 'table' then
+                local mt = getmetatable(obj)
+                if mt and mt.__call then
+                    return true
+                end
+                return false
+            end
+
+            return true
+        end, 'Object is not a callable: ' .. u.dump(obj))
+    end,
+
+    string = function (obj)
+        claim(function ()
+            return type(obj) == 'string'
+        end, 'Object is not a string: ' .. u.dump(obj))
+    end,
+}
+
+local function post_indexing(k, obj, validator)
+    local is_opt = false
+    if k:match('^opt_') then
+        is_opt = true
+        k = k:gsub('^opt_', '')
+    end
+
+    if is_opt and obj == nil then
+        return
+    end
+
+    if param.claim[k] and not validator then
+        return rawget(param.claim, k)(obj)
+    end
+
+    if not type(obj) == 'table' then
+        error("Object provided is not a module/class table and not a primitive datatype either: " .. u.dump(obj))
+    end
+
+    if not validator then
+        local mt = getmetatable(obj)
+        if not mt then
+            error("Object is a table but does have a metatable defined: " .. u.dump(obj))
+        end
+
+        if not mt.__name == k then
+            error("Object is not of type: " .. k)
+        end
+    else
+        param.claim.callable(validator)
+        claim(function() return validator(obj) end, 'Object validator returned false for object: ' .. u.dump(obj))
+    end
+
+    return obj
+end
+
+param.claim = setmetatable(param.claim, {
+    __newindex = function (self, k, validator)
+        rawset(self, k, function (obj)
+            return post_indexing(k, obj, validator)
+        end)
+    end;
+
+    __index = function (self, k)
+        return function (obj, validator)
+            return post_indexing(k, obj, validator)
+        end
+    end;
+
+    __call = function (self, obj, ...)
+        local args = {...}
+        local n = #args
+        local failed = 0
+
+        claim(n > 0, 'No objects provided for type checking')
+
+        for _, k in ipairs({...}) do
+            local cls = rawget(self, k)
+            claim(cls ~= nil, 'Invalid datatype provided: ' .. k)
+            local success = pcall(cls, obj)
+            if not success then
+                failed = failed + 1
+            else
+                break
+            end
+        end
+
+        if n == failed then
+            error('Could not match any datatype for object: ' .. u.dump(obj))
+        end
+    end
+})
+
+for k, v in pairs(param.claim) do
+    param['claim_' .. k] = v
+end
+
+param.claim_s = param.claim_string
+param.claim_str = param.claim_string
+param.claim_b = param.claim_boolean
+param.claim_bool = param.claim_boolean
+param.claim_h = param.claim_table
+param.claim_t = param.claim_table
+param.claim_hash = param.claim_hash
 
 function param.typeof(obj)
     local t = type(obj)
@@ -19,118 +158,31 @@ function param.typeof(obj)
     end
 end
 
-function param.assert_boolean(b)
-    if b ~= nil then
-        assert(b == true or b == false, u.sprintf('Param `%s` is not a boolean', b))
-    end
+function param.claim_equal(a, b)
+    claim(a == b, u.sprintf('Param `%s` is not equal to param `%s`', a, b))
 end
 
-param.assert_bool = param.assert_boolean
-param.assert_b = param.assert_bool
-
-function param.assert_s(s)
-    if s ~= nil then
-        assert(u.str_p(s), u.sprintf('Param `%s` is not a string', s))
-    end
+function param.claim_type_equal(a, b)
+    claim(param.typeof(a) == param.typeof(b), u.sprintf('Param `%s` is not equal to param `%s`', a, b))
 end
 
-param.assert_string = param.assert_s
-param.assert_str = param.assert_s
+param.claim_eql = param.claim_equal
+param.claim_type_eql = param.claim_type_equal
 
-function param.assert_num(num)
-    if num ~= nil then
-        assert(u.num_p(num), u.sprintf('Param `%s` is not a number', num))
-    end
-end
-
-param.assert_number = param.assert_num
-param.assert_n = param.assert_num
-
-function param.assert_t(t)
-    if t ~= nil then
-        assert(u.table_p(t), u.sprintf('Param `%s` is not a table', t))
-    end
-end
-
-param.assert_h = param.assert_t
-param.assert_table = param.assert_t
-
-function param.assert_class(cls)
-    if cls ~= nil then
-        assert(class.of(cls), u.sprintf('Param `%s` is not a class', cls))
-    end
-end
-
-param.assert_cls = param.assert_class
-
-function param.assert_func(f)
-    if f ~= nil then
-        assert(u.func_p(f), u.sprintf('Param `%s` is not a function', f))
-    end
-end
-
-function param.assert_callable(f)
-    if f ~= nil then
-        assert(u.callable(f), u.sprintf('Param `%s` is not a callable', f))
-    end
-end
-
-function param.assert_type(p, ...)
-    if p == nil then return end
-
-    local fail = 0
-    local t_param  = param.typeof(p)
-    local failed = {}
-
-    local args = {...}
-    local n = #args
-
-    for _, i in ipairs(args) do
-        if i == 'callable' then
-            if not u.callable(p) then
-                fail = fail + 1
-                tu.push(failed, i)
-            end
-        elseif not match(i, '(table|boolean|string|number|function|userdata)') then
-            local param_cls = class.of(param_cls)
-            if not param_cls or not table_p(param_cls) or not param_cls.__name == i then
-                fail = fail + 1
-                tu.push(failed, i)
-            end
-        elseif t_param ~= i then
-            fail = fail + 1
-            tu.push(failed, i)
-        end
-    end
-
-    assert(fail ~= n, dump(failed) .. string.format(' failed to match with param type `%s`', param.typeof(param)))
-end
-
-function param.assert_equal(a, b)
-    assert(a == b, u.sprintf('Param `%s` is not equal to param `%s`', a, b))
-end
-
-function param.assert_type_equal(a, b)
-    assert(param.typeof(a) == param.typeof(b), u.sprintf('Param `%s` is not equal to param `%s`', a, b))
-end
-
-param.assert_eql = param.assert_equal
-param.assert_type_eql = param.assert_type_equal
-
-function param.assert_class_equal(a, b)
+function param.claim_class_equal(a, b)
     local cls_a = class.of(a)
     local cls_b = class.of(b)
 
     if cls_a and cls_b then 
-        assert(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, param.typeof(a), param.typeof(b)))
+       claim(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, param.typeof(a), param.typeof(b)))
     end
 end
 
-param.assert_cls_equal = param.assert_class_equal
-param.assert_cls_eql = param.assert_cls_eql
+param.claim_cls_equal = param.claim_class_equal
+param.claim_cls_eql = param.claim_cls_eql
 
 function param.compare_type(a, b)
-    return type(a) == param.typeof(b)
+    return param.typeof(a) == param.typeof(b)
 end
 
 function param.compare_class(a, b)
@@ -142,33 +194,23 @@ end
 
 param.compare_cls = param.compare_class
 
-function param.assert_key(t, default, ...)
-    param.assert_h(t)
-
-    default = default == nil and false
+function param.claim_key(t, ...)
+    param.claim_h(t)
 
     for _, k in ipairs({...}) do
-        local no_key_err_msg = u.sprintf("Table %s does not have key %s with the required value", t, k)
-
-        if default then
-            no_key_err_msg = no_key_err_msg .. ': ' .. u.dump(default)
-        end
-
-        assert(t[k], no_key_err_msg)
+        claim(t[k] ~= nil, u.sprintf("Table %s does not have key %s with the required value", t, k))
     end
 end
 
 function param.dfs_compare_table(table_a, table_b, cmp)
-    param.assert_h(table_a)
-    param.assert_h(table_b)
+    param.claim_h(table_a)
+    param.claim_h(table_b)
 
-    if cmp then param.assert_callable(cmp) end
+    if cmp then param.claim_callable(cmp) end
     local new_t = {}
     local _new_t = new_t
 
     local function __compare(_table_a, _table_b)
-        local later_ks = {}
-
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
@@ -203,9 +245,9 @@ function param.dfs_compare_table(table_a, table_b, cmp)
 end
 
 function param.bfs_compare_table(table_a, table_b, cmp)
-    param.assert_h(table_a)
-    param.assert_h(table_b)
-    param.assert_callable(cmp)
+    param.claim_h(table_a)
+    param.claim_h(table_b)
+    param.claim_callable(cmp)
 
     local new_t = {}
     local _new_t = new_t
@@ -248,29 +290,29 @@ function param.bfs_compare_table(table_a, table_b, cmp)
     return new_t
 end
 
-function param.bfs_assert_table(table_a, table_b, use_value)
-    param.assert_h(table_a)
-    param.assert_h(table_b)
+function param.bfs_claim_table(table_a, table_b, use_value)
+    param.claim_h(table_a)
+    param.claim_h(table_b)
 
     local function __compare(_table_a, _table_b)
         local later_ks = {}
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            param.assert_type_equal(a, b)
+            param.claim_type_equal(a, b)
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    param.assert_class_equal(a, b)
+                    param.claim_class_equal(a, b)
 
                     if use_value then
-                        param.assert_key(_table_a, k, b)
+                        param.claim_key(_table_a, k, b)
                     end
                 else
                     push(later_ks, k)
                 end
             elseif use_value then
-                param.assert_key(_table_a, k, b)
+                param.claim_key(_table_a, k, b)
             end
         end
 
@@ -282,9 +324,9 @@ function param.bfs_assert_table(table_a, table_b, use_value)
     __compare(table_a, table_b)
 end
 
-function param.dfs_assert_table(table_a, table_b, use_value)
-    param.assert_h(table_a)
-    param.assert_h(table_b)
+function param.dfs_claim_table(table_a, table_b, use_value)
+    param.claim_h(table_a)
+    param.claim_h(table_b)
 
     use_value = use_value == nil and true or false
 
@@ -292,20 +334,20 @@ function param.dfs_assert_table(table_a, table_b, use_value)
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            assert(param.compare_type(a, b))
+            claim(param.compare_type(a, b))
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    param.assert_class_equal(a, b)
+                    param.claim_class_equal(a, b)
 
                     if use_value then
-                        param.assert_key(_table_a, k, b)
+                        param.claim_key(_table_a, k, b)
                     end
                 else
                     __compare(_table_a[k], _table_b[k])
                 end
             elseif use_value then
-                param.assert_key(_table_a, k, b)
+                param.claim_key(_table_a, k, b)
             end
         end
     end
@@ -313,7 +355,7 @@ function param.dfs_assert_table(table_a, table_b, use_value)
     __compare(table_a, table_b)
 end
 
-param.assert_table = param.bfs_assert_table
+param.claim_table = param.bfs_claim_table
 
 function param.bfs_compare(a, b, cmp)
     if not param.compare_type(a, b) then

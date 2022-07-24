@@ -21,12 +21,9 @@ end
 -- @param cmd string Command to run
 -- @param opts table Contains all the options for jobstart() and current job
 function job.new(name, cmd, opts)
-    assert(name)
-    assert(cmd)
-
-    assert_s(name)
-    assert_s(cmd)
-    assert_t(opts)
+    claim.string(name)
+    claim.string(cmd)
+    claim.table(opts)
 
     local existing_job = get(job.status, name)
 
@@ -90,8 +87,7 @@ end
 function job:send(s)
     if not self.running then return false end
     
-    assert(s)
-    assert_type(s, 'string', 'table')
+    claim(s, 'table', 'string')
 
     if table_p(s) then s = join(s, "\n") end
     s = s .. "\n"

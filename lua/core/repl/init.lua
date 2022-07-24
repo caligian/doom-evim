@@ -21,7 +21,7 @@ end
 -- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
 -- @param s string If s is given then method is ignored and s is simply chansend()
 function repl:send(method)
-    assert_type(method, 'string', 'boolean')
+    claim(method, 'string', 'boolean')
 
     local pos = {}
     method = method or '.'
@@ -68,10 +68,10 @@ function repl:__init(name, cmd, job_opts)
 end
 
 function repl.new(name, job_opts, ft, cmd)
-    assert_type(name, 'boolean', 'string')
-    assert_type(cmd, 'boolean', 'string')
-    assert_type(job_opts, 'boolean', 'table')
-    assert_type(ft, 'boolean', 'string')
+    claim(name, 'boolean', 'string')
+    claim(cmd, 'boolean', 'string')
+    claim(job_opts, 'boolean', 'table')
+    claim(ft, 'boolean', 'string')
 
     job_opts = job_opts or {}
     ft = ft or vim.bo.filetype

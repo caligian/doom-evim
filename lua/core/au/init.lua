@@ -8,8 +8,8 @@ au.refs = Doom.au.refs
 function au.func2ref(f, style)
     assert(f, ex.no_f())
 
-    assert_type(f, 'string', 'callable')
-    assert_s(style)
+    claim(f, 'string', 'callable')
+    claim.opt_string(style)
 
     style = style or 'call'
 
@@ -40,11 +40,10 @@ function au:__init(name, doc)
 end
 
 function au.new(name, doc)
-    assert_type(name, 'boolean', 'string')
-    assert(doc, 'No documentation provided for augroup')
-    assert_s(doc)
+    claim.opt_string(name)
+    claim.string(doc)
 
-    if name == false then
+    if not name then
         name = sprintf('doom_group_%d', len(au.status) + 1)
     else
         name = name:gsub('[^%w_]+', '')
@@ -74,9 +73,12 @@ function au:add(event, pat, f, opts)
     assert(pat, ex.no_pat())
     assert(f, ex.no_f())
 
-    assert_t(opts)
-    assert_type(event, 'string', 'table')
-    assert_type(pat, 'string', 'table')
+    claim.opt_table(opts)
+
+    if event then
+        claim(event, 'string', 'table')
+    end
+    claim(pat, 'string', 'table')
 
     opts = opts or {}
     event = event or 'BufEnter'

@@ -199,7 +199,7 @@ end
 function sig.new(id, handle)
     assert(id)
     assert(handle)
-    assert_type(id, 'number', 'string')
+    claim(id, 'number', 'string')
     assert(handle)
 
     id = sig.signals[id]
@@ -210,7 +210,7 @@ end
 
 function sig:add_callback(f)
     assert(f)
-    assert_callable(f)
+    claim.callable(f)
 
     push(self.callbacks, f)
 end

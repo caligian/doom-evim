@@ -1,7 +1,7 @@
 local exception = {}
 
 function exception.throw(fmt, ...)
-    assert_s(fmt)
+    claim.string(fmt)
     error(sprintf(fmt, ...))
 end
 

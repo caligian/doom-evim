@@ -4,10 +4,10 @@ local function notify(title, message, level, opts)
     assert(title, 'No title provided for notification')
     assert(message, 'No message provided for notification')
 
-    assert_s(title)
-    assert_s(message)
-    assert_s(level)
-    assert_t(opts)
+    claim.string(title)
+    claim.string(message)
+    claim.string(level)
+    claim.table(opts)
 
     opts = opts or {}
     level = level or 'info'

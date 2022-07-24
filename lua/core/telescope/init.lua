@@ -25,7 +25,7 @@ update(Doom.telescope.defaults, ts.defaults)
 -- Or     {value => value[1], display => value[2], ordinal => value[2]}
 -- Or     {value => value, display => value, ordinal => value}
 function ts.entry_maker(entry)
-    assert_type(entry, 'table', 'string')
+    claim(entry, 'table', 'string')
     local t = {}
 
     if not table_p(entry) then
@@ -59,8 +59,8 @@ end
 
 function ts.new(opts, global_opts)
     assert(opts, 'No args given')
-    assert_t(opts)
-    assert_t(global_opts)
+    claim.table(opts)
+    claim.opt_table(global_opts)
 
     global_opts = global_opts or ts.defaults.opts
     local title, results, mappings, entry_maker, sorter
@@ -80,11 +80,14 @@ function ts.new(opts, global_opts)
     assert(results, ex.picker.missing_results())
     assert(mappings, ex.picker.missing_mappings())
 
-    assert_type(sorter, 'callable', 'boolean', 'string')
-    assert_callable(opts.entry_maker)
-    assert_s(title)
-    assert_t(results)
-    assert_type(mappings, 'callable', 'table')
+    if sorter then
+        claim(sorter, 'callable', 'string')
+    end
+
+    claim.opt_callable(opts.entry_maker)
+    claim.opt_string(title)
+    claim.table(results)
+    claim(mappings, 'callable', 'table')
 
     if sorter and str_p(sorter) then
         sorter = strip(sorter)
@@ -130,16 +133,12 @@ function ts.new(opts, global_opts)
             for i=2,#mappings do
                 local mode, keys, f, doc, transform = unpack(mappings[i])
                 transform = transfrom == nil and false
+                doc = doc or ''
 
-                assert(mode)
-                assert(keys)
-                assert(f)
-                assert(doc)
-
-                assert_s(mode)
-                assert_s(keys)
-                assert_s(doc)
-                assert_callable(f)
+                claim.string(mode)
+                claim.string(keys)
+                claim.string(doc)
+                claim.callable(f)
 
                 local _action = function()
                     local entry = action_state.get_selected_entry()

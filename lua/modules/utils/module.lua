@@ -16,8 +16,6 @@ local function unwrap(getter)
         return function (self)
             return self
         end
-    elseif getter == false then
-        return false
     elseif not u.callable(getter) then
         return function (self)
             return self.__vars[getter]

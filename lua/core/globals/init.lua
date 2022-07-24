@@ -82,7 +82,7 @@ return {
 
     telescope = {
         font_switcher = {
-            include = '(Nerd Font|NF|Mono)';
+            include = '[a-z]';
             keys = '<leader>hf';
             default_height = 13;
         };

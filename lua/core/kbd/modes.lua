@@ -6,10 +6,8 @@ assoc(Doom, {'kbd', 'mode', 'status'}, {})
 mode.status = Doom.kbd.mode.status
 
 function mode.new(name, pattern)
-    assert(name)
-    assert(pattern)
-    assert_s(name)
-    assert_type(pattern, 'number', 'string')
+    claim.string(name)
+    claim(pattern, 'number', 'string')
 
     if num_p(pattern) then
         if pattern == 0 then
@@ -59,8 +57,8 @@ function m:disable()
 end
 
 function m:hook(event, pattern)
-    assert_s(event)
-    assert_type(pattern, 'number', 'string')
+    claim.string(event)
+    claim(pattern, 'number', 'string')
 
     event = event or 'BufEnter'
     if num_p(pattern) then

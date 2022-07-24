@@ -9,9 +9,8 @@ function timer:__init(timeout, _repeat, callback)
 end
 
 function timer.new(callback, opts)
-    assert(callback)
-    assert_callable(callback)
-    assert_t(opts)
+    claim.callable(callback)
+    claim.table(opts)
 
     opts = opts or {}
     opts.timeout = opts.timeout or 100

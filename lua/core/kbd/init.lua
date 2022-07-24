@@ -15,13 +15,10 @@ kbd.status = Doom.kbd.status
 kbd.prefixes = Doom.kbd.prefixes
 
 function kbd.wk_register(mode, keys, doc, bufnr)
-    assert(mode, ex.no_mode())
-    assert(keys, ex.no_keys())
-    assert(doc, ex.no_doc())
-
-    assert_type(mode, 'string', 'table')
-    assert_s(keys)
-    assert_s(doc)
+    claim(mode, 'string', 'table')
+    claim.string(keys)
+    claim.string(doc)
+    claim.opt_number(bufnr)
 
     local opts = {buffer=bufnr, mode=mode}
 
@@ -40,17 +37,10 @@ function kbd.wk_register(mode, keys, doc, bufnr)
     end
 end
 
-function kbd.find(mode, keys, n)
-    assert(mode, ex.no_mode())
-    assert(keys, ex.no_keys())
-
-    if n == nil or n == false then
-        n = 1
-    else
-        assert_n(n)
-    end
-
-    return assoc(Doom.kbd.status, {mode, keys, n})
+function kbd.find(mode, keys)
+    claim(mode, 'string', 'table')
+    claim.string(keys)
+    return assoc(Doom.kbd.status, {mode, keys})
 end
 
 function kbd.load_prefixes()
@@ -78,18 +68,22 @@ function kbd:__init(mode, keys, f, attribs, attribs_s, doc, event, pattern)
 end
 
 function kbd.new(mode, keys, f, attribs, doc, event, pattern)
-    assert(mode, ex.no_mode())
-    assert(keys, ex.no_keys())
-    assert(doc, ex.no_doc())
-    assert(f, ex.no_f())
+    claim(mode, 'string', 'table')
+    claim.string(keys)
+    claim.string(doc)
+    claim(f, 'callable', 'string')
 
-    assert_type(mode, 'string', 'table')
-    assert_s(keys)
-    assert_s(doc)
-    assert_type(f, 'string', 'callable')
-    assert_type(attribs, 'string', 'table', 'boolean')
-    assert_type(event, 'string', 'table')
-    assert_type(pattern, 'string', 'table', 'number')
+    if pattern then
+        claim(pattern, 'string', 'table')
+    end
+
+    if event then
+        claim(event, 'string', 'table')
+    end
+
+    if attribs then
+        claim(attribs, 'string', 'table')
+    end
 
     attribs = attribs or defaults.attribs
     attribs = to_list(attribs)
@@ -215,7 +209,7 @@ end
 
 -- Restore nth previous keybinding
 function kbd:restore_previous(n)
-    assert_num(n)
+    claim.number(n)
     n = n or 1
     assert(n > 0, ex.index_not_valid)
 
@@ -230,7 +224,7 @@ function kbd:restore_previous(n)
 end
 
 function kbd:disable(buffers)
-    assert_type(buffers, 'number', 'table')
+    claim(buffers, 'number', 'table')
     
     buffers = to_list(buffers)
 
@@ -280,15 +274,10 @@ end
 
 
 function kbd.oneshot(mode, keys, f, attribs)
-    assert(mode, ex.no_mode())
-    assert(keys, ex.no_keys())
-    assert(f, ex.no_f())
-
-    assert_s(mode, 'string')
-    assert_s(keys)
-    assert_type(f, 'string', 'callable')
-    assert_type(attribs, 'string', 'table', 'boolean')
-
+    claim(mode, 'string', 'table')
+    claim.string(keys)
+    claim(f, 'string', 'callable')
+    claim(attribs, 'string', 'table', 'boolean')
     attribs = attribs or defaults.attribs
     attribs = to_list(attribs)
     local noremap = find(attribs, 'noremap')
