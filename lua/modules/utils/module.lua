@@ -12,7 +12,7 @@ local function readonly_table(t)
 end
 
 local function unwrap(getter)
-    if getter == true then
+    if type(getter) == 'boolean' then
         return function (self)
             return self
         end
@@ -30,12 +30,11 @@ end
 -- If getter is true then simply return partial(callback(self, ...))
 -- If getter is false then return callback(...)
 local function unwrap_for_method(getter, callback)
-    assert(getter ~= nil)
-    assert(callback)
-    pu.assert_type(getter, 'string', 'callable', 'number', 'boolean')
+    pu.claim(getter, 'string', 'number', 'callable', 'boolean')
+    pu.claim.callable(callback)
 
     return function (self, ...)
-        if not getter then
+        if getter == false then
             return callback(self, ...)
         else
             return callback(unwrap(getter)(self), ...)
@@ -46,10 +45,8 @@ end
 -- If {callback} is a table, the first will be used when the 
 -- self is on LHS and the second will be assumed for RHS. If nothing is provided, consider callback as the default LHS and RHS handler
 function module.on_operator(self, op, callback, getter)
-    assert(op)
-    assert(callback)
-    pu.assert_str(op)
-    pu.assert_type(callback, 'table', 'callable')
+    pu.claim.string(op)
+    pu.claim(callback, 'table', 'callable')
 
     local operators = {
         ['+'] = '__add',
@@ -71,8 +68,8 @@ function module.on_operator(self, op, callback, getter)
         local lhs, rhs = false, false
         if u.table_p(callback) and not u.callable(callback) then
             assert(#callback == 2, 'Need a callback for when self is on LHS and when self on RHS')
-            pu.assert_callable(callback[1])
-            pu.assert_callable(callback[2])
+            pu.claim.callable(callback[1])
+            pu.claim.callable(callback[2])
             lhs = callback[1]
             rhs = callback[2]
         else
@@ -95,7 +92,7 @@ function module.on_operator(self, op, callback, getter)
                         f = rhs or lhs
                     end
                 elseif cls == self then
-                    l = cls
+                    l = unwrap(getter or false)(cls)
                     r = cls1
                     f = lhs
                 else
@@ -105,11 +102,11 @@ function module.on_operator(self, op, callback, getter)
                 end
             elseif cls == self or cls1 == self then
                 if cls == self then
-                    l = cls
+                    l = unwrap(getter or false)(cls)
                     r = cls1
                     f = unwrap_for_method(getter, lhs)
                 else
-                    l = cls1
+                    l = unwrap(getter or false)(cls1)
                     r = cls
                     f = unwrap_for_method(getter, rhs)
                 end
@@ -168,10 +165,8 @@ function module.unfreeze(self)
 end
 
 function module.define_method(self, name, callback, getter)
-    assert(name)
-    assert(callback)
-    pu.assert_str(name)
-    pu.assert_callable(callback)
+    pu.claim.string(name)
+    pu.claim.callable(callback)
 
     getter = getter or false
     callback = unwrap_for_method(getter, callback)
@@ -181,7 +176,7 @@ function module.define_method(self, name, callback, getter)
 end
 
 function module.include(self, methods, getter)
-    pu.assert_t(methods)
+    pu.claim.table(methods)
 
     for key, value in pairs(methods) do
         self:define_method(key, value, getter)
@@ -238,7 +233,7 @@ function module.new(name, vars, methods)
     end
 
     if vars.constants then
-        pu.assert_t(vars.constants)
+        pu.claim.table(vars.constants)
         for key, value in pairs(vars.constants) do
             module.set_constant(self, key, value)
         end
@@ -247,14 +242,14 @@ function module.new(name, vars, methods)
     self.__constants = readonly_table(self.__constants)
 
     if vars.vars then
-        pu.assert_t(vars.vars)
+        pu.claim.table(vars.vars)
         for key, value in pairs(vars.vars) do
             module.set_instance_variable(self, key, value)
         end
     end
 
     if methods then
-        pu.assert_t(methods)
+        pu.claim.table(methods)
         for key, value in pairs(methods) do
             module.define_method(self, key, value)
         end

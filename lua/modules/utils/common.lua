@@ -354,7 +354,7 @@ utils.chomp = function(s)
 end
 
 utils.tempfile = function()
-    return utils.system('mktemp')[1]
+    return os.tmpname()
 end
 
 utils.with_open = function(dst, mode, f)

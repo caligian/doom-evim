@@ -30,6 +30,13 @@ for k, v in pairs(tu) do
     end
 end
 
+methods.to_list = function (t, force)
+    if force then
+        return {t}
+    end
+    return t
+end
+
 methods.nth = tu.nth_
 methods.map = tu.map_
 methods.filter = tu.filter_
@@ -63,7 +70,7 @@ methods.jspit = spit('jspit')
 methods.jslurp = slurp('jslurp')
 
 function hash.new(t)
-    local m = module.new('methods', {vars={value=t}})
+    local m = module.new('hash', {vars={value=t}})
     m:include(methods, 'value')
     m:on_operator('s', u.dump, 'value')
     m:on_operator('+', {methods.push, methods.unshift}, 'value')

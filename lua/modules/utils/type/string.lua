@@ -37,6 +37,9 @@ for k, v in pairs(tu) do
     end
 end
 
+methods.to_list = function (obj)
+    return {table.concat(obj, obj.split_pattern)}
+end
 methods.nth = tu.nth_
 methods.map = tu.map_
 methods.filter = tu.filter_

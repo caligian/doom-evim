@@ -152,6 +152,8 @@ function param.typeof(obj)
         if mt then
             if not mt.__name then return 'table' end
             return mt.__name
+        else
+            return 'table'
         end
     else
         return t
