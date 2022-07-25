@@ -12,14 +12,11 @@ local _prev = "vsnip#jumpable(1) ? '<Plug>(vsnip-jump-prev)'      : '<Tab>'"
 local _next = "vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)'      : '<Tab>'"
 local attribs = {'noremap', 'expr'}
 
-kbd.new('i', '<C-j>', _expand, attribs, 'Expand snippet under cursor'):enable()
-kbd.new('n', '<C-j>', _expand, attribs, 'Expand snippet under cursor'):enable()
-
-kbd.new('s', '<C-l>', _jump, attribs, 'Expand or jump to snippet under cursor'):enable()
-kbd.new('i', '<C-l>', _jump, attribs, 'Expand or jump to snippet under cursor'):enable()
-
-kbd.new('i', '<Tab>', _next, attribs, 'Jump to next field'):enable()
-kbd.new('n', '<Tab>', _next, attribs, 'Jump to next field'):enable()
-
-kbd.new('i', '<S-Tab>', _prev, attribs, 'Jump to prev field'):enable()
-kbd.new('n', '<S-Tab>', _prev, attribs, 'Jump to prev field'):enable()
+kbd.new('vsnipiexpand', 'i', '<C-j>', _expand, attribs, 'Expand snippet under cursor'):enable()
+kbd.new('vsnipexpand', 'n', '<C-j>', _expand, attribs, 'Expand snippet under cursor'):enable()
+kbd.new('vsnipsjump', 's', '<C-l>', _jump, attribs, 'Expand or jump to snippet under cursor'):enable()
+kbd.new('vsnipijump', 'i', '<C-l>', _jump, attribs, 'Expand or jump to snippet under cursor'):enable()
+kbd.new('vsnipinext', 'i', '<Tab>', _next, attribs, 'Jump to next field'):enable()
+kbd.new('vsnipnext', 'n', '<Tab>', _next, attribs, 'Jump to next field'):enable()
+kbd.new('vsnipiprev', 'i', '<S-Tab>', _prev, attribs, 'Jump to prev field'):enable()
+kbd.new('vsnipprev', 'n', '<S-Tab>', _prev, attribs, 'Jump to prev field'):enable()

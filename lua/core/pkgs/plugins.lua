@@ -39,11 +39,12 @@ return {
         };
         { 
             "rafcamlet/nvim-luapad";
-            keys = {{'n', "<F3>", ':Luapad', false, 'Open an interactive lua buffer'}};
+            keys = {{'luapad', 'n', "<F3>", ':Luapad', false, 'Open an interactive lua buffer'}};
+            keep_keys = true;
         };
         { 
             "folke/trouble.nvim"; 
-            keys = {{'n', "<leader>lt", ':TroubleToggle', false, 'Toggle trouble'}};
+            keys = {{'trouble', 'n', "<leader>lt", ':TroubleToggle', false, 'Toggle trouble'}};
             keep_keys = true;
         };
         { 
@@ -56,7 +57,7 @@ return {
         };
         { 
             "folke/zen-mode.nvim"; 
-            keys = {{"n", "<leader>bz", ':ZenMode', false, 'Start zenmode'}};
+            keys = {{'zenmode', "n", "<leader>bz", ':ZenMode', false, 'Start zenmode'}};
             keep_keys = true;
         };
         {
@@ -65,23 +66,23 @@ return {
         };
         {
             "tpope/vim-fugitive";
-            keys = {{'n', "<leader>gg", ':Git', false, 'Open interactive git'}};
+            keys = {{'Git', 'n', "<leader>gg", ':Git', false, 'Open interactive git'}};
         };
         { 
             "tpope/vim-rhubarb"; 
-            keys = {{"n", "<leader>gG", ":G ", false, "Start Git hub using rhubarb"}};
+            keys = {{'Gitbhubarb', "n", "<leader>gG", ":G ", false, "Start Git hub using rhubarb"}};
         };
         { 
             "godlygeek/tabular";
             keep_keys           = true;
             keys                = {
-                {"n", '<leader>=', function()
+                {'tabular', "n", '<leader>=', function()
                     local pat   = gets('%', false, {'Align using', '/ = /'})
                     if pat[1] then
                         vim.cmd(':Tabularize ' .. first(pat))
                     end
                 end, false, "Tabulate strings"}; 
-                {"v", '<leader>=', function()
+                {'tabular', "v", '<leader>=', function()
                     local pat = gets('%', false, {'Align using', '/=/'})
                     if pat[1] then
                         vim.cmd(":'<,'>Tabularize " .. first(pat))
@@ -91,11 +92,11 @@ return {
         { 
             "preservim/tagbar";
             keep_keys = true;
-            keys = {{'n', "<C-t>", ':TagbarToggle', false, 'Open tags bar'}};
+            keys = {{'tagbar', 'n', "<C-t>", ':TagbarToggle', false, 'Open tags bar'}};
         };
         { 
             "nvim-telescope/telescope-file-browser.nvim";
-            keys = {{'n', '<leader>fF', function()
+            keys = {{'ts_filebrowser', 'n', '<leader>fF', function()
                 local t = require("telescope")
                 t.load_extension("file_browser")
                 t.setup {extensions={file_browser=merge(copy(ts.defaults.opts), {hijack_netrw=true})}}
@@ -104,17 +105,17 @@ return {
         };
         { 
             "nvim-telescope/telescope-project.nvim";
-            keys = {{'n', '<leader>pp', function()
+            keep_keys = true;
+            keys = {{'ts_project', 'n', '<leader>pp', function()
                 local t = require("telescope")
                 t.load_extension("project")
                 t.setup {extensions={project=merge(copy(ts.defaults.opts), {hijack_netrw=true})}}
                 t.extensions.project.project(ts.defaults.opts)
             end, false, 'Open projects'}};
-            keep_keys = true,
         };
         { 
             "kyazdani42/nvim-tree.lua"; 
-            keys = {{'n', '<leader>`', ':NvimTreeToggle', false, 'Toggle file tree'}}
+            keys = {{'nvimtree', 'n', '<leader>`', ':NvimTreeToggle', false, 'Toggle file tree'}}
         };
     };
 }

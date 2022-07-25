@@ -775,7 +775,7 @@ end
 
 tu.len = function(param)
     if type(param) == 'table' or type(param) == 'string' then
-        return #param
+        return #(tu.keys(param))
     end
 end
 

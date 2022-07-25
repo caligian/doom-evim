@@ -1,3 +1,28 @@
+local status_mt = function(t)
+    claim.table(t)
+
+    return setmetatable(t, {
+        __index = function(self, k)
+            claim(k, 'number', 'string', 'table')
+
+            if table_p(k) then
+                k = join(map(u.dump, k), "")
+            end
+
+            return rawget(self, k)
+        end;
+        __newindex = function(self, k, v)
+            claim(k, 'number', 'string', 'table')
+
+            if table_p(k) then
+                k = join(map(u.dump, k), "")
+            end
+
+            rawset(self, k, v)
+        end;
+    })
+end
+
 return {
     ui = {
         theme = 'base16-gruvbox-dark-hard',
@@ -97,12 +122,15 @@ return {
         path = {with_data_path('snippets'), with_config_path('snippets')}
     },
 
-    async = { job = { status = {} } },
+    async = {job = {status = status_mt {} }},
 
-    au = { status = {}, refs = {}, },
+    au = {
+        status = status_mt {autocmds={}}; 
+        refs = {};
+    },
 
     buffer = {
-        status = {},
+        status = status_mt {},
         temp_path = with_data_path('doom-temp')
     },
 
@@ -130,7 +158,7 @@ return {
             ["<localleader>t"] = "REPL",
             ["<localleader>e"] = "REPL",
         },
-        status = {},
+        status = status_mt {},
     },
 
     pkgs = {

@@ -497,8 +497,9 @@ function buffer:set_keymap(mode, keys, f, attribs, doc, event)
     attribs = attribs or 'buffer'
     local doc = 'Keybinding for buffer: ' .. self.index
     local pattern = sprintf('<buffer=%d>', self.index)
-    local k = kbd.new(mode, keys, f, attribs, doc, event, pattern)
-    self.keymaps[mode][keys] = k
+    local name = sprintf('bufnr=%d keys=%s:%s', self.index, mode, keys)
+    local k = kbd.new(name, mode, keys, f, attribs, doc, event, pattern)
+    assoc(self.keymaps, {mode, keys, name}, k)
     k:enable()
 end
 

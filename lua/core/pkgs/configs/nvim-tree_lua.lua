@@ -3,4 +3,4 @@ local nvim_tree = require('nvim-tree')
 
 nvim_tree.setup()
 
-kbd.new('n', '<leader>`', ':NvimTreeToggle<CR>', {'noremap'}, 'Toggle nvim-tree'):enable()
+kbd.new('nvimtree', 'n', '<leader>`', ':NvimTreeToggle<CR>', {'noremap'}, 'Toggle nvim-tree'):enable()

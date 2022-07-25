@@ -14,48 +14,56 @@ local claim = function (test, msg)
 end
 
 param.claim = {
-    ['function'] = function (obj)
-        claim(type(obj) == 'function', 'Object is not a function: ' .. u.dump(obj))
+    ['function'] = function (...)
+        for _, value in ipairs({...}) do
+            claim(type(value) == 'function', 'Object is not a function: ' .. u.dump(value))
+        end
     end;
-
-    number = function (obj)
-        claim(type(obj) == 'number', 'Object is not a number: ' .. u.dump(obj))
+    number = function (...)
+        for _, value in ipairs({...}) do
+            claim(type(value) == 'number', 'Object is not a number: ' .. u.dump(value))
+        end
     end,
-
-    boolean = function (obj)
-        claim(type(obj) == 'boolean', 'Object is not a boolean: ' .. u.dump(obj))
+    userdata = function (...)
+        for _, value in ipairs({...}) do
+            claim(type(value) == 'userdata', 'Object is not a userdata: ' .. u.dump(value))
+        end
     end,
-
-    table = function (obj)
-        claim(type(obj) == 'table', 'Object is not a table: ' .. u.dump(obj))
+    table = function (...)
+        for _, value in ipairs({...}) do
+            claim(type(value) == 'table', 'Object is not a table: ' .. u.dump(value))
+        end
     end,
-
-    userdata = function (obj)
-        claim(type(obj) == 'userdata', 'Object is not userdata: ' .. u.dump(obj))
+    boolean = function (...)
+        for _, value in ipairs({...}) do
+            claim(type(value) == 'boolean', 'Object is not a boolean: ' .. u.dump(value))
+        end
     end,
-
-    callable = function (obj)
-        claim(function ()
-            if type(obj) ~= 'table' and type(obj) ~= 'function' then
-                return false
-            end
-
-            if type(obj) == 'table' then
-                local mt = getmetatable(obj)
-                if mt and mt.__call then
-                    return true
+    callable = function (...)
+        for _, value in ipairs({...}) do
+            claim(function ()
+                if type(value) ~= 'table' and type(value) ~= 'function' then
+                    return false
                 end
-                return false
-            end
 
-            return true
-        end, 'Object is not a callable: ' .. u.dump(obj))
+                if type(value) == 'table' then
+                    local mt = getmetatable(value)
+                    if mt and mt.__call then
+                        return true
+                    end
+                    return false
+                end
+
+                return true
+            end, 'Object is not a callable: ' .. u.dump(value))
+        end
     end,
-
-    string = function (obj)
-        claim(function ()
-            return type(obj) == 'string'
-        end, 'Object is not a string: ' .. u.dump(obj))
+    string = function (...)
+        for _, value in ipairs({...}) do
+            claim(function ()
+                return type(value) == 'string'
+            end, 'Object is not a string: ' .. u.dump(value))
+        end
     end,
 }
 
@@ -384,5 +392,36 @@ function param.dfs_compare(a, b, cmp)
 end
 
 param.compare = param.bfs_compare
+
+-- Spec: {'type/class', param}, ...
+-- For optional params which are either false or nil, they will be ignored
+function param.validate_params(...)
+    local args = {...}
+
+    for index, i in ipairs(args) do
+        param.claim.table(i)
+        assert(#i > 1, 'Spec: {class/type, param}')
+        local spec, arg = unpack(i)
+
+        if type(spec) ~= 'string' then
+            spec = param.typeof(spec)
+        end
+        
+        local is_opt = false
+        if spec:match('^opt_') then
+            is_opt = true
+            spec = spec:gsub('^opt_', '')
+        end
+
+        local test = param.typeof(arg) == spec
+        if not is_opt then
+            assert(test, u.sprintf('Invalid spec provided for %s: %s', arg, spec))
+        end
+
+        args[index] = arg
+    end
+
+    return unpack(args)
+end
 
 return param

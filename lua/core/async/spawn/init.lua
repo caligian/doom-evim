@@ -91,23 +91,26 @@ function async.new(name, cmd, opts)
     env = {os.getenv('PATH'), _env}
 
     if opts.stderr then
-        claim.callable(opts.on_stderr)
-        on_stderr = opts.on_stderr
+        if callable(opts.stderr)  then
+            on_stderr = opts.on_stderr
+        end
     end
     
     if opts.stdout then
-        claim.callable(opts.on_stdout)
-        on_stdout = opts.on_stdout
+        if callable(opts.stdout)  then
+            on_stdout = opts.on_stdout
+        end
     end
 
     if opts.stdin then
-        claim.callable(opts.on_stdin)
-        on_stdin = opts.on_stdin
+        if callable(opts.stdin)  then
+            on_stdin = opts.on_stdin
+        end
     end
 
-    claim.table(opts.stdio)
-    claim.callable(opts.on_exit)
-    claim.table(opts.signals)
+    claim.opt_table(opts.stdio)
+    claim.opt_callable(opts.on_exit)
+    claim.opt_table(opts.signals)
 
     local self_opts = {
         name = name;

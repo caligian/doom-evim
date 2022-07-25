@@ -11,4 +11,4 @@ t.setup {
 
 t.load_extension("file_browser")
 
-kbd.new('n', '<leader>fF', partial(t.extensions.file_browser.file_browser, ts.defaults.opts), false, 'Launch file browser'):enable()
+kbd.new('ts_filebrowser', 'n', '<leader>fF', partial(t.extensions.file_browser.file_browser, ts.defaults.opts), false, 'Launch file browser'):enable()

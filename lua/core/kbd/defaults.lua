@@ -1,17 +1,17 @@
 local keybindings = {}
 local kbd = require('core.kbd')
-local attribs = false
+local attribs = {'noremap', 'silent', 'nowait'}
 
 keybindings.tabs = {
-    {'n', '<leader>tt', ":tabnew <CR>", attribs, 'Open a new tab'};
-    {'n', '<leader>tk', ":tabclose <CR>", attribs, 'Close tab'};
-    {'n', '<leader>tn', ":tabnext <CR>", attribs, 'Next tab'};
-    {'n', '<leader>tp', ":tabprev <CR>", attribs, 'Previous tab'};
+    {'tabnew', 'n', '<leader>tt', ":tabnew <CR>", attribs, 'Open a new tab'};
+    {'tabclose', 'n', '<leader>tk', ":tabclose <CR>", attribs, 'Close tab'};
+    {'tabnext', 'n', '<leader>tn', ":tabnext <CR>", attribs, 'Next tab'};
+    {'tabprev', 'n', '<leader>tp', ":tabprev <CR>", attribs, 'Previous tab'};
 }
 
 keybindings.misc = {
-    {'n', '<leader><leader>', ":noh <CR>", attribs, 'Disable highlighting'};
-    {'n', '<leader>fv', function (bufnr, opts)
+    {'nohighlight', 'n', '<leader><leader>', ":noh <CR>", attribs, 'Disable highlighting'};
+    {'source%', 'n', '<leader>fv', function (bufnr, opts)
         opts = opts or {}
         bufnr = bufnr or vim.fn.bufnr()
         claim.number(bufnr)
@@ -44,16 +44,16 @@ keybindings.misc = {
 }
 
 keybindings.files = {
-    {'n', '<leader>fs', ':w<CR>', attribs, 'Save file'};
+    {'savebuffer', 'n', '<leader>fs', ':w<CR>', attribs, 'Save file'};
 }
 
 keybindings.buffers = {
-    {'n', '<leader>bR', ":if &modifiable == 1 <bar> set nomodifiable <bar> else <bar> set modifiable <bar> endif <CR>", attribs, 'Make current buffer readonly'};
-    {'n', '<leader>bk', ":hide <CR>", attribs, 'Hide current window'};
-    {'n', '<leader>bq', ":bwipeout <CR>", attribs, 'Wipeout current buffer'};
-    {'n', '<leader>bn', ":bnext <CR>", attribs, 'Go to next buffer'};
-    {'n', '<leader>bn', ":bprev <CR>", attribs, 'Go to previous buffer'};
-    {'n', '<leader>br', ":e % <CR>", attribs, 'Reload current buffer'};
+    {'readonlybuffer', 'n', '<leader>bR', ":if &modifiable == 1 <bar> set nomodifiable <bar> else <bar> set modifiable <bar> endif <CR>", attribs, 'Make current buffer readonly'};
+    {'hidebuffer', 'n', '<leader>bk', ":hide <CR>", attribs, 'Hide current window'};
+    {'wipeoutbuffer', 'n', '<leader>bq', ":bwipeout <CR>", attribs, 'Wipeout current buffer'};
+    {'nextbuffer', 'n', '<leader>bn', ":bnext <CR>", attribs, 'Go to next buffer'};
+    {'prevbuffer', 'n', '<leader>bn', ":bprev <CR>", attribs, 'Go to previous buffer'};
+    {'reloadbuffer', 'n', '<leader>br', ":e % <CR>", attribs, 'Reload current buffer'};
 }
 
 update(Doom.kbd, 'defaults', keybindings)

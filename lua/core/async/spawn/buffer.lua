@@ -1,6 +1,6 @@
 local buffer = require('core.buffers')
 local kbd = require('core.kbd')
-local spawn = dofile('../spawn.lua')
+local spawn = dofile('init.lua')
 -- local ts = require('core.telescope')
 local ts = dofile('../../telescope/init.lua')
 local spawn_buffer = {}
@@ -102,23 +102,19 @@ function m:show_output(opts)
         pcall(vim.api.nvim_win_close, j.winnr, true)
 
         if not has_stderr and not has_stdout then
-            assoc(j, 'sync_opts', {inc=10; timeout=100; tries=5, current_try=0, delay=10})
+            assoc(j, 'sync_opts', {inc=10; timeout=100; tries=5, current_try=0})
 
             local timeout = j.sync_opts.timeout
             local inc = j.sync_opts.inc
             local tries = j.sync_opts.tries
-            local delay = j.sync_opts.delay
 
             if input then
                 timeout, delay, inc, tries = unpack(gets('%', false, {
-                    {'Timeout in ms', '10000'};
-                    -- The amount used for waiting before reading
-                    {'Delay in ms', '10'};
-                    {'Increment time in ms', '100'};
+                    {'Timeout in ms', '100'};
+                    {'Increment time in ms', '10'};
                     {'Number of tries', '5'}
                 }))
 
-                j.sync_opts.delay = delay 
                 j.sync_opts.timeout = timeout
                 j.sync_opts.inc = inc
                 j.sync_opts.tries = tries

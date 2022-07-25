@@ -309,14 +309,14 @@ utils.with_packer_path = function(what, ...)
     return utils.with_data_path('site', 'pack', 'packer', what, ...)
 end
 
-utils.add_global = function(f, name, force)
+utils.add_global = function(obj, name, force)
     if force then
-        _G[name] = f
+        _G[name] = obj
     elseif not _G[name] then
-        _G[name] = f
+        _G[name] = obj
     end
 
-    return f
+    return obj
 end
 
 utils.globalize = function (mod, ks)

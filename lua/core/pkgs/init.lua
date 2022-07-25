@@ -155,8 +155,7 @@ local function parse_specs(spec, opt)
         local multiple = false
 
         for _, i in ipairs(to_list(keys)) do
-            local _mode, _keys, _f, _attribs, _doc, cmd = false, false, false, false, ''
-
+            local _name, _mode, _keys, _f, _attribs, _doc, _cmd = spec[1], false, false, false, false, ''
             claim(i, 'string', 'table')
 
             if str_p(i) then
@@ -164,8 +163,8 @@ local function parse_specs(spec, opt)
                 _keys = i
                 _attribs = kbd.defaults.attribs
             elseif table_p(i) then
-                assert(#i >= 3, 'Need at least 3 vals: mode, keys, f')
-                _mode, _keys, _f, _attribs, _doc = unpack(i)
+                assert(#i >= 4, 'Need at least 4 vals: id, mode, keys, f')
+                _name, _mode, _keys, _f, _attribs, _doc = unpack(i)
             end
 
             cmd = function(k)
@@ -178,7 +177,7 @@ local function parse_specs(spec, opt)
             end
 
             if keep_keys then
-                kbd.new(_mode, _keys, cmd, _attribs, _doc):enable()
+                kbd.new(_name, _mode, _keys, cmd, _attribs, _doc):enable()
             else
                 kbd.oneshot(_mode, _keys, cmd, _attribs)
             end
@@ -243,5 +242,7 @@ function pkgs.load_plugins(force)
 
     return t
 end
+
+pkgs.load_plugins(true)
 
 return pkgs

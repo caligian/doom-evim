@@ -1,25 +1,27 @@
 local uv = vim.loop
-local timer = class('doom-luv-timer')
-
-function timer:__init(timeout, _repeat, callback)
-    self.timeout = timeout
-    self['repeat'] = _repeat
-    self.callback = callback
-    self.counter = 0
-end
+local m = {}
+local timer = {}
 
 function timer.new(callback, opts)
     claim.callable(callback)
-    claim.table(opts)
+    claim.opt_table(opts)
 
     opts = opts or {}
     opts.timeout = opts.timeout or 100
-    opts['repeat'] = opts['repeat'] or 0
+    opts.n = opts.n or 0
 
-    assert_n(opts.timeout)
-    assert_n(opts['repeat'])
+    claim.number(opts.timeout)
+    claim.number(opts.n)
 
-    local self = timer(opts.timeout, opts['repeat'], false)
+    local self = module.new('timer', {
+        vars = {
+            timeout = opts.timeout;
+            n = opts.n;
+            callback = callback;
+            timer = uv.new_timer();
+            counter = 0;
+        }
+    })
 
     self.callback = vim.schedule_wrap(function ()
         self.timer:stop()
@@ -27,18 +29,18 @@ function timer.new(callback, opts)
         callback()
     end)
 
-    self.timer = uv.new_timer()
+    self:include(m)
 
     return self
 end
 
-function timer:stop()
+function m:stop()
     self.timer:stop()
     self.timer:close()
 end
 
-function timer:start()
-    local run = self.timer:start(self.timeout, self['repeat'], self.callback) == 0
+function m:start()
+    local run = self.timer:start(self.timeout, self.n, self.callback) == 0
 
     if run then
         self.counter = self.counter + 1
@@ -47,20 +49,20 @@ function timer:start()
     return run == 0 
 end
 
-function timer:again()
+function m:again()
     return self.timer:again() == 0
 end
 
-function timer:set_repeat(new_repeat)
-    opts['repeat'] = new_repeat
+function m:set_repeat(new_repeat)
+    opts.n = new_repeat
     self.timer:set_repeat(new_repeat)
 end
 
-function timer:get_repeat()
+function m:get_repeat()
     return self.timer:get_repeat()
 end
 
-function timer:get_due_in()
+function m:get_due_in()
     return self:get_due_in()
 end
 
