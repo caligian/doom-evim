@@ -20,7 +20,7 @@ end
 
 function template.new(split)
     local ft = vim.bo.filetype
-    local b = buffer()
+    local b = buffer.new(ft .. '_template_buffer', true)
     b:setopts {filetype=ft}
     local fname = path(template.dir, ft .. '.json')
     split = split or 's'
@@ -40,15 +40,7 @@ function template.new(split)
         end
     end, false, 'Save current template', 'BufEnter')
 
-    if split == 's' then
-        b:split()
-    elseif split == 'v' then
-        b:vsplit()
-    else
-        b:to_win() 
-    end
-
-    b:delete()
+    return b:split('s')
 end
 
 function template.load()

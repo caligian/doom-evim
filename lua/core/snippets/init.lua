@@ -30,7 +30,7 @@ end
 
 function snippet.new(split)
     local ft = vim.bo.filetype
-    local b = buffer()
+    local b = buffer.new(ft .. '_snippet_buffer', true)
     b:setopts {filetype=ft}
     local fname = path(snippet.dir, ft .. '.json')
     split = split or 's'
@@ -46,15 +46,7 @@ function snippet.new(split)
         end
     end, false, 'Save current snippet', 'BufEnter')
 
-    if split == 's' then
-        b:split()
-    elseif split == 'v' then
-        b:vsplit()
-    else
-        b:to_win() 
-    end
-
-    b:delete()
+    b:split(split)
 end
 
 return snippet

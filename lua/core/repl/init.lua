@@ -1,9 +1,10 @@
 local job = require('core.async.vim-job')
 local buffer = require('core.buffers')
 
-local repl = class('doom-repl')
+local repl = {}
 assoc(Doom, {'repl', 'status'}, {})
 repl.status = Doom.repl.status
+local m = {}
 
 function repl.find(ft)
     ft = ft or vim.bo.filetype
@@ -20,7 +21,7 @@ end
 
 -- @param method string '.' send current line, '~.' till current line, '~' for whole buffer, 'v' for visual range
 -- @param s string If s is given then method is ignored and s is simply chansend()
-function repl:send(method)
+function m:send(method)
     claim(method, 'string', 'boolean')
 
     local pos = {}
@@ -61,12 +62,6 @@ function repl:send(method)
     return s
 end
 
-function repl:__init(name, cmd, job_opts)
-    self.job = job.new(name, cmd, job_opts)
-    self.connected = {}
-    return self
-end
-
 function repl.new(name, job_opts, ft, cmd)
     claim(name, 'boolean', 'string')
     claim(cmd, 'boolean', 'string')
@@ -94,28 +89,40 @@ function repl.new(name, job_opts, ft, cmd)
     job_opts.on_stdout = false
     job_opts.on_stderr = false
 
-    local self = repl(name, cmd, job_opts)
-    self.filetype = ft
-    update(repl.status, name, self)
+    local self = module.new('repl', {
+        vars = {
+            filetype = ft;
+            job_opts = job_opts;
+            name = name;
+            cmd = cmd;
+            job = job.new(name, cmd, job_opts);
+            connected = {};
+        }
+    }, m)
 
+    update(repl.status, name, self)
     return self
 end
 
-function repl:start()
+function m:start()
     self.job:start()
 end
 
-function repl:kill(...)
+function m:kill(...)
     self.job:kill(...)
 end
 
-function repl:delete()
+function m:delete()
     self.job:delete()
 end
 
-function repl:show(...)
+function m:show(...)
     self.job:show(...)
 end
 
+--local r = repl.new('lua-repl')
+--r:start()
+--r:show('s')
+--r:send('.')
 
 return repl

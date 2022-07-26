@@ -1,19 +1,10 @@
 local class = require('classy')
 local path = require('path')
 local buf = require('core.buffers')
-local job = class('doom-async-job')
+local job = {}
+local m = {}
 
 job.status = Doom.async.job.status
-
-function job:__init(name, cmd, opts)
-    self.id = -1
-    self.cmd = cmd
-    self.name = name
-    self.opts = opts
-    self.running = false
-    self.opts = opts or {}
-    job.status[self.name] = self
-end
 
 -- Same args as `jobstart() or termopen()`
 -- Make a job object but don't start the job.
@@ -36,10 +27,21 @@ function job.new(name, cmd, opts)
     end
 
     opts.force = nil
-    return job(name, cmd, opts)
+    local self = module.new('vim-job', {
+        vars = {
+            id = -1;
+            running = false;
+            name = name;
+            cmd = cmd;
+            opts = opts;
+        }
+    }, m)
+    update(job.status, self.name, self)
+
+    return self
 end
 
-function job:repr()
+function m:repr()
     print(sprintf([[
 %10s: %s
 %10s: %s
@@ -55,7 +57,7 @@ function job:repr()
     'Options', dump(self.opts or {})))
 end
 
-function job:kill()
+function m:kill()
     if not self.running then return false end
     self.buffer:delete()
     self.running = false
@@ -64,7 +66,7 @@ function job:kill()
     vim.fn.jobstop(self.id)
 end
 
-function job:show(direction)
+function m:show(direction)
     if not self.buffer:exists() then
         to_stderr('REPL was killed by user: ' .. self.cmd)
     else
@@ -84,7 +86,7 @@ function job.killall()
     end
 end
 
-function job:send(s)
+function m:send(s)
     if not self.running then return false end
     
     claim(s, 'table', 'string')
@@ -95,7 +97,7 @@ function job:send(s)
     return vim.fn.chansend(self.id, s)
 end
 
-function job:sync(opts)
+function m:sync(opts)
     if not self.running then return false end
 
     assert(self.persistent ~= true, 'Cannot wait for output from a persistent terminal session')
@@ -115,12 +117,12 @@ function job:sync(opts)
     end, opts)
 end
 
-function job:wait()
+function m:wait()
     if not self.running then return false end
     return vim.fn.jobwait(self.id)
 end
 
-function job:open(opts)
+function m:open(opts)
     if self.running then return end
 
     opts = opts or self.opts or {}
@@ -205,6 +207,6 @@ function job:open(opts)
     end
 end
 
-job.start = job.open
+m.start = m.open
 
 return job

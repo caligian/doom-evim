@@ -16,7 +16,7 @@ function au.new(name, doc)
 
     if Doom.au.status[name] then
         if Doom.au.status[name].__vars then
-            return Doom.au.status(name) 
+            return Doom.au.status[name] 
         end
     end
 

@@ -2,9 +2,9 @@ local class = require('classy')
 local kbd = require('core.kbd')
 local path = require('path')
 local augroup = require('core.au')
-local buffer = class('doom-buffer')
-local exception = require('core.buffers.exception')
 
+local buffer = {}
+local m = {}
 buffer.status = Doom.buffer.status
 
 -- Class methods
@@ -76,35 +76,31 @@ function buffer.cleanup()
 end
 
 -- Instance methods
-function buffer:exists()
+function m:exists()
     return 1 == vim.fn.bufexists(self.index)
 end
 
-function buffer:is_visible()
+function m:is_visible()
     return -1 ~= vim.fn.bufwinid(self.index)
 end
 
-function buffer:is_loaded()
+function m:is_loaded()
     return vim.fn.bufloaded(self.index) == 1
 end
 
-buffer.loaded_p = buffer.is_loaded
+m.loaded_p = m.is_loaded
 
-function buffer:load()
+function m:load()
     return vim.fn.bufload(self.index) ~= 0
 end
 
-function buffer:setvars(vars)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
+function m:setvars(vars)
     for key, value in pairs(vars) do
         vim.api.nvim_buf_set_var(self.index, key, value)
     end
 end
 
-function buffer:getvars(vars)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
+function m:getvars(vars)
     local t = {}
     for i, o in ipairs(vars) do
         t[o] = vim.api.nvim_buf_get_var(self.index, o)
@@ -113,28 +109,24 @@ function buffer:getvars(vars)
     return t
 end
 
-function buffer:setopts(options)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
+function m:setopts(options)
     for key, value in pairs(options) do
         vim.api.nvim_buf_set_option(self.index, key, value)
     end
 end
 
-function buffer:setvars(vars)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-
+function m:setvars(vars)
     for key, value in pairs(vars) do
         vim.api.nvim_buf_set_var(self.index, key, value)
     end
 end
 
-function buffer:unlist()
+function m:unlist()
     self:setopts({buflisted=false})
 end
 
-function buffer:equals(buf2)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:equals(buf2)
+    assert(self:exists())
 
     local buf1 = self
     if class.of(buf1) == class.of(buf2) then
@@ -146,8 +138,8 @@ function buffer:equals(buf2)
     end
 end
 
-function buffer:nequals(buf2)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:nequals(buf2)
+    assert(self:exists())
 
     local buf1 = self
     if class.of(buf1) == class.of(buf2) then
@@ -163,8 +155,8 @@ buffer.not_equals = buffer.nequals
 buffer.__eq = buffer.equals
 buffer.__neq = buffer.nequals
 
-function buffer:wincall(f, ...)
-    assert(self:exists(), exception.bufname_not_valid(self.index))
+function m:wincall(f, ...)
+    assert(self:exists())
 
     claim.string(f)
     
@@ -183,7 +175,7 @@ function buffer:wincall(f, ...)
     end
 end
 
-function buffer:call(f, ...)
+function m:call(f, ...)
     assert(self:exists())
 
     claim.string(f)
@@ -199,17 +191,14 @@ function buffer:call(f, ...)
     return caller(self.index, ...)
 end
 
-function buffer:__init(name, scratch)
-    claim.string(name)
-    claim.boolean(scratch)
-
-    self.name = name
-    self.scratch = scratch and true or false
-end
-
 function buffer.new(name, scratch)
     local bufnr
     local is_temp
+
+    claim.opt_boolean(scratch)
+    if name then
+        claim(name, 'string', 'number')
+    end
 
     if scratch then
         name = name or with_data_path('temp', 'doom-scratch-buffer' .. '.' .. vim.bo.filetype)
@@ -239,13 +228,17 @@ function buffer.new(name, scratch)
         return buffer.status[bufnr]
     end
 
-    local self = buffer(name, scratch)
+    local self = module.new('buffer', {
+        vars = {
+            index = bufnr;
+            name = name;
+            scratch = scratch and true or false;
+        }
+    }, m)
 
-    self.index = bufnr
-    self.name = name
-    self.scratch = scratch and true or false
-    self.status[bufnr] = self
-    self.status[self.name] = self
+    update(buffer.status, bufnr, self)
+    update(buffer.status, bufnr, self.name)
+
     if is_temp then
         self:setopts({buftype='nofile', swapfile=false, buflisted=false})
     elseif scratch then
@@ -255,15 +248,16 @@ function buffer.new(name, scratch)
     return self
 end
 
-function buffer:get_line_count()
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:get_line_count()
+    assert(self:exists())
+
     return vim.api.nvim_buf_line_count(self.index)
 end
 
 -- @tparam opts table Options for vim.api.nvim_open_win
 -- @return winid number
-function buffer:to_win(opts)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:to_win(opts)
+    assert(self:exists())
 
     opts = opts or {}
     opts.relative = opts.relative or 'cursor'
@@ -281,8 +275,8 @@ function buffer:to_win(opts)
     return vim.api.nvim_open_win(self.index, true, opts)
 end
 
-function buffer:exec(f, ...)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:exec(f, ...)
+    assert(self:exists())
 
     local args = {...}
 
@@ -291,8 +285,8 @@ function buffer:exec(f, ...)
     end)
 end
 
-function buffer:read(pos, concat)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:read(pos, concat)
+    assert(self:exists())
 
     pos = pos or {}
     local bufnr = self.index
@@ -312,8 +306,8 @@ function buffer:read(pos, concat)
     return t
 end
 
-function buffer:write(pos, s)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:write(pos, s)
+    assert(self:exists())
 
     pos = pos or {}
     pos.start_row = pos.start_row or 0
@@ -376,30 +370,30 @@ function buffer:write(pos, s)
     vim.api.nvim_buf_set_text(bufnr, pos.start_row, pos.start_col, pos.end_row, pos.end_col, s)
 end
 
-function buffer:write_line(pos, s)
+function m:write_line(pos, s)
     pos = pos or {}
     if pos.start_row then pos.end_row = pos.start_row end
     self:write(pos, s)
 end
 
-function buffer:insert(pos, s)
+function m:insert(pos, s)
     pos = pos or {}
     pos.end_row = pos.start_row
     pos.end_col = pos.start_col
     self:write(pos, s)
 end
 
-function buffer:insert_line(start_row, s)
+function m:insert_line(start_row, s)
     self:insert({start_row=start_row, start_col=-1}, s)
 end
 
-function buffer:put(s, prepend, _type, _follow)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:put(s, prepend, _type, _follow)
+    assert(self:exists())
 
     claim(s, 'table', 'string')
-    claim.string(prepend)
-    claim.string(_type)
-    claim.string(_follow)
+    claim.opt_string(prepend)
+    claim.opt_string(_type)
+    claim.opt_string(_follow)
 
     local bufnr = self.index
     prepend = prepend and 'P' or 'p'
@@ -412,8 +406,8 @@ function buffer:put(s, prepend, _type, _follow)
     return self:exec(vim.api.nvim_put, s, _type, prepend, _follow)
 end
 
-function buffer:getcurpos()
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:getcurpos()
+    assert(self:exists())
 
     return self:exec(function ()
         local row, col, curswant
@@ -427,8 +421,8 @@ function buffer:getcurpos()
     end)
 end
 
-function buffer:getpos(expr)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:getpos(expr)
+    assert(self:exists())
 
     return self:exec(function ()
         expr = expr or '.'
@@ -444,8 +438,8 @@ function buffer:getpos(expr)
     end)
 end
 
-function buffer:getvcurpos()
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:getvcurpos()
+    assert(self:exists())
 
     local from = self:getpos("'<")
     local till = self:getpos("'>")
@@ -459,8 +453,8 @@ function buffer:getvcurpos()
     }
 end
 
-function buffer:add_hook(event, f, opts)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:add_hook(event, f, opts)
+    assert(self:exists())
 
     local bufnr = self.index
     event = event or 'BufEnter'
@@ -474,19 +468,17 @@ function buffer:add_hook(event, f, opts)
     au:add(event, sprintf('<buffer=%d>', bufnr), f, opts)
 end
 
-function buffer:delete()
+function m:delete()
     pcall(function ()
         vim.cmd('bwipeout ' .. self:exec(function ()
             return vim.fn.expand('%:p')
         end))
     end)
-
-    self.status[self.index] = nil
 end
 
 buffer.wipeout = buffer.delete
 
-function buffer:set_keymap(mode, keys, f, attribs, doc, event)
+function m:set_keymap(mode, keys, f, attribs, doc, event)
     assert(mode)
     assert(keys)
     assert(f)
@@ -503,16 +495,16 @@ function buffer:set_keymap(mode, keys, f, attribs, doc, event)
     k:enable()
 end
 
-function buffer:disable_keymap(mode, keys)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:disable_keymap(mode, keys)
+    assert(self:exists())
 
     modes = modes or 'n'
     local k = assoc(self.keymaps, {m, keys})
     if k then k:disable() end
 end
 
-function buffer:replace_keymap(mode, keys, f, attribs, event, pattern)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
+function m:replace_keymap(mode, keys, f, attribs, event, pattern)
+    assert(self:exists())
 
     mode = mode or 'n'
     local keybinding = assoc(self.keymaps, {mode, keys})
@@ -522,18 +514,15 @@ function buffer:replace_keymap(mode, keys, f, attribs, event, pattern)
     end
 end
 
-function buffer:to_win_prompt(hook, doc, comment, win_opts)
-    assert(self:exists(), exception.bufnr_not_valid(self.index))
-    assert(doc, exception.no_doc())
-    assert(hook, exception.no_f())
+function m:to_win_prompt(hook, doc, comment, win_opts)
+    assert(self:exists())
 
-    claim(doc, 'string')
-    claim.table(win_opts)
-    claim.string(comment)
-    claim.string(doc)
+    claim.opt_string(doc, comment)
+    claim.opt_table(win_opts)
     claim(hook, 'callable', 'string')
 
     local text = self:read(pos)
+    doc = doc or ''
     comment = comment or '#'
     self:write({}, map(function(s) return comment .. ' ' .. s end, text))
 
@@ -548,18 +537,19 @@ function buffer:to_win_prompt(hook, doc, comment, win_opts)
 
     self.prompt = true
     self.comment = comment
-    self:to_win(win_opts)
+    return self:to_win(win_opts)
 end
 
-function buffer:split(direction, opts)
-    claim(direction, 'string', 'boolean')
+function m:split(direction, opts)
+    if direction then
+        claim.string('string')
+    end
+    claim.opt_table(opts)
 
     direction = direction or 's'
     direction = strip(direction)
     direction = match('^([svtf])', direction)
     opts = opts or {}
-
-    claim.table(opts)
 
     local cmd = ''
 
@@ -619,15 +609,15 @@ function buffer:split(direction, opts)
     return vim.fn.winnr()
 end
 
-function buffer:tabnew(opts)
+function m:tabnew(opts)
     return self:split('t', opts)
 end
 
-function buffer:vsplit(opts)
+function m:vsplit(opts)
     return self:split('v', opts)
 end
 
-function buffer:save(where)
+function m:save(where)
     claim.string(where)
 
     if not where then where = self.name end
