@@ -1,4 +1,5 @@
-local sig = class('doom-async-signal')
+local sig = {}
+local m = {}
 local uv = vim.loop
 
 sig.signals = {
@@ -189,37 +190,31 @@ sig.signals = {
     ['SIGRTMAX'] = 64;
 }
 
-function sig:__init(id, handle)
-    self.id = id
-    self.signal = uv.new_signal()
-    self.handle = handle
-    self.callbacks = {}
-end
-
 function sig.new(id, handle)
-    assert(id)
-    assert(handle)
-    claim(id, 'number', 'string')
-    assert(handle)
+    claim(id, 'string', 'number')
+    claim.userdata(handle)
 
     id = sig.signals[id]
     assert(id, 'Invalid signal ID provided')
 
-    return sig(id, handle)
+    return module.new('signal', {vars = {
+        id = id;
+        signal = uv.new_signal();
+        handle = handle;
+        callbacks = {};
+    }}, m)
 end
 
-function sig:add_callback(f)
-    assert(f)
+function m:add_callback(f)
     claim.callable(f)
-
     push(self.callbacks, f)
 end
 
-function sig:add_callbacks(...)
+function m:add_callbacks(...)
     each(partial(self.add_callback, self), {...})
 end
 
-function sig:get_callback()
+function m:get_callback()
     assert(#self.callbacks > 0, 'No callbacks have been added yet')
 
     return function (exit_id)
@@ -227,17 +222,17 @@ function sig:get_callback()
     end
 end
 
-function sig:start_oneshot()
+function m:start_oneshot()
     local exit = self.signal:start_oneshot(self.id, self:get_callback())
     return exit == 0
 end
 
-function sig:start()
+function m:start()
     local exit = self.signal:start(self.id, self:get_callback())
     return exit == 0
 end
 
-function sig:stop()
+function m:stop()
     local exit = self.signal:stop()
     return exit == 0
 end

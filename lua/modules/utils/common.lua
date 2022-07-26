@@ -395,7 +395,6 @@ end
 -- @tparam timeout number Pass -1 to immediately return the result
 function utils.wait(f, args, opts)
     assert(f, 'No callable provided')
-    assert(args, 'No args provided')
 
     args = args or {}
     opts = opts or {}
@@ -404,6 +403,7 @@ function utils.wait(f, args, opts)
     local inc = opts.inc or 10
     local out = opts.default
     local sched = opts.sched == nil or false
+    assert(args, 'No args provided')
 
     if sched then 
         assert(timeout ~= false, 'Cannot defer execution without waiting. Please supply a timeout value')

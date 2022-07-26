@@ -103,18 +103,18 @@ function m:sync(opts)
     assert(self.persistent ~= true, 'Cannot wait for output from a persistent terminal session')
     local opts = opts or {}
 
-    opts.wait = opts.wait or 2
+    opts.timeout = opts.timeout or 2
     opts.tries = opts.tries or 10
     opts.inc = opts.inc or 10
     opts.sched = opts.sched == nil and true
 
-    return wait(function()
+    wait(function()
         if self.done then
             return true
         else
-            return false
+            return
         end
-    end, opts)
+    end, false, opts)
 end
 
 function m:wait()

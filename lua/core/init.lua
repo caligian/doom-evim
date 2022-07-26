@@ -25,7 +25,7 @@ end
 -- Load doom packages
 add_global(require('core.au'), 'au')
 add_global(require('core.kbd'), 'kbd')
-add_global(require('core.telescope'), 'ts')
+add_global(require('core.telescope'), 'telescope')
 add_global(require('core.pkgs'), 'pkgs')
 add_global(require('core.notify'), 'notify')
 add_global(require('core.buffers'), 'buffer')
@@ -35,20 +35,19 @@ lsp.setup_nvim_cmp()
 lsp.setup_servers()
 
 -- Load extras from builtin modules
-ts.font_switcher = require('core.telescope.font_switcher')
+telescope.font_switcher = require('core.telescope.font_switcher')
 require('core.telescope.font_switcher.keybindings')
-kbd.load_prefixes()
 
 -- Require keybindings
 require('core.buffers.keybindings')
 require('core.kbd.defaults')
 require('core.repl.keybindings')
 
--- Misc setup
-require('core.async.misc')
-
 -- Require autocmds of modules
 require('core.telescope.au')
+
+-- Require formatter
+require 'core.formatter.keybindings'
 
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
 pkgs.load_plugins()

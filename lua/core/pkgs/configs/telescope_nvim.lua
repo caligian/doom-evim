@@ -1,13 +1,13 @@
-local telescope = require('telescope')
+local ts = require('telescope')
 local builtin = require('telescope.builtin')
 
 local get_picker = function(picker_name)
     return function ()
-        builtin[picker_name](ts.defaults.opts)
+        builtin[picker_name](telescope.defaults.opts)
     end
 end
 
-telescope.setup(ts.defaults.opts)
+ts.setup(telescope.defaults.opts)
 
 -- File
 kbd.new('ts_findfiles', 'n', '<leader>ff', get_picker('find_files'), false, 'Find git files'):enable()

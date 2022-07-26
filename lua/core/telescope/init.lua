@@ -6,9 +6,9 @@ local action_state = require('telescope.actions.state')
 local transform_mod = require("telescope.actions.mt").transform_mod
 local pickers = require('telescope.pickers')
 local config = require('telescope.config').values
-local ts = class('doom-telescope')
 local ex = require('core.telescope.exception')
 
+local ts = {}
 ts.defaults = assoc(Doom, {'telescope', 'defaults'}, {})
 ts.defaults.opts = require('telescope.themes').get_ivy({layout_config={height=0.37}})
 ts.defaults.opts.borderchars.prompt = { "", " ", " ", " ", " ", " ", " ", " " }

@@ -1,17 +1,12 @@
 local uv = vim.loop
 local sig  = require('core.async.signals')
-local async = class('doom-luv-spawn')
+local job = {}
+local m = {}
 
-assoc(Doom.async, 'luv_job', {status={}})
-async.status = Doom.async.luv_job.status
+assoc(Doom.async, {'luv_job'}, {status={}})
+job.status = Doom.async.luv_job.status
 
-function async:__init(name, cmd, opts)
-    self.name = name
-    self.cmd = cmd
-    merge(self, opts)
-end
-
-function async:close(code, signal)
+function m:close(code, signal)
     self.exit_code = code
     self.exit_signal = signal
 
@@ -43,9 +38,10 @@ function async:close(code, signal)
     end
 
     self.done = true
+    self.running = false
 end
 
-function async.new(name, cmd, opts)
+function job.new(name, cmd, opts)
     claim.string(name)
 
     opts = opts or {}
@@ -66,7 +62,7 @@ function async.new(name, cmd, opts)
     claim(cmd, 'string', 'table')
 
     if table_p(cmd) then
-        args = slice(copy(cmd), 2, -1)
+        args = slice(cmd, 2, -1)
         cmd = first(cmd)
     elseif not opts.args then
         args = {}
@@ -114,8 +110,9 @@ function async.new(name, cmd, opts)
 
     local self_opts = {
         name = name;
+        -- This is causing the bug of ENOENT No file such file or directory
+        -- env = env;
         cmd = cmd;
-        env = env;
         cwd = cwd;
         stdio = opts.stdio or {uv.new_pipe(false), uv.new_pipe(false), uv.new_pipe(false)};
         detached = opts.detached;
@@ -126,6 +123,8 @@ function async.new(name, cmd, opts)
         hide = opts.hide;
         on_stdout = on_stdout;
         on_stderr = on_stderr;
+        running = false;
+        done = false;
         on_stdin = on_stdin;
         on_exit = opts.on_exit;
         stdout_output = {err={}, data={}};
@@ -133,38 +132,49 @@ function async.new(name, cmd, opts)
         capture_stdout = opts.stdout ~= nil;
         capture_stderr = opts.stderr ~= nil;
         accepts_stdin = opts.stdin ~= nil;
-        _signals = opts.signals or {};
+        signals = opts.signals or {};
         opts = opts;
     }
 
-    local self = async(name, cmd, self_opts)
+    local self = module.new('libuv-job', {vars=self_opts}, m)
     update(Doom.async.luv_job, name, self)
 
     return self
 end
 
-function async:restart(force)
+function m:restart(force)
     if not self.done and not force then
         return false
     end
 
+    inspect(s)
     self.exit_code = nil
     self.exit_signal = nil
+    local prev = self.opts.force
     self.opts.force = true
     local s = self.new(self.name, self.cmd, self.opts)
-    s.force = nil
+    s.force = prev
 
     return s
 end
 
-function async:kill()
+function m:kill()
     uv.process_kill(self.handle, 'SIGHUP') 
 end
 
-function async:start()
+function m:start()
+    if self.done then
+        error(sprintf("Job %s is already done", self.name))
+    end
+
+    if self.running then
+        return self
+    end
+
     local in_pipe, out_pipe, err_pipe
     in_pipe, out_pipe, err_pipe = unpack(self.stdio)
 
+    inspect(self.capturing_stdout)
     if self.capture_stdout then
         if not self.on_stdout then
             self.on_stdout = function (err, data)
@@ -185,7 +195,7 @@ function async:start()
 
     local on_exit
     if not self.on_exit then
-        on_exit = partial(async.close, self)
+        on_exit = partial(self.close, self)
     else
         on_exit = function (code, signal)
             self:close()
@@ -193,8 +203,9 @@ function async:start()
         end
     end
 
-    self.handle = uv.spawn(self.cmd, self, on_exit)
-    assert(self.handle ~= 0, 'Could not spawn a process using command ' .. self.cmd)
+    local success, err = uv.spawn(self.cmd, self, on_exit)
+    assert(success, err)
+    self.handle = success
     self.on_exit = on_exit
 
     if self.capture_stdout then
@@ -205,69 +216,29 @@ function async:start()
         err_pipe:read_start(vim.schedule_wrap(self.on_stderr))
     end
 
-    local function default_sig(cb)
-        self:close()
-    end
-
-    local sigs = {}
-    local close_cb = partial(self.close, self)
-    local exit_cb = partial(os.exit)
-    local default = {
-        'SIGHUP';
-        'SIGTERM';
-        'SIGABRT';
-        'SIGKILL';
-        'SIGTERM';
-        'SIGQUIT';
-        'SIGINT';
-    }
-
-    each(function (id)
-        if self._signals[id] then return end
-        local s = sig.new(id, self.handle)
-        s:add_callbacks(close_cb, exit_cb)
-        s:start()
-        sigs[id] = s
-    end, default)
-
-    each(function (id)
-        if sigs[id] then return end
-        local s = sig.new(id, self.handle)
-        s:add_callbacks(close_cb, exit_cb)
-        s:start()
-        sigs[id] = s
-    end, self._signals)
+    self.running = true
 end
 
-function async:write(s)
+function m:write(s)
     claim(s, 'string', 'table')
     assert(self.accepts_stdin, 'Job does not accept stdin')
 
     uv.write(self.stdio[1], s)
 end
 
-function async:sync_read(opts)
+function m:sync(opts)
     opts = opts or {}
-    opts.inc = opts.inc or 0.1
-    opts.timeout = opts.timeout or 100
+    opts.inc = opts.inc or 1
+    opts.timeout = opts.timeout or 1000
     opts.tries = opts.tries or 10
 
-    local function wait(what)
-        assert_s(what)
-
-        local n = 0
-        local timeout = opts.timeout
-        local check = self[what]
-
-        while #check.data == 0 and n < opts.tries do
-            vim.wait(timeout)
-            timeout = timeout + opts.inc
-            n = n + 1
+    wait(function ()
+        if #self.stdout_output.data > 0 then
+            return true
+        else
+            return false
         end
-    end
-
-    if self.capture_stdout then wait('stdout_output') end
-    if self.capture_stderr then wait('stderr_output') end
+    end, false, opts)
 
     local status = {}
     if #self.stderr_output.data > 0 then
@@ -281,4 +252,4 @@ function async:sync_read(opts)
     return status
 end
 
-return async
+return job

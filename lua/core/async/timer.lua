@@ -13,25 +13,19 @@ function timer.new(callback, opts)
     claim.number(opts.timeout)
     claim.number(opts.n)
 
-    local self = module.new('timer', {
+    return module.new('timer', {
         vars = {
-            timeout = opts.timeout;
-            n = opts.n;
-            callback = callback;
             timer = uv.new_timer();
             counter = 0;
+            timeout = opts.timeout;
+            n = opts.n;
+            callback = vim.schedule_wrap(function ()
+                self.timer:stop()
+                self.timer:close()
+                callback()
+            end);
         }
-    })
-
-    self.callback = vim.schedule_wrap(function ()
-        self.timer:stop()
-        self.timer:close()
-        callback()
-    end)
-
-    self:include(m)
-
-    return self
+    }, m)
 end
 
 function m:stop()

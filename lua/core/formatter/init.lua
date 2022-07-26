@@ -32,5 +32,4 @@ function format.format_buffer(ft, bufnr)
     end
 end
 
-function format.enable_autoformat()
-end
+return format
