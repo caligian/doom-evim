@@ -21,7 +21,7 @@ end
 function template.new(split)
     local ft = vim.bo.filetype
     local b = buffer.new(ft .. '_template_buffer', true)
-    b:setopts {filetype=ft}
+    b:setopts {filetype=ft, buftype='nofile'}
     local fname = path(template.dir, ft .. '.json')
     split = split or 's'
 

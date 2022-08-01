@@ -116,6 +116,44 @@ utils.to_list = function (i, force)
     end
 end
 
+function utils.is_class(obj)
+    if not type(obj) == 'table' then
+        return false
+    end
+    if obj.__vars then
+        return obj
+    end
+    return false
+end
+
+function utils.class_name(obj)
+    if not type(obj) == 'table' then
+        return false
+    end
+    if obj.__vars then
+        local mt = getmetatable(obj)
+        if mt.__name then
+            return mt.__name
+        end
+    end
+    return false
+end
+
+function utils.is_a(obj)
+    if type(obj) == 'table' and obj.__vars then
+        local mt = getmetatable(obj)
+        if mt then
+            return mt.__name
+        elseif mt.__call then
+            return 'callable'
+        else
+            return 'table'
+        end
+    else
+        return type(obj)
+    end
+end
+
 utils.to_arr = utils.to_list
 
 utils.to_a = utils.to_arr

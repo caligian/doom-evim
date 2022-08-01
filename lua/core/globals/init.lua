@@ -1,4 +1,4 @@
-local status_mt = function(t)
+add_global(function(t)
     claim.table(t)
 
     return setmetatable(t, {
@@ -21,11 +21,11 @@ local status_mt = function(t)
             rawset(self, k, v)
         end;
     })
-end
+end, 'create_status_t')
 
 return {
     ui = {
-        theme = 'base16-gruvbox-dark-hard',
+        theme = 'atom-dark',
     },
 
     langs = {
@@ -122,15 +122,15 @@ return {
         path = {with_data_path('snippets'), with_config_path('snippets')}
     },
 
-    async = {job = {status = status_mt {} }},
+    async = {job = {status = create_status_t {} }},
 
     au = {
-        status = status_mt {autocmds={}}; 
+        status = create_status_t {autocmds={}}; 
         refs = {};
     },
 
     buffer = {
-        status = status_mt {},
+        status = create_status_t {},
         temp_path = with_data_path('doom-temp')
     },
 
@@ -158,7 +158,7 @@ return {
             ["<localleader>t"] = "REPL",
             ["<localleader>e"] = "REPL",
         },
-        status = status_mt {},
+        status = create_status_t {},
     },
 
     pkgs = {

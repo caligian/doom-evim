@@ -1,13 +1,19 @@
-local class = require('classy')
 local kbd = require('core.kbd')
 local path = require('path')
 local augroup = require('core.au')
+local exception = require 'core.buffers.exception'
 
+-- @module Buffer
+-- This module provides basic buffer utilities to use in scripts and keybindings
 local buffer = {}
 local m = {}
+
+-- @field status Contains all the buffers made using this module
 buffer.status = Doom.buffer.status
 
--- Class methods
+-- Find buffer by using the buffer index number. This will index Doom.buffer.status
+-- @tparam bufnr number Buffer index number (`:h bufnr`)
+-- @treturn Buffer or false
 function buffer.find_by_bufnr(bufnr)
     claim.number(bufnr)
 
@@ -16,18 +22,30 @@ function buffer.find_by_bufnr(bufnr)
     return false
 end
 
+-- Find buffer using window index number
+-- @see find_by_bufnr
+-- @tparam winnr number Window index number (`:h winnr`)
+-- @treturn Buffer or false
 function buffer.find_by_winnr(winnr)
     claim.number(bufnr)
 
     return buffer.find_by_bufnr(vim.fn.winbufnr(winnr))
 end
 
+-- Find buffer using window ID number
+-- @see find_by_bufnr
+-- @tparam id number Window ID number (`:h winid`)
+-- @treturn Buffer or false
 function buffer.find_by_winid(id)
     claim.number(id)
 
     return buffer.find_by_bufnr(vim.fn.winbufnr(vim.fn.win_id2win(id)))
 end
 
+-- Find buffer using Buffer name
+-- @see find_by_bufnr
+-- @tparam expr string|number Expression acceptable by vim.fn.expand (`:h expand`)
+-- @treturn Buffer or false
 function buffer.find_by_bufname(expr)
     claim(expr, 'string', 'number')
 
@@ -129,7 +147,7 @@ function m:equals(buf2)
     assert(self:exists())
 
     local buf1 = self
-    if class.of(buf1) == class.of(buf2) then
+    if typeof(self) == typeof(buf2) then
         assert(buf2:exists(), exception.bufnr_not_valid(buf2.index))
         return buf1.index == buf2.index
     else
@@ -142,7 +160,7 @@ function m:nequals(buf2)
     assert(self:exists())
 
     local buf1 = self
-    if class.of(buf1) == class.of(buf2) then
+    if typeof(buf1) == typeof(buf2) then
         assert(buf2:exists(), exception.bufnr_not_valid(buf2.index))
         return buf1.index == buf2.index
     else

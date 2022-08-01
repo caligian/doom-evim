@@ -99,8 +99,8 @@ return {
             keys = {{'ts_filebrowser', 'n', '<leader>fF', function()
                 local t = require("telescope")
                 t.load_extension("file_browser")
-                t.setup {extensions={file_browser=merge(copy(ts.defaults.opts), {hijack_netrw=true})}}
-                t.extensions.file_browser.file_browser(ts.defaults.opts)
+                t.setup {extensions={file_browser=merge(copy(telescope.defaults.opts), {hijack_netrw=true})}}
+                t.extensions.file_browser.file_browser(telescope.defaults.opts)
             end, false, 'Open file browser'}};
         };
         { 

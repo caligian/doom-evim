@@ -1,5 +1,6 @@
-local autocmd = {}
-local auu = require 'core.au.utils'
+--@module autocmd
+--
+local autocmd = deepcopy(require 'core.au.utils')
 local m = {}
 
 function autocmd.new(group, event, pattern, callback, opts)
@@ -12,15 +13,19 @@ function autocmd.new(group, event, pattern, callback, opts)
         Doom.au.status[group] = {}
     end
 
-    local existing = assoc(Doom.au.status, {'autocmd', event .. ' ' .. pattern}, {})
-    if existing.__vars then return existing end
+    --local existing = assoc(Doom.au.status, {group, event .. ' ' .. pattern}, {})
+    --if existing.__vars then return existing end
 
     opts = opts or {}
     once = find(opts, 'once')
     nested = find(opts, 'nested')
     local self = {}
 
-    if nested then nested = '++nested' else nested = '' end
+    if nested then 
+        nested = '++nested' 
+    else 
+        nested = '' 
+    end
 
     if once then
         once = '++once'
@@ -37,7 +42,7 @@ function autocmd.new(group, event, pattern, callback, opts)
     callback = function()
         f(self)
     end
-    local cmd = sprintf('autocmd %s %s %s %s %s %s', group, event, pattern, once, nested, auu.register(callback, 'call'))
+    local cmd = sprintf('autocmd %s %s %s %s %s %s', group, event, pattern, once, nested, autocmd.register(callback, 'call'))
     cmd = cmd:gsub('%s+', ' ')
     local name = event .. ' ' .. pattern
 
@@ -52,19 +57,18 @@ function autocmd.new(group, event, pattern, callback, opts)
             callback = callback;
             enabled = false;
             count = 0;
-            once = #once == 0 and false or true;
-            nested = #nested == 0 and false or true;
+            once = #once > 1 and true or false;
+            nested = #nested > 1 and true or false;
         }
     })
     self:include(m)
     update(Doom.au.status, {group, name}, self)
-    update(Doom.au.status.autocmd, self.name, self)
 
     return self
 end
 
 function m:enable(force)
-    if not force and self.enabled then
+    if force and self.enabled == false then
         return self
     end
 

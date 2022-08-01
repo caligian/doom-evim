@@ -29,6 +29,10 @@ add_global(require('core.telescope'), 'telescope')
 add_global(require('core.pkgs'), 'pkgs')
 add_global(require('core.notify'), 'notify')
 add_global(require('core.buffers'), 'buffer')
+add_global(require('core.async.spawn'), 'spawn')
+add_global(require('core.async.vim-job'), 'vim_job')
+add_global(require('core.async.timer'), 'timer')
+add_global(require('core.au.autocmd'), 'autocmd')
 
 local lsp = require('core.lsp')
 lsp.setup_nvim_cmp()
@@ -49,10 +53,23 @@ require('core.telescope.au')
 -- Require formatter
 require 'core.formatter.keybindings'
 
+-- Template and snippets
+require 'core.snippets'
+require 'core.snippets.keybindings'
+local templates = require 'core.templates'
+require 'core.templates.keybindings'
+templates.enable()
+
 -- Successfuly load all the packages and their configurations (lazy or stat depending on its spec)
 pkgs.load_plugins()
+
+local a = au.new('StatuslineColorChanger', 'Change statusline colors automatically according to colorscheme.')
+a:add('Colorscheme', '*', require('core.pkgs.configs.lualine_nvim').setup)
+a:enable()
 
 vim.cmd('colorscheme ' .. Doom.ui.theme)
 
 -- Load post-initialization user config
 if path.exists(with_user_config_path('lua', 'user', 'config.lua')) then require('user.config') end
+
+vim.bo.filetype = 'lua'

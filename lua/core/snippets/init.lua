@@ -15,9 +15,14 @@ if not vim.g.vsnip_snippet_dir then
     vim.g.vsnip_snippet_dir = snippet.dir
 end
 
-if not path.exists(snippet.dir) then
-    fs.mkdir(snippet.dir)
+local function create_dir(dir)
+    if not path.exists(snippet.dir) then
+        fs.mkdir(snippet.dir)
+    end
 end
+
+create_dir(snippet.dir)
+each(create_dir, snippet.dirs)
 
 function snippet.save(ft, name, prefix, s)
     ft = ft or vim.bo.filetype
@@ -31,7 +36,7 @@ end
 function snippet.new(split)
     local ft = vim.bo.filetype
     local b = buffer.new(ft .. '_snippet_buffer', true)
-    b:setopts {filetype=ft}
+    b:setopts {filetype=ft, buftype='nofile'}
     local fname = path(snippet.dir, ft .. '.json')
     split = split or 's'
 
