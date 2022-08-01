@@ -13,9 +13,7 @@ end
 
 function repl.killall()
     for _, value in pairs(repl.status) do
-        if value.running  then
-            value:kill()
-        end
+        value:kill()
     end
 end
 
@@ -112,17 +110,8 @@ function m:kill(...)
     self.job:kill(...)
 end
 
-function m:delete()
-    self.job:delete()
-end
-
 function m:show(...)
     self.job:show(...)
 end
-
---local r = repl.new('lua-repl')
---r:start()
---r:show('s')
---r:send('.')
 
 return repl

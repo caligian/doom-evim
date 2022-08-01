@@ -1,5 +1,6 @@
 return {
     start = {
+        { 'guns/vim-sexp' };
         { "savq/paq-nvim" };
         {'ggandor/lightspeed.nvim'};
         { "ryanoasis/vim-devicons" };

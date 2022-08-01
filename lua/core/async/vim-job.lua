@@ -59,7 +59,6 @@ end
 
 function m:kill()
     if not self.running then return false end
-    self.buffer:delete()
     self.running = false
     self.done = true
     self.buffer = nil

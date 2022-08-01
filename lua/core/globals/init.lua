@@ -75,10 +75,16 @@ return {
             compile = "bash",
             debug = 'bash -x',
         },
+
+        scheme = {
+            compile = 'guile';
+            debug = 'guile --debug';
+            repl = 'guile';
+        };
     },
 
     editor = {
-        lisp_langs = {"fennel", "clojure", "scheme"},
+        lisp_langs = {"fennel", "clojure", "scheme", 'guile'},
     },
 
     treesitter = {
