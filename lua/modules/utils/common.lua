@@ -3,6 +3,49 @@ local yaml = require('yaml')
 local iter = require('fun')
 local utils = {}
 
+utils.blank_p = function (obj)
+    if type(obj) ~= 'string' or type(obj) ~= 'table' then
+        return
+    end
+
+    return #obj == 0
+end
+utils.is_blank = utils.blank_p
+
+utils.to_callable = function(f)
+    assert(utils.func_p(f), 'Only functions can be used in callable tables')
+    return setmetatable({}, {__call = function(_, ...) f(...) end})
+end
+
+utils.len = function(param)
+    if type(param) == 'table' then
+        local n = 0
+        for _, _ in pairs(param) do
+            n = n + 1
+        end
+
+        return n
+    elseif type(param) == 'string' then
+        return #param
+    else
+        return false
+    end
+end
+
+utils.range = function (from, till, step)
+    assert(from, 'No starting index provided')
+    assert(till, 'No ending index provided')
+
+    step = step or 1
+    local t = {}
+
+    for i=from, till, step do
+        tu.push(t, i)
+    end
+
+    return t
+end
+
 utils.typeof = function (obj)
     assert(obj ~= nil, 'Object cannot be nil')
     local t = type(obj)

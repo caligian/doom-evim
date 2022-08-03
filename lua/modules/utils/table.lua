@@ -2,6 +2,39 @@ local iter = require('fun')
 local utils = require('modules.utils.common')
 local tu = {}
 
+local function valid_t(t)
+    assert(type(t) == 'table', utils.dump(t) .. ' is not a table')
+    if utils.cname(t) == 'table' then
+        return t.value
+    elseif utils.cname(t) == 'iterable' then
+        return t.param
+    end
+
+    return t
+end
+
+tu.new_iter = function (t)
+    t = iter.iter(valid_t(t))
+    local mt = getmetatable(t)
+    mt.__name = 'iterable'
+    return t
+end
+
+tu.new_basic_iter = function (t, init)
+    local ks = tu.keys(t)
+    local index = init or 1
+    local n = #ks
+
+    return function ()
+        if index > n then
+            return
+        end
+
+        index = index + 1
+        return t[ks[index-1]]
+    end, t, ks[index]
+end
+
 tu.to_dict = function(...)
     local args = {...}
     local t = {}
@@ -13,22 +46,8 @@ tu.to_dict = function(...)
     return t
 end
 
-tu.list_to_dict = function(...)
-    local t = {}
-    local args = {...}
-
-    for _, arr in ipairs(args) do
-        assert(utils.table_p(arr), 'List should be a table')
-        t[#t+1] = tu.to_dict(unpack(arr))
-    end
-
-    if #t == 1 then return first(t) end
-    return t
-end
-
-tu.arr_to_dict = tu.list_to_dict
-
 tu.partition = function (arr, n)
+    arr = valid_t(arr)
     n = n or 1
     local len = #arr
 
@@ -60,6 +79,8 @@ tu.partition = function (arr, n)
 end
 
 tu.push = function (arr, ...)
+    arr = valid_t(arr)
+
     for _, i in ipairs({...}) do
         arr[#arr+1] = i
     end
@@ -68,6 +89,7 @@ tu.push = function (arr, ...)
 end
 
 tu.pop = function (arr, n)
+    arr = valid_t(arr)
     n = n or 1
     local tail = {}
 
@@ -87,6 +109,7 @@ tu.extend = function(dst, ...)
         if not utils.table_p(arr) then
             dst[#dst+1] = arr
         else
+            arr = valid_t(arr)
             for i=1, #arr do
                 dst[#dst+1] = arr[i]
             end
@@ -97,6 +120,7 @@ tu.extend = function(dst, ...)
 end
 
 tu.unshift = function (arr, ...)
+    arr = valid_t(arr)
     local args = {...}
 
     for i=1,#args do
@@ -107,9 +131,13 @@ tu.unshift = function (arr, ...)
 end
 
 tu.lextend = function (arr, ...)
-    for _, a in ipairs(...) do
-        for _, i in pairs(a) do
-            table.insert(a, 1, i)
+    for _, a in ipairs({...}) do
+        if utils.table_p(a) then
+            for _, i in ipairs(a) do
+                table.insert(arr, 1, i)
+            end
+        else
+            table.insert(arr, 1, a)
         end
     end
 
@@ -117,6 +145,7 @@ tu.lextend = function (arr, ...)
 end
 
 tu.shift = function(arr, n)
+    arr = valid_t(arr)
     n = n or 1
     local head = {}
 
@@ -133,6 +162,8 @@ end
 
 tu.splice = function(arr, from, len, ...)
     assert(from > 0 and from < #arr)
+
+    arr = valid_t(arr)
     local args = {...}
     len = len or 0
 
@@ -156,6 +187,7 @@ tu.splice = function(arr, from, len, ...)
 end
 
 tu.keys = function (dict)
+    dict = valid_t(dict)
     local ks = {}
 
     for key, _ in pairs(dict) do
@@ -166,6 +198,7 @@ tu.keys = function (dict)
 end
 
 tu.vals = function (dict)
+    dict = valid_t(dict)
     local vs = {}
 
     for _, value in pairs(dict) do
@@ -179,6 +212,8 @@ tu.values = tu.vals
 
 tu.slice = function (arr, start, finish)
     assert(start > 0)
+
+    arr = valid_t(arr)
     finish = finish or #arr
 
     local t = {}
@@ -190,18 +225,22 @@ tu.slice = function (arr, start, finish)
 end
 
 tu.butlast = function (arr)
+    arr = valid_t(arr)
     return tu.slice(arr, 1, #arr-1)
 end
 
 tu.rest = function (arr)
+    arr = valid_t(arr)
     return tu.slice(arr, 2, #arr)
 end
 
 tu.first = function (arr)
+    arr = valid_t(arr)
     return arr[1]
 end
 
 tu.last = function (arr)
+    arr = valid_t(arr)
     return arr[#arr]
 end
 
@@ -210,29 +249,30 @@ tu.identity = function (i)
 end
 
 tu.max = function (t)
-    return math.max(unpack(t))
+    return math.max(unpack(valid_t(t)))
 end
 
 tu.min = function (t)
-    return math.min(unpack(t))
+    return math.min(unpack(valid_t(t)))
 end
 
 -- This will call all the iterators! 
-tu.nth = function (k, ...)
+tu.nth = function (...)
+    local args = {...}
+    local k = args[#args]
     local params = {}
 
-    for _, i in ipairs({...}) do
-        params[#params+1] = i[k] or false
+    for i = 1, #args-1 do
+        local t = valid_t(args[i])
+        params[#params+1] = t[k] or false
     end
 
     return params
 end
 
-function tu.nth_(t, k, ...)
-    return tu.nth(k, t, ...)
-end
-
 tu.merge = function(dicta, dictb, depth, f)
+    dicta = valid_t(dicta)
+    dictb = valid_t(dictb)
     depth = depth or -1
     local cached = {}
 
@@ -271,6 +311,8 @@ end
 -- This tests for absolute equality. Any failed attempt will lead to the whole table
 -- being treated as false
 tu.equals = function(dicta, dictb, depth, f)
+    dicta = valid_t(dicta)
+    dictb = valid_t(dictb)
     local t = false
     depth = depth or -1
     local cached = {}
@@ -317,28 +359,64 @@ end
 -- Generator
 tu.zip = function(...)
     local arrs = {...}
-    local max_len = {}
+    local len = {}
+    local max_len = 0
+    local out = {}
 
-    for _, a in ipairs(arrs) do
-        max_len[#max_len] = #a
+    for idx, _ in ipairs(arrs) do
+        arrs[idx] = valid_t(arrs[idx])
+        local a = arrs[idx]
+        a = valid_t(a)
+        len[idx] = #a
     end
-    max_len = math.min(unpack(max_len))
+    max_len = math.max(unpack(len))
 
-    local state = 1
+    for i = 1, max_len do
+        local add = {}
+        for index, arr in ipairs(arrs) do
+            local key = i > len[index] and 1 or i
+            tu.push(add, arr[key])
+        end
+        tu.push(out, add)
+    end
+
+    return out
+end
+
+tu.izip = function(...)
+    local arrs = {...}
+    local len = {}
+    local index = 1
+    local max_len = 0
     local n = #arrs
-    return function()
-        if state > n then
-            return 
+
+    for idx, _ in ipairs(arrs) do
+        arrs[idx] = valid_t(arrs[idx])
+        local a = arrs[idx]
+        a = valid_t(a)
+        len[idx] = #a
+    end
+    max_len = math.max(unpack(len))
+
+    return function ()
+        if index > max_len then
+            return
         end
 
-        state = state + 1
-        local out = tu.nth(state - 1, unpack(arrs)) or false
-        return state, out
-    end, arrs, state
+        local out = {}
+        for i, arr in ipairs(arrs) do
+            local key = index > len[i] and 1 or index
+            tu.push(out, arrs[i][key])
+        end
+        index = index + 1
+
+        return out
+    end, arrs, index
 end
 
 tu.items = function(dict)
     local vs = {}
+    dict = valid_t(dict)
 
     for key, value in pairs(dict) do
         vs[#vs+1] = {key, value}
@@ -351,8 +429,8 @@ end
 --@tparam transform function Spec: transform(value, table, key, previous_table, previous_key). The function is only used when a key is found
 --@tparam create boolean|any If create is true then create a table in its place. If create is false or nil, false is returned. If create is anything else, it is simply put in place of the missing value. If 'd' is passed, that element is removed from the dict iff it is found
 tu.assoc = function (dict, ks, create, transform)
+    dict = valid_t(dict)
     ks = utils.to_list(ks)
-    local n = #ks
     local t = dict
     local last_key = false
     local last_t = t
@@ -403,17 +481,20 @@ tu.assoc = function (dict, ks, create, transform)
 end
 
 function tu.update(dict, ks, replacement)
+    dict = valid_t(dict)
     tu.assoc(dict, ks, replacement, function(...) return replacement end)
     return dict
 end
 
 function tu.remove(dict, ks)
+    dict = valid_t(dict)
     tu.assoc(dict, ks, false, 'd')
     return dict
 end
 
 -- if table is passed then it will be sent to tu.assoc
 tu.get = function(arr, ...)
+    arr = valid_t(arr)
     local ks = {...}
     local vs = {}
     local failed = false
@@ -441,6 +522,7 @@ tu.get = function(arr, ...)
 end
 
 tu.find = function(t, i)
+    t = valid_t(t)
     for k, v in pairs(t) do
         if i == v then 
             return k
@@ -449,6 +531,7 @@ tu.find = function(t, i)
 end
 
 tu.findall = function(t, i)
+    t = valid_t(t)
     local found = {}
 
     for k, v in pairs(t) do
@@ -462,84 +545,66 @@ end
 
 -- misc operations
 --
-tu.imap = function (f, ...)
-    local arrs = {...}
-    local max_len = {}
-
-    for _, a in pairs(arrs) do
-        max_len[#max_len+1] = #a
-    end
-    max_len = math.min(unpack(max_len))
-
+tu.imap = function (t, f)
+    t = valid_t(t)
+    local ks = tu.keys(t)
+    local n = #ks
     local index = 1
+    local key = ks[index]
+
     return function ()
-        if index > max_len then return end
+        if index > n then return end
+        key = t[index]
         index = index + 1
-        local out = f(unpack(tu.nth(index-1, unpack(arrs)))) or false
-        return index, out
-    end, arrs, index
+        return f(t[key])
+    end, t, key
 end
 
-tu.map = function (f, ...)
-    local out = {}
-    local arrs = {...}
-    local max_len = {}
+tu.ieach = function (t, f)
+    t = valid_t(t)
 
-    for _, a in pairs(arrs) do
-        max_len[#max_len+1] = #a
+    local index = 1
+    local ks = tu.keys(t)
+    local n = utils.len(t)
+    local key = ks[index]
+
+    return function ()
+        if index > n then return end
+
+        key = ks[index]
+        index = index + 1
+        f(t[key])
+    end, t, key
+end
+
+tu.each = function (t, f)
+    t = valid_t(t)
+    for _, value in pairs(t) do
+        f(value)
     end
-    max_len = math.min(unpack(max_len))
+end
 
-    for i=1, max_len do
-        local v = tu.nth(i, ...) or false
-        tu.extend(out, f(unpack(v)))
+tu.map = function (t, f)
+    local out = {}
+    for i in tu.imap(t, f) do
+        tu.push(out, i)
     end
 
     return out
 end
 
-tu.map_ = function (t, f, ...)
-    return tu.map(f, t, ...)
-end
-
-tu.imap_ = function (t, f, ...)
-    return tu.imap(f, t, ...)
-end
-
-tu.each = function (f, ...)
-    local arrs = {...}
-    local max_len = {}
-
-    for _, a in pairs(arrs) do
-        max_len[#max_len+1] = #a
-    end
-    max_len = math.min(unpack(max_len))
-
-    for i=1, max_len do
-        local vs = tu.nth(i, ...)
-        f(unpack(vs))
-    end
-end
-
-function tu.each_(t, f, ...)
-    return tu.each(f, t, ...)
-end
-
-tu.reduce = function (f, arr, init)
+tu.reduce = function (arr, f, init)
+    arr = valid_t(arr)
     init = init or false
 
-    for _, v in pairs(arr) do 
+    for _, v in pairs(arr) do
         init = f(v, init)
     end
 
     return init
 end
 
-function tu.reduce_(arr, f, init)
-    return tu.reduce(f, arr, init)
-end
-
-tu.filter = function (f, t)
+tu.filter = function (t, f)
     local correct = {}
 
     for k, v in pairs(t) do
@@ -557,15 +622,14 @@ tu.filter = function (f, t)
     return correct
 end
 
-function tu.filter_(t, f)
-    return tu.filter(f, t)
-end
-
 -- iterator operations
-tu.vec = function (index, n, gen, param, state)
+tu.vec = function (iterable, index, n)
+    local gen, param, state
+    iterable = valid_t(iterable)
+    gen, param, state = iterable.gen, iterable.param, iterable.state
+
     index = index or -1
     n = n or -1
-
     local acc = {}
 
     local _add = function(g, p, s)
@@ -605,7 +669,6 @@ tu.vec = function (index, n, gen, param, state)
     local success
     local new_state
     local times = 0
-
     repeat
         success, new_state = _add(gen, param, state) 
         if not success then return acc end
@@ -616,8 +679,11 @@ tu.vec = function (index, n, gen, param, state)
     return acc
 end
 
+inspect(tu.vec(iter.iter({1,2,3,4})))
+
 tu.defaultdict = function (t, default)
     t = t or {}
+    t = valid_t(t)
     local out 
 
     if utils.callable(default) then
@@ -643,6 +709,7 @@ end
 
 -- @tparam t table If all the elements are truthy then return true or else return false
 tu.all = function(t)
+    t = valid_t(t)
     local v = tu.vals(t)
     local n = #v
 
@@ -653,6 +720,7 @@ tu.all = function(t)
 end
 
 tu.some = function(t)
+    t = valid_t(t)
     local v = tu.vals(t)
     local n = #v
 
@@ -662,25 +730,27 @@ tu.some = function(t)
     end, v)) > 0
 end
 
-tu.blank_p = function (obj)
-    if not type(obj) == 'string' or type(obj) == 'table' then
-        return
+local function list_to_dict(arr)
+    local d = {}
+
+    for _, value in pairs(arr) do
+        d[value] = true
     end
 
-    return #obj == 0
+    return d
 end
-
-tu.is_blank = tu.blank_p
 
 tu.union = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
+    t1 = valid_t(t1)
+    t2 = valid_t(t2)
     t1 = utils.to_list(t1)
     t2 = utils.to_list(t2)
 
-    local a = tu.list_to_dict(t1)
-    local b = tu.list_to_dict(t2)
+    local a = list_to_dict(t1)
+    local b = list_to_dict(t2)
 
     for k, _ in pairs(b) do
         if not a[k] then
@@ -695,11 +765,13 @@ tu.intersection = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
+    t1 = valid_t(t1)
+    t2 = valid_t(t2)
     t1 = utils.to_list(t1)
     t2 = utils.to_list(t2)
 
-    local a = tu.list_to_dict(t1)
-    local b = tu.list_to_dict(t2)
+    local a = list_to_dict(t1)
+    local b = list_to_dict(t2)
 
     for k, _ in pairs(a) do
         if not b[k] then
@@ -714,11 +786,13 @@ tu.difference = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
+    t1 = valid_t(t1)
+    t2 = valid_t(t2)
     t1 = utils.to_list(t1)
     t2 = utils.to_list(t2)
 
-    local a = tu.list_to_dict(t1, true)
-    local b = tu.list_to_dict(t2, true)
+    local a = list_to_dict(t1, true)
+    local b = list_to_dict(t2, true)
 
     for k, _ in pairs(a) do
         if b[k] then
@@ -733,13 +807,15 @@ tu.subset_p = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
+    t1 = valid_t(t1)
+    t2 = valid_t(t2)
     t1 = utils.to_list(t1)
     t2 = utils.to_list(t2)
 
     local found = 0
     local t1_len = #t1
-    t1 = tu.list_to_dict(t1)
-    t2 = tu.list_to_dict(t2)
+    t1 = list_to_dict(t1)
+    t2 = list_to_dict(t2)
 
     for k, v in pairs(t2) do
         if t1[k] then
@@ -751,32 +827,12 @@ tu.subset_p = function(t1, t2)
 end
 
 tu.superset_p = function(t1, t2)
+    t1 = valid_t(t1)
+    t2 = valid_t(t2)
     return tu.subset_p(t2, t1)
 end
 
-tu.range = function (from, till, step)
-    assert(from, 'No starting index provided')
-    assert(till, 'No ending index provided')
-
-    step = step or 1
-    local t = {}
-
-    for i=from, till, step do
-        tu.push(t, i)
-    end
-
-    return t
-end
-
-tu.to_callable = function(f)
-    assert(utils.func_p(f), 'Only functions can be used in callable tables')
-    return setmetatable({}, {__call = function(_, ...) f(...) end})
-end
-
-tu.len = function(param)
-    if type(param) == 'table' or type(param) == 'string' then
-        return #(tu.keys(param))
-    end
-end
+tu.is_superset = tu.superset_p
+tu.is_subset = tu.subset_p
 
 return tu
