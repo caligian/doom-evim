@@ -1,9 +1,10 @@
 local class = require('classy')
 local path = require('path')
-local buf = require('core.buffers')
+local buf = require('core.buffer')
 local job = {}
 local m = {}
 
+assoc(Doom, {'async', 'job', 'status'}, create_status_t {})
 job.status = Doom.async.job.status
 
 -- Same args as `jobstart() or termopen()`

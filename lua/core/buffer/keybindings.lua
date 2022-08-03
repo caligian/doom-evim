@@ -1,4 +1,4 @@
-local buffer = require('core.buffers')
+local buffer = require('core.buffer')
 local kbd = require 'core.kbd'
 
 kbd.new('splitscratch', 'n', '<leader>xxs', function() buffer.new(false, true):split('s', {force_resize=true}) end, false, 'Open a new scratch buffer in sp'):enable()

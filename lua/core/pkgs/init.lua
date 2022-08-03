@@ -132,16 +132,16 @@ local function parse_specs(spec, opt)
     if Doom.pkgs.loaded[spec[1]] then return spec end
 
     if spec.keys then
-        claim(spec.keys, 'table', 'string')
+        claim(spec.keys or false, 'table', 'string')
     end
     if spec.rocks then
-        claim(spec.rocks, 'table', 'string')
+        claim(spec.rocks or false, 'table', 'string')
     end
     if spec.events then
-        claim(spec.events, 'table', 'string')
+        claim(spec.events or false, 'table', 'string')
     end
     if spec.pattern then
-        claim(spec.pattern, 'table', 'string')
+        claim(spec.pattern or false, 'table', 'string')
     end
 
     if opt then spec.opt = true end
@@ -243,6 +243,6 @@ function pkgs.load_plugins(force)
     return t
 end
 
-pkgs.load_plugins(true)
+pkgs.load_plugins()
 
 return pkgs

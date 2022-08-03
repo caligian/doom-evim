@@ -281,4 +281,6 @@ function module.new(name, vars, methods)
     })
 end
 
+module.new('test', {}, {a=inspect})
+
 return module

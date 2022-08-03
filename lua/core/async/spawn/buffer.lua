@@ -1,8 +1,7 @@
-local buffer = require('core.buffers')
+local buffer = require('core.buffer')
 local kbd = require('core.kbd')
 local spawn = dofile('init.lua')
--- local ts = require('core.telescope')
-local ts = dofile('../../telescope/init.lua')
+local ts = require('core.telescope')
 local spawn_buffer = {}
 local m = {}
 
@@ -11,7 +10,7 @@ function spawn_buffer.new(opts)
 
     local self = module.new('async-buffer', {
         vars = {
-            status = {},
+            status = create_status_t {},
             jobs = {},
             cmd = '',
             ft = '',

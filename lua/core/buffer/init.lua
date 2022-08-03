@@ -1,7 +1,7 @@
 local kbd = require('core.kbd')
 local path = require('path')
 local augroup = require('core.au')
-local exception = require 'core.buffers.exception'
+local exception = require 'core.buffer.exception'
 
 -- @module Buffer
 -- This module provides basic buffer utilities to use in scripts and keybindings
@@ -9,6 +9,7 @@ local buffer = {}
 local m = {}
 
 -- @field status Contains all the buffers made using this module
+assoc(Doom, {'buffer', 'status'}, create_status_t {})
 buffer.status = Doom.buffer.status
 
 -- Find buffer by using the buffer index number. This will index Doom.buffer.status
@@ -445,7 +446,6 @@ function m:getpos(expr)
     return self:exec(function ()
         expr = expr or '.'
         local bufnr, row, col, off = unpack(vim.fn.getpos(expr))
-        buffer.hide_by_winid(id)
 
         return {
             winid = id,

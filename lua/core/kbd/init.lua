@@ -3,6 +3,7 @@ local telescope = require 'core.telescope'
 local wk = require('which-key')
 local ex = require('core.kbd.exception')
 
+assoc(Doom, {'kbd', 'status'}, create_status_t {})
 assoc(Doom.kbd, {'defaults', 'attribs'}, {'silent', 'noremap', 'nowait'})
 local kbd = {
     defaults = Doom.kbd.defaults,
@@ -147,8 +148,7 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
             mapped = false,
             previous = {},
         }
-    })
-    self:include(m)
+    }, m)
     update(kbd.status, {mode, keys, id}, self)
 
     return self
@@ -327,5 +327,7 @@ function kbd.describe(query)
         end, items(grp))
     end
 end
+
+kbd.new('test', 'n', '<leader>zz', 'echo "hello"<CR>', false, '')
 
 return kbd

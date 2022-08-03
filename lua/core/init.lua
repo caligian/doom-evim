@@ -28,7 +28,7 @@ add_global(require('core.kbd'), 'kbd')
 add_global(require('core.telescope'), 'telescope')
 add_global(require('core.pkgs'), 'pkgs')
 add_global(require('core.notify'), 'notify')
-add_global(require('core.buffers'), 'buffer')
+add_global(require('core.buffer'), 'buffer')
 add_global(require('core.async.spawn'), 'spawn')
 add_global(require('core.async.vim-job'), 'vim_job')
 add_global(require('core.async.timer'), 'timer')
@@ -43,7 +43,7 @@ telescope.font_switcher = require('core.telescope.font_switcher')
 require('core.telescope.font_switcher.keybindings')
 
 -- Require keybindings
-require('core.buffers.keybindings')
+require('core.buffer.keybindings')
 require('core.kbd.defaults')
 require('core.repl.keybindings')
 

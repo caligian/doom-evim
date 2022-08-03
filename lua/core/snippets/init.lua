@@ -1,4 +1,4 @@
-local buffer = require('core.buffers')
+local buffer = require('core.buffer')
 local kbd = require('core.kbd')
 local snippet = {}
 

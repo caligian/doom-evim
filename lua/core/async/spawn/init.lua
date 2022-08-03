@@ -3,7 +3,7 @@ local sig  = require('core.async.signals')
 local job = {}
 local m = {}
 
-assoc(Doom.async, {'luv_job'}, {status={}})
+assoc(Doom.async, {'luv_job'}, {status=create_status_t {}})
 job.status = Doom.async.luv_job.status
 
 function m:close(code, signal)

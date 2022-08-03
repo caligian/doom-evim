@@ -10,7 +10,7 @@ function autocmd.new(group, event, pattern, callback, opts)
 
     if not Doom.au.status[group] then
         vim.cmd("augroup " .. group .. "\n    autocmd!\naugroup END")
-        Doom.au.status[group] = {}
+        Doom.au.status[group] = create_status_t {}
     end
 
     --local existing = assoc(Doom.au.status, {group, event .. ' ' .. pattern}, {})

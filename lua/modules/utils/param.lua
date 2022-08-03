@@ -13,129 +13,90 @@ local claim = function (test, msg)
     end
 end
 
-param.claim = {
-    ['function'] = function (...)
-        for _, value in ipairs({...}) do
-            claim(type(value) == 'function', 'Object is not a function: ' .. u.dump(value))
-        end
-    end;
-    number = function (...)
-        for _, value in ipairs({...}) do
-            claim(type(value) == 'number', 'Object is not a number: ' .. u.dump(value))
-        end
-    end,
-    userdata = function (...)
-        for _, value in ipairs({...}) do
-            claim(type(value) == 'userdata', 'Object is not a userdata: ' .. u.dump(value))
-        end
-    end,
-    table = function (...)
-        for _, value in ipairs({...}) do
-            claim(type(value) == 'table', 'Object is not a table: ' .. u.dump(value))
-        end
-    end,
-    boolean = function (...)
-        for _, value in ipairs({...}) do
-            claim(type(value) == 'boolean', 'Object is not a boolean: ' .. u.dump(value))
-        end
-    end,
-    callable = function (...)
-        for _, value in ipairs({...}) do
-            claim(function ()
-                if type(value) ~= 'table' and type(value) ~= 'function' then
-                    return false
-                end
-
-                if type(value) == 'table' then
-                    local mt = getmetatable(value)
-                    if mt and mt.__call then
-                        return true
-                    end
-                    return false
-                end
-
-                return true
-            end, 'Object is not a callable: ' .. u.dump(value))
-        end
-    end,
-    string = function (...)
-        for _, value in ipairs({...}) do
-            claim(function ()
-                return type(value) == 'string'
-            end, 'Object is not a string: ' .. u.dump(value))
-        end
-    end,
-}
-
-local function post_indexing(k, obj, validator)
-    local is_opt = false
-    if k:match('^opt_') then
-        is_opt = true
-        k = k:gsub('^opt_', '')
-    end
-
-    if is_opt and obj == nil then
-        return
-    end
-
-    if param.claim[k] and not validator then
-        return rawget(param.claim, k)(obj)
-    end
-
-    if not type(obj) == 'table' then
-        error("Object provided is not a module/class table and not a primitive datatype either: " .. u.dump(obj))
-    end
-
-    if not validator then
-        local mt = getmetatable(obj)
-        if not mt then
-            error("Object is a table but does have a metatable defined: " .. u.dump(obj))
-        end
-
-        if not mt.__name == k then
-            error("Object is not of type: " .. k)
-        end
-    else
-        param.claim.callable(validator)
-        claim(function() return validator(obj) end, 'Object validator returned false for object: ' .. u.dump(obj))
-    end
-
-    return obj
-end
-
-param.claim = setmetatable(param.claim, {
-    __newindex = function (self, k, validator)
-        rawset(self, k, function (obj)
-            return post_indexing(k, obj, validator)
-        end)
-    end;
-
+param.claim = setmetatable({}, {
+    __newindex = nil;
     __index = function (self, k)
-        return function (obj, validator)
-            return post_indexing(k, obj, validator)
+        local is_opt = false
+        local inversion = false
+
+        if k:match('^opt_') then
+            is_opt = true
+            k = k:gsub('^opt_', '')
+        elseif k:match('^_') then
+            is_opt = true
+            k = k:gsub('^_', '')
+        end
+        if k:match('^not_') then
+            inversion = true
+            k = k:gsub('^not_', '')
+        elseif k:match('^[!~]') then
+            inversion = true
+            k = k:gsub('^[!~]', '')
+        end
+
+        k = k .. '_p'
+        if not u[k] then
+            error('Invalid type provided: ' .. k)
+        end
+
+        return function (...)
+            for _, obj in ipairs({...}) do
+                local msg = 'Object %s is not a %s'
+                if is_opt and obj == nil then 
+                    return true
+                end
+
+                local correct_type = u[k](obj) 
+                if inversion then
+                    correct_type = not correct_type
+                    msg = 'Object %s is a %s'
+                end
+                if not correct_type then
+                    error(u.sprintf(msg, obj, k:gsub('_p', '')))
+                end
+                return true
+            end
         end
     end;
-
-    __call = function (self, obj, ...)
+    __call = function (self, ...)
         local args = {...}
+        local obj = args[1]
         local n = #args
-        local failed = 0
+        local ks = tu.slice(args, 2, -1)
+        local failed = {}
 
         claim(n > 0, 'No objects provided for type checking')
 
-        for _, k in ipairs({...}) do
-            local cls = rawget(self, k)
-            claim(cls ~= nil, 'Invalid datatype provided: ' .. k)
-            local success = pcall(cls, obj)
+        for _, k in ipairs(ks) do
+            local inversion = false
+            if k:match('^not_') then
+                inversion = true
+            elseif k:match('^[!~]') then
+                inversion = true
+            end
+
+            local success = pcall(param.claim[k], obj)
+            k = k:gsub('^opt_', '')
+            k = k:gsub('^[_!~]', '')
+            k = k:gsub('^not_', '')
+
             if not success then
-                failed = failed + 1
+                if inversion then
+                    failed[#failed+1] = u.sprintf('Object %s is a %s', obj, k)
+                else
+                    failed[#failed+1] = u.sprintf('Object %s is not a %s', obj, k)
+                end
             else
                 break
             end
         end
 
-        if n == failed then
-            error('Could not match any datatype for object: ' .. u.dump(obj))
+        if n == #failed then
+            obj = u.dump(obj)
+            for _, err in ipairs(failed) do
+                u.printf(err)
+            end
+            error('Could not match any datatype for object: ' .. obj)
         end
     end
 })
@@ -178,31 +139,6 @@ end
 
 param.claim_eql = param.claim_equal
 param.claim_type_eql = param.claim_type_equal
-
-function param.claim_class_equal(a, b)
-    local cls_a = class.of(a)
-    local cls_b = class.of(b)
-
-    if cls_a and cls_b then 
-       claim(cls_a == cls_b, u.sprintf("Class of `%s` is invalid. Given class: `%s`; Required class: `%s`", a, param.typeof(a), param.typeof(b)))
-    end
-end
-
-param.claim_cls_equal = param.claim_class_equal
-param.claim_cls_eql = param.claim_cls_eql
-
-function param.compare_type(a, b)
-    return param.typeof(a) == param.typeof(b)
-end
-
-function param.compare_class(a, b)
-    local c, d = class.of(a), class.of(b)
-
-    if c == nil or d == nil then return false end
-    return c == d
-end
-
-param.compare_cls = param.compare_class
 
 function param.claim_key(t, ...)
     param.claim_h(t)

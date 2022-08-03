@@ -10,6 +10,8 @@ keybindings.tabs = {
 }
 
 keybindings.misc = {
+    {'clipboardpaste', 'v', '<leader>xy', '"+y', {'silent', 'nowait'}, 'Paste from clipboard'};
+    {'clipboardcopy', 'v', '<leader>xp', '"+p', {'silent', 'nowait'}, 'Copy from clipboard'};
     {'nohighlight', 'n', '<leader><leader>', ":noh <CR>", attribs, 'Disable highlighting'};
     {'source%', 'n', '<leader>fv', function (bufnr, opts)
         opts = opts or {}

@@ -106,7 +106,7 @@ return {
             };
             indent = {
                 enable = true;
-                disable = {'lua', 'ruby'};
+                disable = {'lua', 'ruby', 'python'};
             }
         };
     },

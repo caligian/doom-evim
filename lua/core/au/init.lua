@@ -3,6 +3,8 @@ local autocmd = require 'core.au.autocmd'
 local au = require('core.au.utils')
 local m = {}
 
+assoc(Doom, {'au', 'status'}, create_status_t {})
+
 -- @module au
 -- Augroup module 
 -- Use this module to create augroup consisting of `autocmd' objects.

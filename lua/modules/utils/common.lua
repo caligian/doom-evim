@@ -3,6 +3,53 @@ local yaml = require('yaml')
 local iter = require('fun')
 local utils = {}
 
+utils.typeof = function (obj)
+    assert(obj ~= nil, 'Object cannot be nil')
+    local t = type(obj)
+
+    if t == 'table' then
+        local mt = getmetatable(obj)
+        if mt.__name then
+            return mt.__name
+        elseif mt.__call then
+            return 'callable'
+        end
+    end
+
+    return t
+end
+
+utils.isa = function (obj, k)
+    return utils.typeof(obj) == k
+end
+
+utils.is_a = utils.isa
+
+utils.module_p = function (obj)
+    assert(obj ~= nil, 'Object cannot be nil')
+    local t = type(obj)
+
+    if t == 'table' then
+        return t.__vars ~= nil
+    end
+
+    return false
+end
+
+utils.class_p = function (obj)
+    assert(obj ~= nil, 'Object cannot be nil')
+    local t = type(obj)
+
+    if t == 'table' then
+        return t.__vars ~= nil
+    end
+
+    return false
+end
+
+utils.is_class = utils.class_p
+utils.is_module = utils.module_p
+
 utils.to_stderr = function(s)
     vim.api.nvim_err_writeln(s)
 end
@@ -26,6 +73,8 @@ utils.boolean_p = function(e)
 end
 
 utils.bool_p = utils.boolean_p
+utils.is_boolean = utils.boolean_p
+utils.is_bool = utils.boolean_p
 
 utils.nil_p = function (o)
     if o == nil then
@@ -35,6 +84,8 @@ utils.nil_p = function (o)
     end
 end
 
+utils.is_nil = utils.nil_p
+
 utils.false_p = function (o)
     if o == false then
         return true
@@ -42,6 +93,8 @@ utils.false_p = function (o)
 
     return false
 end
+
+utils.is_false = utils.false_p
 
 utils.defined_p = function(o)
     if not utils.nil_p(o) then
@@ -52,6 +105,7 @@ utils.defined_p = function(o)
 end
 
 utils.defined = utils.defined_p
+utils.is_defined = utils.defined
 
 utils.true_p = function (o)
     if not utils.nil_p(o) and utils.false_p(o) then
@@ -62,6 +116,7 @@ utils.true_p = function (o)
 end
 
 utils.is_truthful = utils.true_p
+utils.is_true = utils.true_p
 
 utils.number_p = function (i)
     return type(i) == 'number'
@@ -71,14 +126,20 @@ utils.num_p = function(i)
     return utils.number_p(i)
 end
 
+utils.is_number = utils.number_p
+utils.is_num = utils.num_p
+
 utils.table_p = function (t)
     return type(t) == 'table'
 end
+utils.is_table = utils.table_p
+utils.is_dict = utils.table_p
 
 utils.func_p = function (f)
     return type(f) == 'function'
 end
-
+utils.is_function = utils.function_p
+utils.is_func = utils.function_p
 utils.function_p = utils.func_p
 
 utils.callable = function (f)
@@ -97,12 +158,14 @@ utils.callable = function (f)
 end
 
 utils.callable_p = utils.callable
+utils.is_callable = utils.callable
 
 utils.str_p = function (s)
     return type(s) == 'string'
 end
 
 utils.string_p = utils.str_p
+utils.is_string = utils.str_p
 
 utils.to_list = function (i, force)
     if utils.table_p(i) then
@@ -114,16 +177,6 @@ utils.to_list = function (i, force)
     else
         return {i}
     end
-end
-
-function utils.is_class(obj)
-    if not type(obj) == 'table' then
-        return false
-    end
-    if obj.__vars then
-        return obj
-    end
-    return false
 end
 
 function utils.class_name(obj)
@@ -138,24 +191,10 @@ function utils.class_name(obj)
     end
     return false
 end
-
-function utils.is_a(obj)
-    if type(obj) == 'table' and obj.__vars then
-        local mt = getmetatable(obj)
-        if mt then
-            return mt.__name
-        elseif mt.__call then
-            return 'callable'
-        else
-            return 'table'
-        end
-    else
-        return type(obj)
-    end
-end
+utils.classname = utils.class_name
+utils.cname = utils.class_name
 
 utils.to_arr = utils.to_list
-
 utils.to_a = utils.to_arr
 
 utils.inspect = function (...)

@@ -1,8 +1,8 @@
 local job = require('core.async.vim-job')
-local buffer = require('core.buffers')
+local buffer = require('core.buffer')
 
 local repl = {}
-assoc(Doom, {'repl', 'status'}, {})
+assoc(Doom, {'repl', 'status'}, create_status_t {})
 repl.status = Doom.repl.status
 local m = {}
 
