@@ -211,14 +211,14 @@ function m:add_callback(f)
 end
 
 function m:add_callbacks(...)
-    each(partial(self.add_callback, self), {...})
+    each({...}, partial(self.add_callback, self))
 end
 
 function m:get_callback()
     assert(#self.callbacks > 0, 'No callbacks have been added yet')
 
     return function (exit_id)
-        each(partial(c, exit_id), self.callbacks)
+        each(self.callbacks, partial(c, exit_id))
     end
 end
 

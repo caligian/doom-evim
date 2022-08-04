@@ -6,7 +6,7 @@ add_global(function(t)
             claim(k, 'number', 'string', 'table')
 
             if table_p(k) then
-                k = join(map(u.dump, k), "")
+                k = join(map(k, u.dump), "")
             end
 
             return rawget(self, k)
@@ -15,7 +15,7 @@ add_global(function(t)
             claim(k, 'number', 'string', 'table')
 
             if table_p(k) then
-                k = join(map(u.dump, k), "")
+                k = join(map(k, u.dump), "")
             end
 
             rawset(self, k, v)
@@ -120,14 +120,6 @@ return {
         defaults = {},
     },
 
-    templates = {
-        path = {with_data_path('templates'), with_config_path('templates')}
-    },
-
-    snippets = {
-        path = {with_data_path('snippets'), with_config_path('snippets')}
-    },
-
     async = {job = {status = create_status_t {} }},
 
     au = {
@@ -168,7 +160,6 @@ return {
     },
 
     pkgs = {
-        paq = require('paq');
         loaded = {},
     },
 }

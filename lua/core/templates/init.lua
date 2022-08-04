@@ -2,7 +2,7 @@ local buffer = require('core.buffer')
 local kbd = require('core.kbd')
 local template = {}
 
-assoc(Doom, {'template', 'dir'}, with_user_config_path('templates'))
+assoc(Doom, {'template'}, {dir=with_user_config_path('templates')})
 template.dir = Doom.template.dir
 
 if not path.exists(template.dir) then
@@ -65,10 +65,10 @@ function template.enable()
 
     local autocmd_groups = {}
 
-    each(function(ft)
+    each(keys(Doom.template.templates), function(ft)
         autocmd_groups[ft] = {}
 
-        each(function (pat)
+        each(keys(Doom.template.templates[ft]), function (pat)
             local t = Doom.template.templates[ft][pat]
 
             if template.au then
@@ -86,8 +86,8 @@ function template.enable()
             a:enable()
 
             autocmd_groups[ft][pat] = a
-        end, keys(Doom.template.templates[ft]))
-    end, keys(Doom.template.templates))
+        end)
+    end)
 
     template.au = autocmd_groups
 

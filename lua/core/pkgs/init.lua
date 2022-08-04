@@ -1,6 +1,7 @@
 local paq = require('paq')
 local plugins = require('core.pkgs.plugins')
 local timer = require('core.async.timer')
+assoc(Doom, {'pkgs', 'loaded'}, true)
 
 --[[
 Simple pkgs loader for plugins that does not rely upon packer
@@ -205,7 +206,7 @@ local function parse_specs(spec, opt)
         if cmd then vim.schedule(cmd) end
     end
 
-    if rocks then each(download_rock, to_list(rocks)) end
+    if rocks then each(to_list(rocks), download_rock) end
 
     return spec
 end
@@ -242,7 +243,5 @@ function pkgs.load_plugins(force)
 
     return t
 end
-
-pkgs.load_plugins()
 
 return pkgs

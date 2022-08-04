@@ -2,6 +2,7 @@ local au = require('core.au')
 local telescope = require 'core.telescope'
 local wk = require('which-key')
 local ex = require('core.kbd.exception')
+local module = dofile(with_config_lua_path('modules', 'utils', 'module.lua'))
 
 assoc(Doom, {'kbd', 'status'}, create_status_t {})
 assoc(Doom.kbd, {'defaults', 'attribs'}, {'silent', 'noremap', 'nowait'})
@@ -24,13 +25,13 @@ function kbd.oneshot(mode, keys, f, attribs)
     attribs = vals(attribs)
     noremap = noremap ~= nil and true
 
-    attribs_s = join(map(function(s)
+    attribs_s = join(map(attribs, function(s)
         if str_p(s) then
             return sprintf('<%s>', s)
         else
             return ''
         end
-    end, attribs), ' ')
+    end), ' ')
 
     local new_f = false
 
@@ -92,11 +93,11 @@ end
 function kbd.load_prefixes()
     if Doom.kbd.prefixes_loaded then return end
 
-    each(function(prefix) 
+    each(keys(Doom.kbd.prefixes), function(prefix) 
         local doc = Doom.kbd.prefixes[prefix]
         local leader = match(prefix, '<[^>]+>')
         wk.register({[prefix]={name=doc}})
-    end, keys(Doom.kbd.prefixes))
+    end)
 
     Doom.kbd.prefixes_loaded = true
 end
@@ -123,13 +124,13 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
     local noremap = find(attribs, 'noremap')
     if noremap then attribs[noremap] = nil end
     noremap = noremap ~= nil and true
-    local attribs_s = join(map(function(s)
+    local attribs_s = join(map(attribs, function(s)
         if str_p(s) then
             return sprintf('<%s>', s)
         else
             return ''
         end
-    end, attribs), ' ')
+    end), ' ')
 
     local self = module.new('keybinding', {
         vars = {
@@ -148,11 +149,14 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
             mapped = false,
             previous = {},
         }
-    }, m)
+    })
+
+    self:include(m)
     update(kbd.status, {mode, keys, id}, self)
 
     return self
 end
+
 
 function m:backup_previous()
     local previous = self.previous
@@ -161,13 +165,13 @@ function m:backup_previous()
     if #keys(current) == 0 then return false end
     if previous and previous.rhs == current.rhs or self.cmd == current.rhs then return false end
 
-    local _a = trim(join(map(function(_attrib)
+    local _a = trim(join(map({'silent', 'nowait', 'expr', 'buffer'}, function(_attrib)
         if current[_attrib] == 1 then
             return sprintf('<%s>', _attrib)
         else
             return ''
         end
-    end, {'silent', 'nowait', 'expr', 'buffer'}), " "))
+    end), " "))
 
     local mode = self.mode
     if current.noremap == 1 then
@@ -275,13 +279,13 @@ function m:disable(buffers)
                 buffers = intersection(buffers, keys(self.buffers))
             end
 
-            each(function(bufnr) 
+            each(self.buffers, function(bufnr) 
                 pcall(function() 
                     vim.api.nvim_buf_del_keymap(bufnr, self.mode, self.keys)
                 end)
 
                 self.buffers[bufnr] = nil
-            end, self.buffers)
+            end) 
         end
     end
 
@@ -320,14 +324,14 @@ function kbd.describe(query)
     if grp.__vars then
         inspect(grp.__vars)
     else
-        each(function(k) 
+        each(items(grp), function(k) 
             local v = false 
             k, v = unpack(k)
             inspect(v.__vars)
-        end, items(grp))
+        end)
     end
 end
 
-kbd.new('test', 'n', '<leader>zz', 'echo "hello"<CR>', false, '')
 
+kbd.new('test', 'n', '<leader>ff', ':echo "hello"', false, '')
 return kbd

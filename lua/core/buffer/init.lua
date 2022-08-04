@@ -542,7 +542,7 @@ function m:to_win_prompt(hook, doc, comment, win_opts)
     local text = self:read(pos)
     doc = doc or ''
     comment = comment or '#'
-    self:write({}, map(function(s) return comment .. ' ' .. s end, text))
+    self:write({}, map(text, function(s) return comment .. ' ' .. s end))
 
     self:set_keymap('n', 'gs', function() 
         hook(filter(function(s) 

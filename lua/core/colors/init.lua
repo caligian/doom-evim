@@ -2,10 +2,10 @@ local color = {}
 
 function color.get_highlight_colors(hi)
     local c = {}
-    each(function (s)
+    each(slice(split(vcmd(':hi ' .. hi), ' +'), 3), function (s)
         local a, hex = unpack(split(s, '='))
         c[a] = hex or false
-    end, slice(split(vcmd(':hi ' .. hi), ' +'), 3))
+    end)
 
     return c
 end

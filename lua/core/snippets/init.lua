@@ -3,7 +3,7 @@ local kbd = require('core.kbd')
 local snippet = {}
 
 assoc(Doom, {'snippet', 'dirs'}, {with_user_config_path('snippets')})
-assoc(Doom, {'snippet', 'dir'}, Doom.snippet.dirs[1])
+assoc(Doom, {'snippet', 'dir'}, Doom.snippet.dirs[1] or '')
 snippet.dirs = Doom.snippet.dirs
 snippet.dir = Doom.snippet.dir
 
@@ -21,8 +21,11 @@ local function create_dir(dir)
     end
 end
 
-create_dir(snippet.dir)
-each(create_dir, snippet.dirs)
+if #snippet.dir > 0 then
+    create_dir(snippet.dir)
+end
+
+each(snippet.dirs, create_dir)
 
 function snippet.save(ft, name, prefix, s)
     ft = ft or vim.bo.filetype

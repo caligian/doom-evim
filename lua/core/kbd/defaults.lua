@@ -71,16 +71,16 @@ if not Doom.kbd.loaded then
     end
 
     if overrides then
-        each(function(group)
+        each(keys(overrides), function(group)
             local specs = overrides[group]
             assoc(keybindings, group, {})
             each(partial(push, keybindings[group]), specs)
-        end, keys(overrides))
+        end)
     end
 
     for k, v in pairs(keybindings) do
         if table_p(v) then
-            each(function(_k) kbd.new(unpack(_k)):enable() end, v)
+            each(v, function(_k) kbd.new(unpack(_k)):enable() end)
         end
     end
 

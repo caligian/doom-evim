@@ -10,7 +10,7 @@ function tf.get_fonts(include)
     include = include or tf.include
     local fonts = {}
 
-    each(function(f)
+    each(system('fc-list -f "%{family}\n" :spacing=100 | uniq'), function(f)
         if match(f, include) then
             if match(f, ',') then
                 for _, i in ipairs(split(f, ',')) do
@@ -20,7 +20,7 @@ function tf.get_fonts(include)
                fonts[f] = true 
             end
         end
-    end, system('fc-list -f "%{family}\n" :spacing=100 | uniq'))
+    end)
 
     return keys(fonts)
 end
@@ -42,7 +42,7 @@ end
 
 function tf.new()
     local theight = function(sel)
-        local heights = map(tostring, range(8, 20))
+        local heights = map(range(8, 20), tostring)
         local t = ts.new {
             title = 'Select font height',
             results = heights,

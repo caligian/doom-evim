@@ -3,6 +3,10 @@ local yaml = require('yaml')
 local iter = require('fun')
 local utils = {}
 
+utils.identity = function (i)
+    return i
+end
+
 utils.blank_p = function (obj)
     if type(obj) ~= 'string' or type(obj) ~= 'table' then
         return
@@ -16,6 +20,9 @@ utils.to_callable = function(f)
     assert(utils.func_p(f), 'Only functions can be used in callable tables')
     return setmetatable({}, {__call = function(_, ...) f(...) end})
 end
+
+utils.func_to_callable = utils.to_callable
+utils.function_to_callable = utils.to_callable
 
 utils.len = function(param)
     if type(param) == 'table' then
@@ -52,9 +59,9 @@ utils.typeof = function (obj)
 
     if t == 'table' then
         local mt = getmetatable(obj)
-        if mt.__name then
+        if mt and mt.__name then
             return mt.__name
-        elseif mt.__call then
+        elseif mt and mt.__call then
             return 'callable'
         end
     end
@@ -73,23 +80,12 @@ utils.module_p = function (obj)
     local t = type(obj)
 
     if t == 'table' then
-        return t.__vars ~= nil
+        return t.__name ~= nil
     end
 
     return false
 end
-
-utils.class_p = function (obj)
-    assert(obj ~= nil, 'Object cannot be nil')
-    local t = type(obj)
-
-    if t == 'table' then
-        return t.__vars ~= nil
-    end
-
-    return false
-end
-
+utils.class_p = utils.module_p
 utils.is_class = utils.class_p
 utils.is_module = utils.module_p
 
@@ -97,18 +93,8 @@ utils.to_stderr = function(s)
     vim.api.nvim_err_writeln(s)
 end
 
-utils.system = function(cmd, opts)
-    local out, t = vim.fn.system(cmd), {}
-
-    for index, s in ipairs(vim.split(out, "[\n\r]")) do
-        t[index] = s
-    end
-
-    if stderr then
-        utils.to_stderr(table.concat(t, "\n"))
-    end
-
-    return t
+utils.system = function(cmd)
+    return vim.fn.systemlist(cmd)
 end
 
 utils.boolean_p = function(e)
@@ -226,14 +212,13 @@ function utils.class_name(obj)
     if not type(obj) == 'table' then
         return false
     end
-    if obj.__vars then
-        local mt = getmetatable(obj)
-        if mt.__name then
-            return mt.__name
-        end
+    local mt = getmetatable(obj)
+    if mt and mt.__name then
+        return mt.__name
     end
     return false
 end
+
 utils.classname = utils.class_name
 utils.cname = utils.class_name
 
@@ -276,25 +261,6 @@ end
 
 utils.echo = function(fmt, ...)
     vim.api.nvim_echo({{utils.sprintf(fmt, ...)}}, false, {})
-end
-
---
--- String ops
---
-utils.split = function(s, pat)
-   if utils.str_p(s) then
-       return vim.split(s, pat)
-   else
-       return s
-   end
-end
-
---
--- Function ops
---
-
-utils.call = function (f, ...)
-    return f(...)
 end
 
 -- File ops

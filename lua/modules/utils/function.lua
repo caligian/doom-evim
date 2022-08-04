@@ -19,15 +19,15 @@ function fun.lpartial(f, ...)
     end
 end
 
-function fun.identity(i)
-    return i
-end
+function fun.ithread(f, ...)
+    param.claim.callable(f)
 
-function fun.ithread(obj, ...)
-    local args = {...}
+    local args = {f, ...}
     local out = nil
     local n = #args
+    local obj = args[n]
     local index = 1
+    n = n - 1
 
     return function ()
         if index > n then
@@ -54,7 +54,7 @@ function fun.ilthread(...)
     local n = #cbs
     local obj = cbs[n]
     local out
-    local index = n 
+    local index = n - 1
 
     return function ()
         if index == 0 then
@@ -76,11 +76,15 @@ function fun.ilthread(...)
     end, cbs, index
 end
 
-function fun.thread(obj, ...)
+function fun.thread(...)
     local args = {...}
+    local n = #args
+    local obj = args[n]
     local out
+    n = n - 1
 
-    for _, callback in ipairs(args) do
+    for i=1, n do
+        local callback = args[i]
         param.claim.callable(callback)
 
         if out == nil then
@@ -99,72 +103,9 @@ function fun.lthread(...)
     local n = #cbs
     local obj = cbs[n]
     local out
+    n = n - 1
 
-    for i=n-1, 1, -1 do
-        local callback = cbs[i]
-        param.claim.callable(callback)
-
-        if out == nil then
-            out = callback(obj)
-        else
-            local prev = out
-            out = callback(prev)
-        end
-    end
-
-    return out
-end
-
-
-
-function fun.lthread(...)
-    local cbs = {...}
-    local n = #cbs
-    local obj = cbs[n]
-    local out
-
-    for i=n-1, 1, -1 do
-        local callback = cbs[i]
-        param.claim.callable(callback)
-
-        if out == nil then
-            out = callback(obj)
-        else
-            local prev = out
-            out = callback(prev)
-        end
-    end
-
-    return out
-end
-
-
-
-function fun.thread(obj, ...)
-    local args = {...}
-    local out
-
-    for _, callback in ipairs(args) do
-        param.claim.callable(callback)
-
-        if out == nil then
-            out = callback(obj)
-        else
-            local prev = out
-            out = callback(prev)
-        end
-    end
-
-    return out
-end
-
-function fun.lthread(...)
-    local cbs = {...}
-    local n = #cbs
-    local obj = cbs[n]
-    local out
-
-    for i=n-1, 1, -1 do
+    for i=n, 1, -1 do
         local callback = cbs[i]
         param.claim.callable(callback)
 

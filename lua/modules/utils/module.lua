@@ -104,11 +104,11 @@ function module.on_operator(self, op, callback, getter)
                 if cls == self then
                     l = unwrap(getter or false)(cls)
                     r = cls1
-                    f = unwrap_for_method(getter, lhs)
+                    f = unwrap_for_method(getter or false, lhs)
                 else
                     l = unwrap(getter or false)(cls1)
                     r = cls
-                    f = unwrap_for_method(getter, rhs)
+                    f = unwrap_for_method(getter or false, rhs)
                 end
             end
 
@@ -221,7 +221,7 @@ function module.get_bound_instance_method(self, name)
     end
 end
 
-function module.new(name, vars, methods)
+function module.new(name, vars)
     local self = { __vars = {}, __methods = {}, __constants = {} }
     vars = vars or {}
     methods = methods or {}
@@ -248,39 +248,25 @@ function module.new(name, vars, methods)
         end
     end
 
-    if methods then
-        pu.claim.table(methods)
-        for key, value in pairs(methods) do
-            module.define_method(self, key, value)
-        end
-    end
-
-    local index = function (cls, k)
-        local is_v = module.get_instance_variable(cls, k)
-        if is_v then
-            return is_v
-        end
-
-        local is_c = module.get_constant(cls, k)
-        if is_c then
-            return is_c
-        end
-
-        local is_m = module.get_instance_method(cls, k)
-        if is_m then
-            return is_m
-        end
-    end
-
     return setmetatable(self, {
         __name = name,
-        __index = index,
-        __newindex = function (cls, k, v)
-            cls:set_instance_variable(k, v)
-        end,
+        __index = function (cls, k)
+            local is_v = module.get_instance_variable(cls, k)
+            if is_v then
+                return is_v
+            end
+
+            local is_c = module.get_constant(cls, k)
+            if is_c then
+                return is_c
+            end
+
+            local is_m = module.get_instance_method(cls, k)
+            if is_m then
+                return is_m
+            end
+        end;
     })
 end
-
-module.new('test', {}, {a=inspect})
 
 return module

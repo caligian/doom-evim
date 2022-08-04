@@ -51,6 +51,7 @@ param.claim = setmetatable({}, {
                     correct_type = not correct_type
                     msg = 'Object %s is a %s'
                 end
+
                 if not correct_type then
                     error(u.sprintf(msg, obj, k:gsub('_p', '')))
                 end
@@ -58,11 +59,11 @@ param.claim = setmetatable({}, {
             end
         end
     end;
-    __call = function (self, ...)
-        local args = {...}
-        local obj = args[1]
-        local n = #args
-        local ks = tu.slice(args, 2, -1)
+    __call = function (self, obj, ...)
+        assert(obj ~= nil, 'No object provided to test')
+
+        local ks = {...}
+        local n = #ks
         local failed = {}
 
         claim(n > 0, 'No objects provided for type checking')
@@ -359,5 +360,46 @@ function param.validate_params(...)
 
     return unpack(args)
 end
+
+-- This is the coolest param multitype validator  
+-- t table
+-- h hash (table)
+-- d hash (table)
+-- s string
+-- c callable
+-- b boolean
+-- f function
+-- m module/class
+-- n number
+param.claim_type = setmetatable({}, {
+    __index = function(self, k)
+        local test = {
+            s = 'string';
+            t = 'table';
+            d = 'table';
+            h = 'table';
+            a = 'table';
+            c = 'callable';
+            b = 'boolean';
+            f = 'function';
+            m = 'module';
+            n = 'number';
+        }
+        local what = string.match(k, '^[thdscbfmn]+$')
+        assert(what, 'Need any of t, h, d, s, c, b, f, m, n as type signature')
+        what = vim.split(what, '')
+        local args = {}
+
+        for _, i in ipairs(what) do
+            assert(test[i], 'Invalid type signature provided: ' .. i)
+            args[#args+1] = test[i]
+        end
+        return function(...)
+            for _, obj in ipairs({...}) do
+                param.claim(obj, unpack(args))
+            end
+        end
+    end
+})
 
 return param

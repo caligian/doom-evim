@@ -41,6 +41,7 @@ function au.new(name, doc)
     return self
 end
 
+
 -- @function add
 -- @tparam event string,table[string] Vim events to bind a callback to. Use `:h events` to get an overview on what vim events are.
 -- @tparam pattern string,table[string] File patterns to match for calling the callback
@@ -57,14 +58,14 @@ function m:add(event, pattern, callback, opts)
     event = to_list(event)
     pattern = to_list(pattern)
 
-    each(function(p)
-        each(function (e)
+    each(pattern, function(p)
+        each(event, function (e)
             local aucmd = autocmd.new(self.name, e, p, callback, opts)
             local name = e .. ' ' .. p
-            update(self.autocmds, name, aucmd)
+            self.autocmds[name] = aucmd
             force = force or false
-        end, event)
-    end, pattern)
+        end)
+    end)
 
     return self
 end

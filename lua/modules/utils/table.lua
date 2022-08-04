@@ -17,22 +17,10 @@ tu.new_iter = function (t)
     t = iter.iter(valid_t(t))
     local mt = getmetatable(t)
     mt.__name = 'iterable'
+    mt.__tostring = function(self)
+        return utils.dump(self)
+    end
     return t
-end
-
-tu.new_basic_iter = function (t, init)
-    local ks = tu.keys(t)
-    local index = init or 1
-    local n = #ks
-
-    return function ()
-        if index > n then
-            return
-        end
-
-        index = index + 1
-        return t[ks[index-1]]
-    end, t, ks[index]
 end
 
 tu.to_dict = function(...)
@@ -428,28 +416,30 @@ end
 -- With side effects
 --@tparam transform function Spec: transform(value, table, key, previous_table, previous_key). The function is only used when a key is found
 --@tparam create boolean|any If create is true then create a table in its place. If create is false or nil, false is returned. If create is anything else, it is simply put in place of the missing value. If 'd' is passed, that element is removed from the dict iff it is found
-tu.assoc = function (dict, ks, create, transform)
+tu.assoc = function (dict, ks, opts)
+    opts = opts or {}
     dict = valid_t(dict)
     ks = utils.to_list(ks)
     local t = dict
     local last_key = false
     local last_t = t
     local out = {}
+    local n = utils.len(dict)
 
     for index, key in ipairs(ks) do
         last_key = key
         local v = t[key]
 
         if not v then
-            if create ~= nil and transform ~= 'd' then
-                if index == n then
-                    if create == true then
+            if opts.replace ~= nil then
+                if index-1 == n then
+                    if opts.replace == true then
                         t[key] = {}
                     else
-                        t[key] = create
+                        t[key] = opts.replace
                     end
 
-                    return create, last_key, last_t, dict
+                    return opts.replace, last_key, last_t, dict
                 else
                     t[key] = {}
                 end
@@ -457,20 +447,16 @@ tu.assoc = function (dict, ks, create, transform)
                 return false, last_key, last_t, dict
             end
         elseif not utils.table_p(v) then
-            if transform == 'd' then
+            if opts.delete then
                 local out = vim.deepcopy(t[key])
                 t[key] = nil
                 return out, last_key, last_t, dict
-            else
-                if transform then 
-                    assert(callable(transform), 'Transformer must be a callable')
-                    t[key] = transform(v, t, key, last_t, last_key)
-                end
-
-                return t[key], last_key, last_t, dict
+            elseif opts.transform then 
+                assert(callable(opts.transform), 'Transformer must be a callable')
+                t[key] = opts.transform(v, t, key, last_t, last_key)
             end
-        elseif transform == 'd' then
-            t[key] = nil
+
+            return t[key], last_key, last_t, dict
         end
 
         last_t = t
@@ -546,35 +532,12 @@ end
 -- misc operations
 --
 tu.imap = function (t, f)
-    t = valid_t(t)
-    local ks = tu.keys(t)
-    local n = #ks
-    local index = 1
-    local key = ks[index]
-
-    return function ()
-        if index > n then return end
-        key = t[index]
-        index = index + 1
-        return f(t[key])
-    end, t, key
+    return iter.iter(t):map(f)
 end
 
 tu.ieach = function (t, f)
     t = valid_t(t)
-
-    local index = 1
-    local ks = tu.keys(t)
-    local n = utils.len(t)
-    local key = ks[index]
-
-    return function ()
-        if index > n then return end
-
-        key = ks[index]
-        index = index + 1
-        f(t[key])
-    end, t, key
+    iter.iter(t):each(f)
 end
 
 tu.each = function (t, f)
@@ -586,7 +549,7 @@ end
 
 tu.map = function (t, f)
     local out = {}
-    for i in tu.imap(t, f) do
+    for _, i in tu.imap(t, f) do
         tu.push(out, i)
     end
 
@@ -621,65 +584,6 @@ tu.filter = function (t, f)
 
     return correct
 end
-
--- iterator operations
-tu.vec = function (iterable, index, n)
-    local gen, param, state
-    iterable = valid_t(iterable)
-    gen, param, state = iterable.gen, iterable.param, iterable.state
-
-    index = index or -1
-    n = n or -1
-    local acc = {}
-
-    local _add = function(g, p, s)
-        local out = {g(p, s)}
-
-        if #out == 0 then 
-            return
-        end
-
-        if #out > 1 and s then
-            s = tu.first(out)
-            out = slice(out, 2)
-        end
-
-        if #out == 1 then
-            out = tu.first(out)
-        end
-
-        if not utils.table_p(index) then
-            if index == -1 then
-                tu.push(acc, out)
-            else
-                tu.push(acc, out[index] or false)
-            end
-        else
-            local t = {}
-            for _, i in ipairs(utils.to_list(index)) do
-                tu.push(t, out[i] or false)
-            end
-
-            tu.push(acc, t)
-        end
-
-        return true, s
-    end
-
-    local success
-    local new_state
-    local times = 0
-    repeat
-        success, new_state = _add(gen, param, state) 
-        if not success then return acc end
-        state = new_state ~= nil and new_state or state
-        times = times + 1
-    until n > 0 and times == n
-
-    return acc
-end
-
-inspect(tu.vec(iter.iter({1,2,3,4})))
 
 tu.defaultdict = function (t, default)
     t = t or {}
@@ -834,5 +738,25 @@ end
 
 tu.is_superset = tu.superset_p
 tu.is_subset = tu.subset_p
+
+function tu.vec(it, n)
+    assert(utils.cname(it) == 'iterable', 'Please use tu.new_iter to create a new luafun iterable')
+
+    local gen, param, state, last_output = it.gen, it.param, it.state
+    local out = {}
+    n = n or #it.param
+    for i=1, n do
+        state, last_output = gen(param, state)
+        if last_output then
+            tu.push(out, last_output)
+        else
+            break
+        end
+    end
+
+    return out
+end
+
+tu.to_vec = tu.vec
 
 return tu

@@ -95,7 +95,7 @@ end
 function lsp.setup_lua()
     local binarypath = with_data_path('lsp_servers', 'sumneko_lua', 'extension', 'server', 'bin', 'lua-language-server')
     local mainpath = with_data_path('lsp_servers', 'sumneko_lua', 'extension', 'server', 'bin', 'main.lua')
-    local runtimepath = split(package.path, ';')
+    local runtimepath = vim.split(package.path, ';')
     local sumneko_lua = require('lspconfig').sumneko_lua
 
     push(runtimepath, 'lua/?.lua')
@@ -133,7 +133,7 @@ function lsp.setup_servers()
         underline = false,
     }
 
-    each(function (lang)
+    each(keys(Doom.langs), function (lang)
         if lang == 'shell' then return end
 
         local server = assoc(Doom.langs, {lang, 'lsp'})
@@ -161,7 +161,7 @@ function lsp.setup_servers()
                 nvim_lsp[server_name].setup(server.config)
             end
         end
-    end, keys(Doom.langs))
+    end)
 end
 
 return lsp

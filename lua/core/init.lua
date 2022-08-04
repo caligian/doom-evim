@@ -10,7 +10,7 @@ add_global(class.multimethod, 'multimethod')
 add_global(class.overload, 'overload')
 
 -- Import globals
-assoc(_G, {'Doom'}, require('core.globals'))
+add_global(require 'core.globals', 'Doom')
 
 -- This is for convenience - global logger
 add_global(require('core.exceptions'), 'ex')
