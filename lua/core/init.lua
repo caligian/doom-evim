@@ -13,7 +13,7 @@ add_global(class.overload, 'overload')
 add_global(require 'core.globals', 'Doom')
 
 -- This is for convenience - global logger
-add_global(require('core.exceptions'), 'ex')
+add_global(require('core.exceptions'), 'exception')
 require('core.log')
 
 -- Load user overrides
@@ -21,8 +21,8 @@ require('core.log')
 if path.exists(with_user_config_path('lua', 'user', 'init.lua')) then 
     require('user') 
 end
-
--- Load doom packages
+--
+---- Load doom packages
 add_global(require('core.au'), 'au')
 add_global(require('core.kbd'), 'kbd')
 add_global(require('core.telescope'), 'telescope')
@@ -41,8 +41,8 @@ lsp.setup_servers()
 -- Load extras from builtin modules
 telescope.font_switcher = require('core.telescope.font_switcher')
 require('core.telescope.font_switcher.keybindings')
-
--- Require keybindings
+--
+---- Require keybindings
 require('core.buffer.keybindings')
 require('core.kbd.defaults')
 require('core.repl.keybindings')

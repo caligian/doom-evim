@@ -1,7 +1,7 @@
 local logger = require('logging.file')
 local path = require('path')
 
-assoc(Doom, {'log', 'logger'}, {})
+assoc(Doom, {'log', 'logger'}, {replace=true})
 
 if not Doom.log.logger then
     Doom.log.logger = logger(Doom.log.path, '%d-%m-%Y-%H-%M-%S', "[%date] [%level] %message\n")

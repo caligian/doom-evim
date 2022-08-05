@@ -2,10 +2,9 @@ local au = require('core.au')
 local telescope = require 'core.telescope'
 local wk = require('which-key')
 local ex = require('core.kbd.exception')
-local module = dofile(with_config_lua_path('modules', 'utils', 'module.lua'))
 
-assoc(Doom, {'kbd', 'status'}, create_status_t {})
-assoc(Doom.kbd, {'defaults', 'attribs'}, {'silent', 'noremap', 'nowait'})
+assoc(Doom, {'kbd', 'status'}, {replace=create_status_t {}})
+assoc(Doom.kbd, {'defaults', 'attribs'}, {replace={'silent', 'noremap', 'nowait'}})
 local kbd = {
     defaults = Doom.kbd.defaults,
     status = Doom.kbd.status,
@@ -18,7 +17,7 @@ function kbd.oneshot(mode, keys, f, attribs)
     claim.string(keys)
     claim(f, 'string', 'callable')
     claim(attribs, 'string', 'table', 'boolean')
-    attribs = attribs or kbd.defaults.attribs
+    attribs = attribs or deepcopy(kbd.defaults.attribs)
     attribs = to_list(attribs)
     local noremap = find(attribs, 'noremap')
     if noremap then attribs[noremap] = nil end
@@ -108,8 +107,8 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
     claim.string(keys, doc)
     claim(callback, 'string', 'callable')
 
-    --local existing = assoc(kbd.status, {mode, keys, id})
-    --if existing then return existing end
+    local existing = assoc(kbd.status, {mode, keys, id})
+    if existing then return existing end
     if event then claim(event, 'string', 'table') end
     if pattern then claim(pattern, 'string', 'table') end
     if attribs then claim(attribs, 'string', 'table') end
@@ -153,10 +152,8 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
 
     self:include(m)
     update(kbd.status, {mode, keys, id}, self)
-
     return self
 end
-
 
 function m:backup_previous()
     local previous = self.previous
@@ -332,6 +329,4 @@ function kbd.describe(query)
     end
 end
 
-
-kbd.new('test', 'n', '<leader>ff', ':echo "hello"', false, '')
 return kbd

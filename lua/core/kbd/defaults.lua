@@ -1,6 +1,6 @@
 local keybindings = {}
+local attribs = false
 local kbd = require('core.kbd')
-local attribs = {'noremap', 'silent', 'nowait'}
 
 keybindings.tabs = {
     {'tabnew', 'n', '<leader>tt', ":tabnew <CR>", attribs, 'Open a new tab'};
@@ -73,14 +73,16 @@ if not Doom.kbd.loaded then
     if overrides then
         each(keys(overrides), function(group)
             local specs = overrides[group]
-            assoc(keybindings, group, {})
+            assoc(keybindings, group, {replace=true})
             each(partial(push, keybindings[group]), specs)
         end)
     end
 
     for k, v in pairs(keybindings) do
         if table_p(v) then
-            each(v, function(_k) kbd.new(unpack(_k)):enable() end)
+            for _, value in ipairs(v) do
+                kbd.new(unpack(value)):enable()
+            end
         end
     end
 

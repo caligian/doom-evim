@@ -2,7 +2,7 @@ local buffer = require('core.buffer')
 local kbd = require('core.kbd')
 local template = {}
 
-assoc(Doom, {'template'}, {dir=with_user_config_path('templates')})
+assoc(Doom, {'template'}, {replace={dir=with_user_config_path('templates')}})
 template.dir = Doom.template.dir
 
 if not path.exists(template.dir) then

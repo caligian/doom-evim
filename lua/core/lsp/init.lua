@@ -135,7 +135,6 @@ function lsp.setup_servers()
 
     each(keys(Doom.langs), function (lang)
         if lang == 'shell' then return end
-
         local server = assoc(Doom.langs, {lang, 'lsp'})
 
         if not server then return end

@@ -22,15 +22,7 @@ vim.g.inccommand = 'split'
 vim.g.session_autosave = false
 vim.o.background = 'dark'
 vim.g.session_autoload = false
-vim.g.guifont = 'Liberation Mono:h16'
-
-vim.cmd [[set ttimeout
-set ttimeoutlen=1
-set listchars=tab:>-,trail:~,extends:>,precedes:<,space:.
-set ttyfast
-let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-let &t_EI = "\<Esc>]50;CursorShape=0\x7"]]
+vim.g.guifont = 'DejaVuSans Mono:h15'
 
 -- leader key
 vim.g.mapleader = " "
@@ -57,25 +49,6 @@ package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/init.lua'
 
 -- cpaths
 package.cpath = package.cpath .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.so'
-
-if vim.fn.exists('g:fvim_loaded') then
-    cmds = {
-        FVimCursorSmoothMove = 'v:true',
-        FVimCursorSmoothBlink = 'v:true',
-        FVimAntiAlias = 'v:true',
-        FVimFontHintLevel = 'full',
-        FVimFontSubPixel = 'v:true',
-        FVimFontAutoSnap = 'v:true',
-        FVimFontNormalWeight = '100',
-        FVimCursorSmoothMove = 'v:true',
-        FVimCursorSmoothMove = 'v:true',
-        FVimCursorSmoothMove = 'v:true',
-    }
-
-    for key, value in ipairs(cmds) do
-        vim.cmd(k .. ' ' .. v)
-    end
-end
 
 -- Load doom
 require('core')

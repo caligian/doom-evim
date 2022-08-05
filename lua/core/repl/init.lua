@@ -2,7 +2,7 @@ local job = require('core.async.vim-job')
 local buffer = require('core.buffer')
 
 local repl = {}
-assoc(Doom, {'repl', 'status'}, create_status_t {})
+assoc(Doom, {'repl', 'status'}, {replace=create_status_t {}})
 repl.status = Doom.repl.status
 local m = {}
 
@@ -36,7 +36,7 @@ function m:send(method)
     end
 
     local buf = buffer.find_by_bufnr(vim.fn.bufnr()) or buffer.new('%')
-    assoc(self, {'connected'}, {})
+    assoc(self, {'connected'}, {replace=true})
     self.connected[buf.index] = buf
     local curpos = buf:getcurpos()
 

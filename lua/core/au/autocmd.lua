@@ -13,8 +13,8 @@ function autocmd.new(group, event, pattern, callback, opts)
         Doom.au.status[group] = create_status_t {}
     end
 
-    --local existing = assoc(Doom.au.status, {group, event .. ' ' .. pattern}, {})
-    --if existing.__vars then return existing end
+    local existing = assoc(Doom.au.status, {group, event .. ' ' .. pattern}, {replace={}})
+    if existing.__vars then return existing end
 
     opts = opts or {}
     once = find(opts, 'once')

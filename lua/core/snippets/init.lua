@@ -2,8 +2,8 @@ local buffer = require('core.buffer')
 local kbd = require('core.kbd')
 local snippet = {}
 
-assoc(Doom, {'snippet', 'dirs'}, {with_user_config_path('snippets')})
-assoc(Doom, {'snippet', 'dir'}, Doom.snippet.dirs[1] or '')
+assoc(Doom, {'snippet', 'dirs'}, {replace={with_user_config_path('snippets')}})
+assoc(Doom, {'snippet', 'dir'}, {replace=Doom.snippet.dirs[1] or ''})
 snippet.dirs = Doom.snippet.dirs
 snippet.dir = Doom.snippet.dir
 

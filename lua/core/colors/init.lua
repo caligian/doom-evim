@@ -2,8 +2,9 @@ local color = {}
 
 function color.get_highlight_colors(hi)
     local c = {}
-    each(slice(split(vcmd(':hi ' .. hi), ' +'), 3), function (s)
-        local a, hex = unpack(split(s, '='))
+    local t = slice(vim.split(vcmd(':hi ' .. hi), ' +'), 3)
+    each(t, function (s)
+        local a, hex = unpack(vim.split(s, '='))
         c[a] = hex or false
     end)
 

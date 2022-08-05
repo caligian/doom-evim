@@ -13,7 +13,7 @@ function tf.get_fonts(include)
     each(system('fc-list -f "%{family}\n" :spacing=100 | uniq'), function(f)
         if match(f, include) then
             if match(f, ',') then
-                for _, i in ipairs(split(f, ',')) do
+                for _, i in ipairs(vim.split(f, ',')) do
                     fonts[i] = true
                 end
             elseif #f > 0 then

@@ -424,15 +424,15 @@ tu.assoc = function (dict, ks, opts)
     local last_key = false
     local last_t = t
     local out = {}
-    local n = utils.len(dict)
+    local n = #ks
 
     for index, key in ipairs(ks) do
         last_key = key
         local v = t[key]
 
         if not v then
-            if opts.replace ~= nil then
-                if index-1 == n then
+            if n == index then
+                if opts.replace ~= nil then
                     if opts.replace == true then
                         t[key] = {}
                     else
@@ -441,8 +441,10 @@ tu.assoc = function (dict, ks, opts)
 
                     return opts.replace, last_key, last_t, dict
                 else
-                    t[key] = {}
+                    return false, last_key, last_t, dict
                 end
+            elseif opts.replace then
+                t[key] = {}
             else
                 return false, last_key, last_t, dict
             end
@@ -451,6 +453,12 @@ tu.assoc = function (dict, ks, opts)
                 local out = vim.deepcopy(t[key])
                 t[key] = nil
                 return out, last_key, last_t, dict
+            elseif opts.replace then
+                if opts.replace == true then
+                    opts.replace = {}
+                end
+
+                t[key] = opts.replace
             elseif opts.transform then 
                 assert(callable(opts.transform), 'Transformer must be a callable')
                 t[key] = opts.transform(v, t, key, last_t, last_key)
@@ -468,13 +476,13 @@ end
 
 function tu.update(dict, ks, replacement)
     dict = valid_t(dict)
-    tu.assoc(dict, ks, replacement, function(...) return replacement end)
+    tu.assoc(dict, ks, {transform=function(...) return replacement end})
     return dict
 end
 
 function tu.remove(dict, ks)
     dict = valid_t(dict)
-    tu.assoc(dict, ks, false, 'd')
+    tu.assoc(dict, ks, {delete=true})
     return dict
 end
 

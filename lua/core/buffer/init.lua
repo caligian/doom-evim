@@ -9,7 +9,7 @@ local buffer = {}
 local m = {}
 
 -- @field status Contains all the buffers made using this module
-assoc(Doom, {'buffer', 'status'}, create_status_t {})
+assoc(Doom, {'buffer', 'status'}, {replace=create_status_t {}})
 buffer.status = Doom.buffer.status
 
 -- Find buffer by using the buffer index number. This will index Doom.buffer.status
@@ -502,14 +502,14 @@ function m:set_keymap(mode, keys, f, attribs, doc, event)
     assert(f)
     assert(doc)
 
-    assoc(self, {'keymaps', mode, keys}, {})
+    assoc(self, {'keymaps', mode, keys}, {replace=true})
     event = event or 'BufEnter'
     attribs = attribs or 'buffer'
     local doc = 'Keybinding for buffer: ' .. self.index
     local pattern = sprintf('<buffer=%d>', self.index)
     local name = sprintf('bufnr=%d keys=%s:%s', self.index, mode, keys)
     local k = kbd.new(name, mode, keys, f, attribs, doc, event, pattern)
-    assoc(self.keymaps, {mode, keys, name}, k)
+    assoc(self.keymaps, {mode, keys, name}, {replace=k})
     k:enable()
 end
 

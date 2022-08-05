@@ -47,7 +47,7 @@ utils.range = function (from, till, step)
     local t = {}
 
     for i=from, till, step do
-        tu.push(t, i)
+        t[#t+1] = i
     end
 
     return t

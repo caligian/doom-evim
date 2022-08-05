@@ -1,7 +1,10 @@
 local paq = require('paq')
 local plugins = require('core.pkgs.plugins')
 local timer = require('core.async.timer')
-assoc(Doom, {'pkgs', 'loaded'}, true)
+
+assoc(Doom, {'pkgs', 'loaded'}, {
+    replace = true;
+})
 
 --[[
 Simple pkgs loader for plugins that does not rely upon packer
