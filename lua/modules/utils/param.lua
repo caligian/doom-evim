@@ -1,9 +1,7 @@
-local class = require('classy')
-local u = require('modules.utils.common')
-local tu = require('modules.utils.table')
-local param = {}
+require('modules.utils.common')
+require('modules.utils.table')
 
-local claim = function (test, msg)
+local _claim = function (test, msg)
     assert(test ~= nil)
 
     if type(test) == 'function' then
@@ -13,7 +11,7 @@ local claim = function (test, msg)
     end
 end
 
-param.claim = setmetatable({}, {
+claim = setmetatable({}, {
     __newindex = nil;
     __index = function (self, k)
         local is_opt = false
@@ -66,7 +64,7 @@ param.claim = setmetatable({}, {
         local n = #ks
         local failed = {}
 
-        claim(n > 0, 'No objects provided for type checking')
+        _claim(n > 0, 'No objects provided for type checking')
 
         for _, k in ipairs(ks) do
             local inversion = false
@@ -76,7 +74,7 @@ param.claim = setmetatable({}, {
                 inversion = true
             end
 
-            local success = pcall(param.claim[k], obj)
+            local success = pcall(claim[k], obj)
             k = k:gsub('^opt_', '')
             k = k:gsub('^[_!~]', '')
             k = k:gsub('^not_', '')
@@ -102,58 +100,27 @@ param.claim = setmetatable({}, {
     end
 })
 
-for k, v in pairs(param.claim) do
-    param['claim_' .. k] = v
-end
+claim_s = claim_string
+claim_str = claim_string
+claim_b = claim_boolean
+claim_bool = claim_boolean
+claim_h = claim_table
+claim_t = claim_table
+claim_hash = claim_hash
 
-param.claim_s = param.claim_string
-param.claim_str = param.claim_string
-param.claim_b = param.claim_boolean
-param.claim_bool = param.claim_boolean
-param.claim_h = param.claim_table
-param.claim_t = param.claim_table
-param.claim_hash = param.claim_hash
-
-function param.typeof(obj)
-    local t = type(obj)
-
-    if t == 'table' then
-        local mt = getmetatable(t)
-        if mt then
-            if not mt.__name then return 'table' end
-            return mt.__name
-        else
-            return 'table'
-        end
-    else
-        return t
-    end
-end
-
-function param.claim_equal(a, b)
-    claim(a == b, u.sprintf('Param `%s` is not equal to param `%s`', a, b))
-end
-
-function param.claim_type_equal(a, b)
-    claim(param.typeof(a) == param.typeof(b), u.sprintf('Param `%s` is not equal to param `%s`', a, b))
-end
-
-param.claim_eql = param.claim_equal
-param.claim_type_eql = param.claim_type_equal
-
-function param.claim_key(t, ...)
-    param.claim_h(t)
+function claim_key(t, ...)
+    claim_h(t)
 
     for _, k in ipairs({...}) do
         claim(t[k] ~= nil, u.sprintf("Table %s does not have key %s with the required value", t, k))
     end
 end
 
-function param.dfs_compare_table(table_a, table_b, cmp)
-    param.claim_h(table_a)
-    param.claim_h(table_b)
+function dfs_compare_table(table_a, table_b, cmp)
+    claim_h(table_a)
+    claim_h(table_b)
 
-    if cmp then param.claim_callable(cmp) end
+    if cmp then claim_callable(cmp) end
     local new_t = {}
     local _new_t = new_t
 
@@ -161,10 +128,10 @@ function param.dfs_compare_table(table_a, table_b, cmp)
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            local is_equal = param.compare_type(a, b)
+            local is_equal = compare_type(a, b)
 
             if u.table_p(a) and is_equal then
-                if param.compare_cls(a, b) then
+                if compare_cls(a, b) then
                     if cmp then
                         _new_t[k] = cmp(a, b)
                     else
@@ -191,10 +158,10 @@ function param.dfs_compare_table(table_a, table_b, cmp)
     return new_t
 end
 
-function param.bfs_compare_table(table_a, table_b, cmp)
-    param.claim_h(table_a)
-    param.claim_h(table_b)
-    param.claim_callable(cmp)
+function bfs_compare_table(table_a, table_b, cmp)
+    claim_h(table_a)
+    claim_h(table_b)
+    claim_callable(cmp)
 
     local new_t = {}
     local _new_t = new_t
@@ -204,10 +171,10 @@ function param.bfs_compare_table(table_a, table_b, cmp)
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            local is_equal = param.compare_type(a, b)
+            local is_equal = compare_type(a, b)
 
             if u.table_p(a) and is_equal then
-                if param.compare_cls(a, b) then
+                if compare_cls(a, b) then
                     if cmp then
                         _new_t[k] = cmp(a, b)
                     else
@@ -237,29 +204,29 @@ function param.bfs_compare_table(table_a, table_b, cmp)
     return new_t
 end
 
-function param.bfs_claim_table(table_a, table_b, use_value)
-    param.claim_h(table_a)
-    param.claim_h(table_b)
+function bfs_claim_table(table_a, table_b, use_value)
+    claim_h(table_a)
+    claim_h(table_b)
 
     local function __compare(_table_a, _table_b)
         local later_ks = {}
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            param.claim_type_equal(a, b)
+            claim_type_equal(a, b)
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    param.claim_class_equal(a, b)
+                    claim_class_equal(a, b)
 
                     if use_value then
-                        param.claim_key(_table_a, k, b)
+                        claim_key(_table_a, k, b)
                     end
                 else
                     push(later_ks, k)
                 end
             elseif use_value then
-                param.claim_key(_table_a, k, b)
+                claim_key(_table_a, k, b)
             end
         end
 
@@ -271,9 +238,9 @@ function param.bfs_claim_table(table_a, table_b, use_value)
     __compare(table_a, table_b)
 end
 
-function param.dfs_claim_table(table_a, table_b, use_value)
-    param.claim_h(table_a)
-    param.claim_h(table_b)
+function dfs_claim_table(table_a, table_b, use_value)
+    claim_h(table_a)
+    claim_h(table_b)
 
     use_value = use_value == nil and true or false
 
@@ -281,20 +248,20 @@ function param.dfs_claim_table(table_a, table_b, use_value)
         for _, k in ipairs(tu.intersection(tu.keys(_table_a), tu.keys(_table_b))) do
             local a = _table_a[k]
             local b = _table_b[k]
-            claim(param.compare_type(a, b))
+            claim(compare_type(a, b))
 
             if u.table_p(a) then
                 if class.of(a) and class.of(b) then
-                    param.claim_class_equal(a, b)
+                    claim_class_equal(a, b)
 
                     if use_value then
-                        param.claim_key(_table_a, k, b)
+                        claim_key(_table_a, k, b)
                     end
                 else
                     __compare(_table_a[k], _table_b[k])
                 end
             elseif use_value then
-                param.claim_key(_table_a, k, b)
+                claim_key(_table_a, k, b)
             end
         end
     end
@@ -302,46 +269,46 @@ function param.dfs_claim_table(table_a, table_b, use_value)
     __compare(table_a, table_b)
 end
 
-param.claim_table = param.bfs_claim_table
+claim_table = bfs_claim_table
 
-function param.bfs_compare(a, b, cmp)
-    if not param.compare_type(a, b) then
+function bfs_compare(a, b, cmp)
+    if not compare_type(a, b) then
         return false
-    elseif not param.compare_cls(a, b) then
+    elseif not compare_cls(a, b) then
         return false
     elseif u.table_p(a) then
-        return param.bfs_compare_table(a, b, cmp)
+        return bfs_compare_table(a, b, cmp)
     end
 
     return a == b
 end
 
-function param.dfs_compare(a, b, cmp)
-    if not param.compare_type(a, b) then
+function dfs_compare(a, b, cmp)
+    if not compare_type(a, b) then
         return false
-    elseif not param.compare_cls(a, b) then
+    elseif not compare_cls(a, b) then
         return false
     elseif u.table_p(a) then
-        return param.dfs_compare_table(a, b, cmp)
+        return dfs_compare_table(a, b, cmp)
     end
 
     return a == b
 end
 
-param.compare = param.bfs_compare
+compare = bfs_compare
 
 -- Spec: {'type/class', param}, ...
 -- For optional params which are either false or nil, they will be ignored
-function param.validate_params(...)
+function validate_params(...)
     local args = {...}
 
     for index, i in ipairs(args) do
-        param.claim.table(i)
+        claim.table(i)
         assert(#i > 1, 'Spec: {class/type, param}')
         local spec, arg = unpack(i)
 
         if type(spec) ~= 'string' then
-            spec = param.typeof(spec)
+            spec = typeof(spec)
         end
         
         local is_opt = false
@@ -350,7 +317,7 @@ function param.validate_params(...)
             spec = spec:gsub('^opt_', '')
         end
 
-        local test = param.typeof(arg) == spec
+        local test = typeof(arg) == spec
         if not is_opt then
             assert(test, u.sprintf('Invalid spec provided for %s: %s', arg, spec))
         end
@@ -371,7 +338,7 @@ end
 -- f function
 -- m module/class
 -- n number
-param.claim_type = setmetatable({}, {
+claim_type = setmetatable({}, {
     __index = function(self, k)
         local test = {
             s = 'string';
@@ -396,10 +363,8 @@ param.claim_type = setmetatable({}, {
         end
         return function(...)
             for _, obj in ipairs({...}) do
-                param.claim(obj, unpack(args))
+                claim(obj, unpack(args))
             end
         end
     end
 })
-
-return param

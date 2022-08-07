@@ -1,24 +1,82 @@
-local module = {}
+local mod = {}
 local pu = require 'modules.utils.param'
 local u = require 'modules.utils.common'
 local tu = require 'modules.utils.table'
 
-local function readonly_table(t)
-    return setmetatable(t, {
-        __newindex = function (...)
-            error('Attempting to edit a read-only table')
-        end
-    })
+
+local function set_method(t, k, v)
+    pu.claim(k, 'number', 'string')
+    pu.claim.table(t)
+
+    local mt = getmetatable(t)
+    if mt then
+        rawset(mt.__method, k, v)
+    end
+end
+
+local function set_constant(t, k, v)
+    pu.claim(k, 'number', 'string')
+    pu.claim.table(t)
+
+    local mt = getmetatable(t)
+    if mt then
+        rawset(mt.__constant, k, v)
+    end
+end
+
+local function set_var(t, k, v)
+    pu.claim(k, 'number', 'string')
+    pu.claim.table(t)
+
+    local mt = getmetatable(t)
+    if mt then
+        rawset(mt.__var, k, v)
+    end
+end
+
+local function get_vars(t)
+    return mt_get(t, '__var')
+end
+
+local function get_methods(t)
+    return mt_get(t, '__method')
+end
+
+local function get_constants(t)
+    return mt_get(t, '__constant')
+end
+
+local function get_constant(t, k)
+    local exists = get_constants(t)
+    if exists then
+        return exists[k]
+    end
+end
+
+local function get_var(t, k)
+    local exists = get_vars(t)
+    if exists then
+        return exists[k]
+    end
+end
+
+local function get_method(t, k)
+    local exists = get_methods(t)
+    if exists then
+        return exists[k]
+    end
 end
 
 local function unwrap(getter)
+    assert(getter ~= nil)
+
     if type(getter) == 'boolean' then
         return function (self)
             return self
         end
     elseif not u.callable(getter) then
         return function (self)
-            return self.__vars[getter]
+            return get_var(self, getter)
         end
     else
         return function (self)
@@ -30,7 +88,7 @@ end
 -- If getter is true then simply return partial(callback(self, ...))
 -- If getter is false then return callback(...)
 local function unwrap_for_method(getter, callback)
-    pu.claim(getter, 'string', 'number', 'callable', 'boolean')
+    assert(getter ~= nil)
     pu.claim.callable(callback)
 
     return function (self, ...)
@@ -44,9 +102,10 @@ end
 
 -- If {callback} is a table, the first will be used when the 
 -- self is on LHS and the second will be assumed for RHS. If nothing is provided, consider callback as the default LHS and RHS handler
-function module.on_operator(self, op, callback, getter)
+function mod.on_operator(self, op, callback, getter)
     pu.claim.string(op)
     pu.claim(callback, 'table', 'callable')
+    getter = getter or false
 
     local operators = {
         ['+'] = '__add',
@@ -83,16 +142,16 @@ function module.on_operator(self, op, callback, getter)
                 local m, n = getmetatable(cls), getmetatable(cls1)
                 if m and n and m.__name == n.__name then
                     if cls == self then
-                        l = unwrap(getter or false)(cls)
-                        r = unwrap(getter or false)(cls1)
+                        l = unwrap(getter)(cls)
+                        r = unwrap(getter)(cls1)
                         f = lhs
                     else
-                        r = unwrap(getter or false)(cls)
-                        l = unwrap(getter or false)(cls1)
+                        r = unwrap(getter)(cls)
+                        l = unwrap(getter)(cls1)
                         f = rhs or lhs
                     end
                 elseif cls == self then
-                    l = unwrap(getter or false)(cls)
+                    l = unwrap(getter)(cls)
                     r = cls1
                     f = lhs
                 else
@@ -102,13 +161,13 @@ function module.on_operator(self, op, callback, getter)
                 end
             elseif cls == self or cls1 == self then
                 if cls == self then
-                    l = unwrap(getter or false)(cls)
+                    l = unwrap(getter)(cls)
                     r = cls1
-                    f = unwrap_for_method(getter or false, lhs)
+                    f = unwrap_for_method(getter, lhs)
                 else
-                    l = unwrap(getter or false)(cls1)
+                    l = unwrap(getter)(cls1)
                     r = cls
-                    f = unwrap_for_method(getter or false, rhs)
+                    f = unwrap_for_method(getter, rhs)
                 end
             end
 
@@ -124,149 +183,177 @@ function module.on_operator(self, op, callback, getter)
 
     return callback
 end
+mod.seto = mod.on_operator
+mod.setop = mod.on_operator
+mod.set_operator = mod.on_operator
 
-function module.name(self)
-    local mt = getmetatable(self)
-    if mt then
-        return self.__name
-    end
+function mod.name(self)
+    return mt_get(self, '__name')
 end
 
-function module.is_same_module(cls, cls1)
-    local name = module.name(cls)
-    local name1 = module.name(cls1)
-
-    if name and name1 then
-        return name == name1
-    end
-end
-
-module.same_module_p = module.is_same_module
-
-function module.freeze(self)
-    rawset(self, '__frozen', true)
-    self.__vars = readonly_table(self.__vars)
-    self.__methods = readonly_table(self.__methods)
-end
-
-function module.is_frozen(self)
-    local fr = self.__frozen or false
-    return fr
-end
-
-module.frozen_p = module.is_frozen
-
-function module.unfreeze(self)
-    rawset(self, '__freeze', false)
-    local var_mt = getmetatable(self.__vars)
-    local m_mt = getmetatable(self.__methods)
-    var_mt.__newindex = nil
-    m_mt.__newindex = nil
-end
-
-function module.define_method(self, name, callback, getter)
+function mod.define_method(self, name, callback, getter)
     pu.claim.string(name)
     pu.claim.callable(callback)
 
     getter = getter or false
     callback = unwrap_for_method(getter, callback)
-    self.__methods[name] = callback
-
-    return callback
+    set_method(self, name, callback)
 end
+mod.setf = mod.define_method
+mod.set_method = mod.define_method
+mod.set_instance_method = mod.define_method
 
-function module.include(self, methods, getter)
+function mod.include(self, methods, getter)
     pu.claim.table(methods)
 
     for key, value in pairs(methods) do
         self:define_method(key, value, getter)
     end
 end
+mod.inherit = mod.include
+mod.delegate = mod.include
 
-function module.set_instance_variable(self, key, value)
-    self.__vars[key] = value
+function mod.set_instance_variable(self, key, value)
+    set_var(self, key, value)
+end
+mod.set_variable = mod.set_instance_variable
+mod.set_var = mod.set_instance_variable
+mod.setv = mod.set_var
+
+function mod.set_constant(self, key, value)
+    set_constant(self, key:upper(), value)
+end
+mod.setc = mod.set_constant
+mod.set_const = mod.set_constant
+
+function mod.get_constant(self, key)
+    return get_constant(self, key:upper())
+end
+mod.getc = mod.get_constant
+mod.get_const = mod.get_constant
+
+function mod.get_instance_variable(self, key)
+    return get_var(self, key)
+end
+mod.getv = mod.get_instance_variable
+mod.get_var = mod.getv
+mod.get_variable = mod.getv
+
+function mod.instance_variables(self)
+    return tu.keys(mt_get(self, '__var'))
+end
+mod.vars = mod.instance_variables
+mod.variables = mod.vars
+mod.get_vars = mod.vars
+
+function mod.instance_methods(self)
+    return tu.keys(mt_get(self, '__method'))
+end
+mod.methods = mod.instance_methods
+mod.get_methods = mod.methods
+
+function mod.get_instance_method(self, name)
+    return get_method(self, name)
+end
+mod.getf = mod.get_instance_method
+mod.getm = mod.get_instance_method
+mod.get_method = mod.getf
+
+if not Module then
+    _G.Module = {}
 end
 
-function module.set_constant(self, key, value)
-    key = key:upper()
-    self.__constants[key] = value
-end
+local function create_module(vars)
+    local self = { __var = {}, __method = {}, __constant = {} }
 
-function module.get_constant(self, key)
-    return self.__constants[key:upper()]
-end
-
-function module.get_instance_variable(self, key)
-    return self.__vars[key]
-end
-
-function module.instance_variables(self)
-    return tu.keys(self.__vars)
-end
-
-function module.instance_methods(self)
-    return tu.keys(self.__methods)
-end
-
-function module.get_instance_method(self, name)
-    return self.__methods[name]
-end
-
-function module.get_bound_instance_method(self, name)
-    local f = self.__methods[name]
-    if f then
-        return function (...)
-            return f(self, ...)
+    for key, value in pairs(vars) do
+        if u.callable(value) then
+            self.__method[key] = value
+        elseif key:match('^[A-Z_]+$') then
+            self.__constant[key] = value
+        else
+            self.__var[key] = value
         end
     end
+
+    for key, value in pairs(mod) do
+        if u.callable(value) then
+            self.__method[key] = value
+        end
+    end
+
+    self.__constant = table_ro(self.__constant)
+    self.__method = table_ro(self.__method)
+    self.__var = table_ro(self.__var)
+
+    return self
 end
 
-function module.new(name, vars)
-    local self = { __vars = {}, __methods = {}, __constants = {} }
-    vars = vars or {}
-    methods = methods or {}
+function mod.instanceof(self, cls)
+    return mt_get(self, '__type') == cls
+end
 
-    for key, value in pairs(module) do
-        if key ~= 'new' then
-            self.__methods[key] = value
-        end
+function mod.name(self)
+    return mt_get(self, '__name')
+end
+
+function mod.class(self)
+    return mt_get(self, '__type')
+end
+
+mod.isa = mod.instanceof
+mod.is_a = mod.instanceof
+
+local function new_module(name)
+    if name:match('[^0-9a-zA-Z_]') then
+        error('Module name cannot contain any nonalphanumeric and nonunderscore characters')
     end
 
-    if vars.constants then
-        pu.claim.table(vars.constants)
-        for key, value in pairs(vars.constants) do
-            module.set_constant(self, key, value)
-        end
+    if not Module[name] then
+        Module[name] = {name=name}
     end
 
-    self.__constants = readonly_table(self.__constants)
-
-    if vars.vars then
-        pu.claim.table(vars.vars)
-        for key, value in pairs(vars.vars) do
-            module.set_instance_variable(self, key, value)
-        end
-    end
-
-    return setmetatable(self, {
-        __name = name,
-        __index = function (cls, k)
-            local is_v = module.get_instance_variable(cls, k)
+    Module[name] = function (vars)
+        vars = vars or {}
+        local self = {}
+        local mt = create_module(vars)
+        mt.__name = name
+        mt.__type = Module[name]
+        mt.__index = function (cls, k)
+            local is_v = mt.__var[k]
             if is_v then
                 return is_v
             end
 
-            local is_c = module.get_constant(cls, k)
-            if is_c then
-                return is_c
-            end
-
-            local is_m = module.get_instance_method(cls, k)
+            local is_m = mt.__method[k]
             if is_m then
                 return is_m
             end
-        end;
-    })
+
+            local is_c = mt.__constant[k]
+            if is_c then
+                return is_c
+            end
+        end
+        __newindex = function (...)
+            error(u.sprintf('Attempting to write to Module %s without using accessor methods', name))
+        end
+
+        self = setmetatable(self, mt)
+        if self.initialize then
+            self:initialize(vars)
+        end
+
+        return self
+    end
+
+    _G[name] = Module[name]
+
+    return _G[name]
 end
 
-return module
+module = new_module
+ns = new_module
+namespace = new_module
+
+return mod

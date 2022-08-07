@@ -6,6 +6,41 @@ assoc(Doom, {'pkgs', 'loaded'}, {
     replace = true;
 })
 
+local safe_require = function(pkg_name)
+    local name = pkg_name
+    pkg_name = pkg_name:gsub('[^a-zA-Z0-9_-]+', '_')
+    local req_path = with_config_lua_path('core', 'pkgs', 'configs', pkg_name .. '.lua')
+    local req = 'core.pkgs.configs.' .. pkg_name
+
+    if not path.exists(req_path) then
+        return false
+    end
+
+    vim.cmd('packadd ' .. name)
+    local success, err = pcall(require, req)
+
+    if not success then
+        log:warn(err)
+    end
+    return success
+end
+
+local function au_require(pkg_name, pattern, event)
+    local a = au.new(pkg_name, 'Autocmd group for ' .. pkg_name)
+    a:add(event, pattern, partial(safe_require, pkg_name), {once=true})
+    a:enable()
+end
+
+local function kbd_require(pkg_name, ...)
+    local mode, keys, f, attribs = ...
+    local callback = function()
+        if safe_require(pkg_name) then
+            f()
+        end
+    end
+    kbd.oneshot(mode, keys, callback, attribs or false)
+end
+
 --[[
 Simple pkgs loader for plugins that does not rely upon packer
 
@@ -35,37 +70,7 @@ Don't update this plugin
 run  string|callable  
 Run such command/callable after installing/updating plugins 
 
----
-
-Additional configuration for facilitating lazy-loading:
-
-Combinations of keys that can be supplied:
-- keys & rocks 
-- event & pattern & rocks
-- event & rocks
-- pattern & rocks
-
-keys    string|table[string]
-Load package after pressing these keys. 
-Keys should be in the format:
-{mode, keys, attribs, f} where attribs, event, pattern can be string|table and the rest must be strings or keys
-If keys is a string then it will be mapped with noremap {keys} {plugin loader}. Multiple keydefs can be passed as table[string] in which all of them will be mapped in normal mode or if table[table] then use the above 4 elements to create oneshot keybindings
-
-event   string|table[string]
-Load package after this event.
-
-pattern string|table[string]
-Load package if pattern is true for buffer, files, etc.
-
-rocks   string|table[string]
-Luarocks required for the plugin
-
-Loading post-loading configurations:
-Configurations are located in core/pkgs/configs. For lazy-loaded packages, these configurations will be loaded as soon as the appropriate event is triggered
-
 --]]
-
-local class = require('classy')
 
 local pkgs = {
     -- Lazy packages will be loaded from site/pack/paq/opt
@@ -98,8 +103,6 @@ local function get_pkgs_loader_cmd(plugin, opt)
     claim(plugin, 'string', 'table')
     claim.boolean(opt)
 
-    if boolean_p(config) then config = false end
-
     local req_path = false
     plugin = path.name(table_p(plugin) and first(plugin) or plugin)
     local name = sed(plugin, {'\\.', '_'})
@@ -111,7 +114,6 @@ local function get_pkgs_loader_cmd(plugin, opt)
 
         cmd = function()
             if opt then vim.api.nvim_exec(':packadd ' .. plugin, true) end
-            require(req_path)
             Doom.pkgs.loaded[plugin] = true
         end
     elseif opt then
@@ -138,10 +140,7 @@ local function parse_specs(spec, opt)
     if spec.keys then
         claim(spec.keys or false, 'table', 'string')
     end
-    if spec.rocks then
-        claim(spec.rocks or false, 'table', 'string')
-    end
-    if spec.events then
+    if spec.event then
         claim(spec.events or false, 'table', 'string')
     end
     if spec.pattern then
@@ -152,8 +151,6 @@ local function parse_specs(spec, opt)
     local keys = spec.keys
     local pattern = spec.pattern
     local event = spec.event
-    local rocks = rocks
-    local keep_keys = spec.keep_keys
 
     if keys then
         local multiple = false
@@ -215,12 +212,10 @@ local function parse_specs(spec, opt)
 end
 
 function pkgs.load_plugins(force)
-    if Doom.pkgs.init then return Doom.pkgs.plugins end
-
     local specs = pkgs.plugin_specs
 
     if path.exists(pkgs.user_plugins_path) then
-        merge(specs, require('user.pkgs.plugins'))
+        merge(specs, safe_require('user.pkgs.plugins'))
     end
 
     local t = {}
@@ -229,7 +224,6 @@ function pkgs.load_plugins(force)
         p = to_list(p)
         push(t, parse_specs(p)) 
     end
-
     for _, p in ipairs(specs.opt) do
         p = to_list(p)
         push(t, parse_specs(p, true)) 

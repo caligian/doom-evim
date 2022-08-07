@@ -1,6 +1,6 @@
 local buffer = require('core.buffer')
 local kbd = require('core.kbd')
-local spawn = dofile('init.lua')
+local spawn = require('core.async.spawn')
 local ts = require('core.telescope')
 local spawn_buffer = {}
 local m = {}

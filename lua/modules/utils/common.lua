@@ -1,30 +1,51 @@
 local path = require('path')
 local yaml = require('yaml')
 local iter = require('fun')
-local utils = {}
 
-utils.identity = function (i)
+function table_ro(t)
+    return setmetatable(t, {
+        __newindex = function (...)
+            error('Attempting to edit a read-only table')
+        end
+    })
+end
+
+function mt_get(t, key)
+    local mt = getmetatable(t)
+    if mt then
+        return rawget(mt, key)
+    end
+end
+
+function mt_def(t, key, f)
+    local mt = getmetatable(t)
+    if mt then
+        rawset(mt, key, f)
+    end
+end
+
+identity = function (i)
     return i
 end
 
-utils.blank_p = function (obj)
+blank_p = function (obj)
     if type(obj) ~= 'string' or type(obj) ~= 'table' then
         return
     end
 
     return #obj == 0
 end
-utils.is_blank = utils.blank_p
+is_blank = blank_p
 
-utils.to_callable = function(f)
-    assert(utils.func_p(f), 'Only functions can be used in callable tables')
+to_callable = function(f)
+    assert(func_p(f), 'Only functions can be used in callable tables')
     return setmetatable({}, {__call = function(_, ...) f(...) end})
 end
 
-utils.func_to_callable = utils.to_callable
-utils.function_to_callable = utils.to_callable
+func_to_callable = to_callable
+function_to_callable = to_callable
 
-utils.len = function(param)
+len = function(param)
     if type(param) == 'table' then
         local n = 0
         for _, _ in pairs(param) do
@@ -39,7 +60,7 @@ utils.len = function(param)
     end
 end
 
-utils.range = function (from, till, step)
+range = function (from, till, step)
     assert(from, 'No starting index provided')
     assert(till, 'No ending index provided')
 
@@ -53,14 +74,14 @@ utils.range = function (from, till, step)
     return t
 end
 
-utils.typeof = function (obj)
+typeof = function (obj)
     assert(obj ~= nil, 'Object cannot be nil')
     local t = type(obj)
 
     if t == 'table' then
         local mt = getmetatable(obj)
-        if mt and mt.__name then
-            return mt.__name
+        if mt and mt.__type then
+            return mt.__type
         elseif mt and mt.__call then
             return 'callable'
         end
@@ -69,13 +90,13 @@ utils.typeof = function (obj)
     return t
 end
 
-utils.isa = function (obj, k)
-    return utils.typeof(obj) == k
+isa = function (obj, k)
+    return typeof(obj) == k
 end
 
-utils.is_a = utils.isa
+isa = isa
 
-utils.module_p = function (obj)
+module_p = function (obj)
     assert(obj ~= nil, 'Object cannot be nil')
     local t = type(obj)
 
@@ -85,27 +106,27 @@ utils.module_p = function (obj)
 
     return false
 end
-utils.class_p = utils.module_p
-utils.is_class = utils.class_p
-utils.is_module = utils.module_p
+class_p = module_p
+is_class = class_p
+is_module = module_p
 
-utils.to_stderr = function(s)
+to_stderr = function(s)
     vim.api.nvim_err_writeln(s)
 end
 
-utils.system = function(cmd)
+system = function(cmd)
     return vim.fn.systemlist(cmd)
 end
 
-utils.boolean_p = function(e)
+boolean_p = function(e)
     return type(e) == 'boolean'
 end
 
-utils.bool_p = utils.boolean_p
-utils.is_boolean = utils.boolean_p
-utils.is_bool = utils.boolean_p
+bool_p = boolean_p
+is_boolean = boolean_p
+is_bool = boolean_p
 
-utils.nil_p = function (o)
+nil_p = function (o)
     if o == nil then
         return true
     else
@@ -113,9 +134,9 @@ utils.nil_p = function (o)
     end
 end
 
-utils.is_nil = utils.nil_p
+is_nil = nil_p
 
-utils.false_p = function (o)
+false_p = function (o)
     if o == false then
         return true
     end
@@ -123,60 +144,60 @@ utils.false_p = function (o)
     return false
 end
 
-utils.is_false = utils.false_p
+is_false = false_p
 
-utils.defined_p = function(o)
-    if not utils.nil_p(o) then
+defined_p = function(o)
+    if not nil_p(o) then
         return true
     else
         return false
     end
 end
 
-utils.defined = utils.defined_p
-utils.is_defined = utils.defined
+defined = defined_p
+is_defined = defined
 
-utils.true_p = function (o)
-    if not utils.nil_p(o) and utils.false_p(o) then
+true_p = function (o)
+    if not nil_p(o) and false_p(o) then
         return true
     else
         return false
     end
 end
 
-utils.is_truthful = utils.true_p
-utils.is_true = utils.true_p
+is_truthful = true_p
+is_true = true_p
 
-utils.number_p = function (i)
+number_p = function (i)
     return type(i) == 'number'
 end
 
-utils.num_p = function(i)
-    return utils.number_p(i)
+num_p = function(i)
+    return number_p(i)
 end
 
-utils.is_number = utils.number_p
-utils.is_num = utils.num_p
+is_number = number_p
+is_num = num_p
 
-utils.table_p = function (t)
+table_p = function (t)
     return type(t) == 'table'
 end
-utils.is_table = utils.table_p
-utils.is_dict = utils.table_p
+is_table = table_p
+is_dict = table_p
 
-utils.func_p = function (f)
+func_p = function (f)
     return type(f) == 'function'
 end
-utils.is_function = utils.function_p
-utils.is_func = utils.function_p
-utils.function_p = utils.func_p
+is_function = function_p
+is_func = function_p
+function_p = func_p
 
-utils.callable = function (f)
-    if utils.func_p(f) then
+callable = function (f)
+    if func_p(f) then
         return true
     end
 
-    if not utils.table_p(f) then
+    if not table_p(f) then
         return false
     end
 
@@ -186,18 +207,18 @@ utils.callable = function (f)
     end
 end
 
-utils.callable_p = utils.callable
-utils.is_callable = utils.callable
+callable_p = callable
+is_callable = callable
 
-utils.str_p = function (s)
+str_p = function (s)
     return type(s) == 'string'
 end
 
-utils.string_p = utils.str_p
-utils.is_string = utils.str_p
+string_p = str_p
+is_string = str_p
 
-utils.to_list = function (i, force)
-    if utils.table_p(i) then
+to_list = function (i, force)
+    if table_p(i) then
         if force then
             return {i}
         else
@@ -208,30 +229,26 @@ utils.to_list = function (i, force)
     end
 end
 
-function utils.class_name(obj)
+function class_name(obj)
     if not type(obj) == 'table' then
         return false
     end
-    local mt = getmetatable(obj)
-    if mt and mt.__name then
-        return mt.__name
-    end
-    return false
+
+    return mt_get(obj, '__name')
 end
 
-utils.classname = utils.class_name
-utils.cname = utils.class_name
+classname = class_name
+cname = class_name
+to_arr = to_list
+to_a = to_arr
 
-utils.to_arr = utils.to_list
-utils.to_a = utils.to_arr
-
-utils.inspect = function (...)
+inspect = function (...)
     for _, value in ipairs({...}) do
         vim.api.nvim_echo({{vim.inspect(value)}}, false, {})
     end
 end
 
-utils.dump = function (...)
+dump = function (...)
     local dumped = {}
 
     for _, value in ipairs({...}) do
@@ -243,11 +260,11 @@ utils.dump = function (...)
     return dumped
 end
 
-utils.sprintf = function(fmt, ...)
+sprintf = function(fmt, ...)
     local args = {...}
 
     for index, val in ipairs(args) do
-        if utils.table_p(val) then
+        if table_p(val) then
             args[index] = vim.inspect(val)
         end
     end
@@ -255,16 +272,16 @@ utils.sprintf = function(fmt, ...)
     return string.format(fmt, unpack(args))
 end
 
-utils.printf = function(fmt, ...)
-    print(utils.sprintf(fmt, ...))
+printf = function(fmt, ...)
+    print(sprintf(fmt, ...))
 end
 
-utils.echo = function(fmt, ...)
-    vim.api.nvim_echo({{utils.sprintf(fmt, ...)}}, false, {})
+echo = function(fmt, ...)
+    vim.api.nvim_echo({{sprintf(fmt, ...)}}, false, {})
 end
 
 -- File ops
-utils.slurp = function (src, iter)
+slurp = function (src, iter)
     local fh = io.open(src, 'r')
 
     if not fh then return end
@@ -286,7 +303,7 @@ utils.slurp = function (src, iter)
     end, fh
 end
 
-utils.spit = function (dst, s, mode)
+spit = function (dst, s, mode)
     local fh = io.open(dst, mode or 'w')
 
     if fh then
@@ -296,40 +313,40 @@ utils.spit = function (dst, s, mode)
     end
 end
 
-utils.yspit = function (dst, data)
-    utils.spit(dst, yaml.dump(data))
+yspit = function (dst, data)
+    spit(dst, yaml.dump(data))
 end
 
-utils.yslurp = function (src)
-    return yaml.load(utils.slurp(src))
+yslurp = function (src)
+    return yaml.load(slurp(src))
 end
 
-utils.ydump = yaml.dump
-utils.yload = yaml.load
+ydump = yaml.dump
+yload = yaml.load
 
-utils.jdump = vim.fn.json_encode
-utils.jload = vim.fn.json_decode
+jdump = vim.fn.json_encode
+jload = vim.fn.json_decode
 
-utils.jspit = function (dst, data)
-    utils.spit(dst, vim.fn.json_encode(data))
+jspit = function (dst, data)
+    spit(dst, vim.fn.json_encode(data))
 end
 
-utils.jslurp = function (dst)
-    return vim.fn.json_decode(utils.slurp(dst))
+jslurp = function (dst)
+    return vim.fn.json_decode(slurp(dst))
 end
 
 --
 -- Misc
 --
-utils.deepcopy = vim.deepcopy
+deepcopy = vim.deepcopy
 
 -- Shallow copy
-utils.copy = function (src_t)
+copy = function (src_t)
     local dst_t = {}
 
     local function copy_level(src, dst)
         for index, value in pairs(src) do
-            if utils.table_p(value) then
+            if table_p(value) then
                 dst[index] = {}
                 copy_level(value, dst[index])
             else
@@ -342,7 +359,7 @@ utils.copy = function (src_t)
     return dst_t
 end
 
-utils.vcall = setmetatable({}, {
+vcall = setmetatable({}, {
     __index = function (self, k)
         local f = self[k] or vim.fn[k] or partial(vim.call, k)
 
@@ -354,48 +371,48 @@ utils.vcall = setmetatable({}, {
     end;
 })
 
-utils.vcmd = function (fmt, ...)
+vcmd = function (fmt, ...)
     local out = vim.api.nvim_exec(sprintf(fmt, ...), true)
     if out == '' then return false end
 
     return out
 end
 
-utils.join_path = function(...)
+join_path = function(...)
     return path(...)
 end
 
-utils.join = table.concat
+join = table.concat
 
-utils.with_data_path = function (...)
+with_data_path = function (...)
     return path(vim.fn.stdpath('data'), ...)
 end
 
-utils.with_config_path = function (...)
+with_config_path = function (...)
     return path(vim.fn.stdpath('config'), ...)
 end
 
-utils.with_config_lua_path = function(...)
-    return utils.with_config_path('lua', ...)
+with_config_lua_path = function(...)
+    return with_config_path('lua', ...)
 end
 
-utils.with_user_config_path = function(...)
+with_user_config_path = function(...)
     return path(os.getenv('HOME'), '.vdoom.d', ...)
 end
 
-utils.with_user_config_lua_path = function(...)
-    return utils.with_user_config_path('lua', ...)
+with_user_config_lua_path = function(...)
+    return with_user_config_path('lua', ...)
 end
 
-utils.with_stdpath = function (what, ...)
+with_stdpath = function (what, ...)
     return path(vim.fn.stdpath(what), ...)
 end
 
-utils.with_packer_path = function(what, ...)
-    return utils.with_data_path('site', 'pack', 'packer', what, ...)
+with_packer_path = function(what, ...)
+    return with_data_path('site', 'pack', 'packer', what, ...)
 end
 
-utils.add_global = function(obj, name, force)
+add_global = function(obj, name, force)
     if force then
         _G[name] = obj
     elseif not _G[name] then
@@ -405,7 +422,7 @@ utils.add_global = function(obj, name, force)
     return obj
 end
 
-utils.globalize = function (mod, ks)
+globalize = function (mod, ks)
     mod = mod or utils
 
     if not ks then
@@ -425,7 +442,7 @@ utils.globalize = function (mod, ks)
     end
 end
 
-utils.chomp = function(s)
+chomp = function(s)
     if type(s) == 'string' then
         return s:gsub("[\n\r ]$", '')
     elseif type(s) == 'table' then
@@ -439,11 +456,11 @@ utils.chomp = function(s)
     return s
 end
 
-utils.tempfile = function()
+tempfile = function()
     return os.tmpname()
 end
 
-utils.with_open = function(dst, mode, f)
+with_open = function(dst, mode, f)
     mode = mode or 'r'
     local fh = io.open(dst, mode)
 
@@ -456,9 +473,9 @@ utils.with_open = function(dst, mode, f)
     return false, dst
 end
 
-function utils.with_tempfile(mode, f, keep)
+function with_tempfile(mode, f, keep)
     mode = mode or 'w'
-    local tf = utils.tempfile()
+    local tf = tempfile()
     local fh = io.open(tf, mode) 
 
     if fh then
@@ -466,7 +483,7 @@ function utils.with_tempfile(mode, f, keep)
         fh:close()
 
         if not keep then
-            utils.system('rm ' .. tf)
+            system('rm ' .. tf)
             return  out
         end
 
@@ -479,7 +496,7 @@ function utils.with_tempfile(mode, f, keep)
 end
 
 -- @tparam timeout number Pass -1 to immediately return the result
-function utils.wait(f, args, opts)
+function wait(f, args, opts)
     assert(f, 'No callable provided')
 
     args = args or {}
@@ -521,7 +538,7 @@ function utils.wait(f, args, opts)
 end
 
 -- @tparam text table {question, default_text, callback }, ...
-utils.gets = function(prompt, loop, ...)
+gets = function(prompt, loop, ...)
     prompt = prompt or '%'
     prompt = prompt .. ' '
     local args = {...}
@@ -531,7 +548,7 @@ utils.gets = function(prompt, loop, ...)
     local function _get_input(t)
         assert(#t >= 1, 'No prompt question provided')
 
-        local q, default_text, cb = unpack(utils.to_list(t))
+        local q, default_text, cb = unpack(to_list(t))
         q = q .. ' ' .. prompt
         default_text = default_text or ''
         local input = vim.fn.input(q, default_text)
@@ -544,10 +561,10 @@ utils.gets = function(prompt, loop, ...)
             end
         else
             if cb then
-                assert(utils.callable(cb), 'Invalid callback provided.')
+                assert(callable(cb), 'Invalid callback provided.')
                 local is_correct = cb(input)
                 if is_correct then 
-                    if utils.bool_p(is_correct) then
+                    if bool_p(is_correct) then
                         return input
                     else
                         return is_correct 
@@ -574,12 +591,18 @@ utils.gets = function(prompt, loop, ...)
     return out
 end
 
-function utils.len(obj)
-    assert(type(obj) == 'string' or type(obj) == 'table', 'Only tables or strings can be passed')
-    return #obj
+function len(obj)
+    if type(obj) == 'string' then
+        return #obj
+    elseif type(obj) == 'table' then
+        local c = 0
+        for k, v in pairs(obj) do
+            c = c + 1
+        end
+
+        return c
+    end
 end
 
-utils.length = utils.len
-utils.size = utils.len
-
-return utils
+length = len
+size = len

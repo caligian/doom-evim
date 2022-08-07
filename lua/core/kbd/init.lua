@@ -2,9 +2,34 @@ local au = require('core.au')
 local telescope = require 'core.telescope'
 local wk = require('which-key')
 local ex = require('core.kbd.exception')
+local tbl = require 'modules.utils.type.table'
 
-assoc(Doom, {'kbd', 'status'}, {replace=create_status_t {}})
-assoc(Doom.kbd, {'defaults', 'attribs'}, {replace={'silent', 'noremap', 'nowait'}})
+assoc(Doom, {'kbd'}, {replace=true})
+assoc(Doom, {'kbd', 'status'}, {replace = tbl.new {}})
+assoc(Doom, {'kbd', 'defaults'}, {replace = tbl.new {
+    attribs = {'silent', 'noremap', 'nowait'};
+}})
+assoc(Doom, {'kbd', 'prefixes'}, {
+    ["<leader>b"] = "Buffer",
+    ["<leader>q"] = "Buffers+close",
+    ["<leader>c"] = "Commenting",
+    ["<leader>i"] = "Insert",
+    ["<leader>l"] = "LSP",
+    ["<leader>t"] = "Tabs",
+    ["<leader>o"] = "Neorg",
+    ["<leader>h"] = "Help+Telescope",
+    ["<leader>f"] = "Files",
+    ["<leader>p"] = "Project",
+    ["<leader>d"] = "Debug",
+    ["<leader>&"] = "Snippets",
+    ["<leader>x"] = "Misc",
+    ["<leader>m"] = "Filetype Actions",
+    ["<leader>s"] = "Session",
+    ["<leader>g"] = "Git",
+    ["<localleader>,"] = "REPL",
+    ["<localleader>t"] = "REPL",
+    ["<localleader>e"] = "REPL",
+})
 local kbd = {
     defaults = Doom.kbd.defaults,
     status = Doom.kbd.status,
@@ -20,7 +45,7 @@ function kbd.oneshot(mode, keys, f, attribs)
     attribs = attribs or deepcopy(kbd.defaults.attribs)
     attribs = to_list(attribs)
     local noremap = find(attribs, 'noremap')
-    if noremap then attribs[noremap] = nil end
+    if noremap then table.remove(attribs, noremap) end
     attribs = vals(attribs)
     noremap = noremap ~= nil and true
 
@@ -118,10 +143,10 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
         pattern = sprintf('<buffer=%d>', pattern) 
     end
     if pattern then pattern = to_list(pattern) end
-    attribs = attribs or kbd.defaults.attribs
+    attribs = attribs or deepcopy(kbd.defaults.attribs)
     attribs = to_list(attribs)
     local noremap = find(attribs, 'noremap')
-    if noremap then attribs[noremap] = nil end
+    if noremap then table.remove(attribs, noremap)  end
     noremap = noremap ~= nil and true
     local attribs_s = join(map(attribs, function(s)
         if str_p(s) then
@@ -151,7 +176,7 @@ function kbd.new(id, mode, keys, callback, attribs, doc, event, pattern)
     })
 
     self:include(m)
-    update(kbd.status, {mode, keys, id}, self)
+    assoc(kbd.status, {mode, keys, id}, {replace=self})
     return self
 end
 

@@ -13,6 +13,13 @@ function hash.new(t, it)
 
     local mod = module.new('table', {vars={value=t}})
     mod:include(tu, 'value')
+    mod:on_operator('+', {mod.push, mod.unshift})
+    mod:on_operator('-', {mod.pop, mod.shift})
+    mod:on_operator('..', {mod.extend, mod.lextend})
+    mod:on_operator('^', {mod.filter, mod.filter})
+    mod:on_operator('*', {mod.map, mod.map})
+    mod:on_operator('%', {mod.assoc, mod.assoc})
+    mod:on_operator('s', u.dump, 'value')
 
     return mod
 end

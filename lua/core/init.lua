@@ -1,27 +1,29 @@
 -- All the required modules
 require('modules.utils')
+require('logging.file') 
 
 -- Add some modules as globals
 add_global(require('path'), 'path')
 add_global(require('path.fs'), 'fs')
 add_global(require('fun'), 'iter')
-add_global(require('classy'), 'class')
-add_global(class.multimethod, 'multimethod')
-add_global(class.overload, 'overload')
 
 -- Import globals
 add_global(require 'core.globals', 'Doom')
 
 -- This is for convenience - global logger
 add_global(require('core.exceptions'), 'exception')
-require('core.log')
 
 -- Load user overrides
 -- Please note that you cannot avail much of the doom facilities while overriding so limit it to modifying _G.Doom
 if path.exists(with_user_config_path('lua', 'user', 'init.lua')) then 
-    require('user') 
+    require('user')
 end
---
+
+log = logging.file({
+    timestampPattern = '%d-%m-%Y-%H-%M-%S';
+    logPattern = "[%date] [%level] %message";
+})
+
 ---- Load doom packages
 add_global(require('core.au'), 'au')
 add_global(require('core.kbd'), 'kbd')

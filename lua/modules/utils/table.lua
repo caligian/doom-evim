@@ -1,6 +1,5 @@
 local iter = require('fun')
-local utils = require('modules.utils.common')
-local tu = {}
+require('modules.utils.common')
 
 local function valid_t(t)
     assert(type(t) == 'table', utils.dump(t) .. ' is not a table')
@@ -13,17 +12,18 @@ local function valid_t(t)
     return t
 end
 
-tu.new_iter = function (t)
+new_iter = function (t)
     t = iter.iter(valid_t(t))
     local mt = getmetatable(t)
     mt.__name = 'iterable'
+    mt.__type = iter
     mt.__tostring = function(self)
         return utils.dump(self)
     end
     return t
 end
 
-tu.to_dict = function(...)
+to_dict = function(...)
     local args = {...}
     local t = {}
 
@@ -34,7 +34,7 @@ tu.to_dict = function(...)
     return t
 end
 
-tu.partition = function (arr, n)
+partition = function (arr, n)
     arr = valid_t(arr)
     n = n or 1
     local len = #arr
@@ -66,7 +66,7 @@ tu.partition = function (arr, n)
     return t
 end
 
-tu.push = function (arr, ...)
+push = function (arr, ...)
     arr = valid_t(arr)
 
     for _, i in ipairs({...}) do
@@ -76,7 +76,7 @@ tu.push = function (arr, ...)
     return arr
 end
 
-tu.pop = function (arr, n)
+pop = function (arr, n)
     arr = valid_t(arr)
     n = n or 1
     local tail = {}
@@ -90,7 +90,7 @@ tu.pop = function (arr, n)
     return tail, arr
 end
 
-tu.extend = function(dst, ...)
+extend = function(dst, ...)
     assert(type(dst) == 'table')
 
     for _, arr in ipairs({...}) do
@@ -107,7 +107,7 @@ tu.extend = function(dst, ...)
     return dst
 end
 
-tu.unshift = function (arr, ...)
+unshift = function (arr, ...)
     arr = valid_t(arr)
     local args = {...}
 
@@ -118,7 +118,7 @@ tu.unshift = function (arr, ...)
     return arr
 end
 
-tu.lextend = function (arr, ...)
+lextend = function (arr, ...)
     for _, a in ipairs({...}) do
         if utils.table_p(a) then
             for _, i in ipairs(a) do
@@ -132,7 +132,7 @@ tu.lextend = function (arr, ...)
     return arr
 end
 
-tu.shift = function(arr, n)
+shift = function(arr, n)
     arr = valid_t(arr)
     n = n or 1
     local head = {}
@@ -148,7 +148,7 @@ tu.shift = function(arr, n)
     return head, arr
 end
 
-tu.splice = function(arr, from, len, ...)
+splice = function(arr, from, len, ...)
     assert(from > 0 and from < #arr)
 
     arr = valid_t(arr)
@@ -174,7 +174,7 @@ tu.splice = function(arr, from, len, ...)
     return arr
 end
 
-tu.keys = function (dict)
+keys = function (dict)
     dict = valid_t(dict)
     local ks = {}
 
@@ -185,7 +185,7 @@ tu.keys = function (dict)
     return ks
 end
 
-tu.vals = function (dict)
+vals = function (dict)
     dict = valid_t(dict)
     local vs = {}
 
@@ -196,9 +196,9 @@ tu.vals = function (dict)
     return vs
 end
 
-tu.values = tu.vals
+values = vals
 
-tu.slice = function (arr, start, finish)
+slice = function (arr, start, finish)
     assert(start > 0)
 
     arr = valid_t(arr)
@@ -212,40 +212,40 @@ tu.slice = function (arr, start, finish)
     return t
 end
 
-tu.butlast = function (arr)
+butlast = function (arr)
     arr = valid_t(arr)
-    return tu.slice(arr, 1, #arr-1)
+    return slice(arr, 1, #arr-1)
 end
 
-tu.rest = function (arr)
+rest = function (arr)
     arr = valid_t(arr)
-    return tu.slice(arr, 2, #arr)
+    return slice(arr, 2, #arr)
 end
 
-tu.first = function (arr)
+first = function (arr)
     arr = valid_t(arr)
     return arr[1]
 end
 
-tu.last = function (arr)
+last = function (arr)
     arr = valid_t(arr)
     return arr[#arr]
 end
 
-tu.identity = function (i)
+identity = function (i)
     return i
 end
 
-tu.max = function (t)
+max = function (t)
     return math.max(unpack(valid_t(t)))
 end
 
-tu.min = function (t)
+min = function (t)
     return math.min(unpack(valid_t(t)))
 end
 
 -- This will call all the iterators! 
-tu.nth = function (...)
+nth = function (...)
     local args = {...}
     local k = args[#args]
     local params = {}
@@ -258,7 +258,7 @@ tu.nth = function (...)
     return params
 end
 
-tu.merge = function(dicta, dictb, depth, f)
+merge = function(dicta, dictb, depth, f)
     dicta = valid_t(dicta)
     dictb = valid_t(dictb)
     depth = depth or -1
@@ -267,8 +267,8 @@ tu.merge = function(dicta, dictb, depth, f)
     local function _replace_level(a, b, ks, d)
         if #ks == 0 or d > 0 and d == depth then return end
 
-        local k = tu.first(ks)
-        local rest = tu.rest(ks)
+        local k = first(ks)
+        local rest = rest(ks)
         local item = b[k]
         local later = {}
 
@@ -298,7 +298,7 @@ end
 
 -- This tests for absolute equality. Any failed attempt will lead to the whole table
 -- being treated as false
-tu.equals = function(dicta, dictb, depth, f)
+equals = function(dicta, dictb, depth, f)
     dicta = valid_t(dicta)
     dictb = valid_t(dictb)
     local t = false
@@ -333,7 +333,7 @@ tu.equals = function(dicta, dictb, depth, f)
         end
 
         for _, i in ipairs(later) do
-            local out = _cmp(a[i], b[i], tu.keys(a[i]), d+1)
+            local out = _cmp(a[i], b[i], keys(a[i]), d+1)
             cached[a[i]] = out
             if not out then return false end
         end
@@ -345,7 +345,7 @@ tu.equals = function(dicta, dictb, depth, f)
 end
 
 -- Generator
-tu.zip = function(...)
+zip = function(...)
     local arrs = {...}
     local len = {}
     local max_len = 0
@@ -363,15 +363,15 @@ tu.zip = function(...)
         local add = {}
         for index, arr in ipairs(arrs) do
             local key = i > len[index] and 1 or i
-            tu.push(add, arr[key])
+            push(add, arr[key])
         end
-        tu.push(out, add)
+        push(out, add)
     end
 
     return out
 end
 
-tu.izip = function(...)
+izip = function(...)
     local arrs = {...}
     local len = {}
     local index = 1
@@ -394,7 +394,7 @@ tu.izip = function(...)
         local out = {}
         for i, arr in ipairs(arrs) do
             local key = index > len[i] and 1 or index
-            tu.push(out, arrs[i][key])
+            push(out, arrs[i][key])
         end
         index = index + 1
 
@@ -402,7 +402,7 @@ tu.izip = function(...)
     end, arrs, index
 end
 
-tu.items = function(dict)
+items = function(dict)
     local vs = {}
     dict = valid_t(dict)
 
@@ -413,158 +413,178 @@ tu.items = function(dict)
     return vs
 end
 
--- With side effects
---@tparam transform function Spec: transform(value, table, key, previous_table, previous_key). The function is only used when a key is found
---@tparam create boolean|any If create is true then create a table in its place. If create is false or nil, false is returned. If create is anything else, it is simply put in place of the missing value. If 'd' is passed, that element is removed from the dict iff it is found
-tu.assoc = function (dict, ks, opts)
+function assoc(tbl, ks, opts)
+    assert(tbl)
+    assert(ks)
+
     opts = opts or {}
-    dict = valid_t(dict)
     ks = utils.to_list(ks)
-    local t = dict
-    local last_key = false
-    local last_t = t
-    local out = {}
     local n = #ks
 
-    for index, key in ipairs(ks) do
-        last_key = key
-        local v = t[key]
-
-        if not v then
-            if n == index then
-                if opts.replace ~= nil then
-                    if opts.replace == true then
-                        t[key] = {}
-                    else
-                        t[key] = opts.replace
-                    end
-
-                    return opts.replace, last_key, last_t, dict
-                else
-                    return false, last_key, last_t, dict
-                end
-            elseif opts.replace then
-                t[key] = {}
+    local function create_new_dict(t, k, value)
+        if value ~= nil then
+            if value == true then
+                t[k] = {}
+            elseif value == false then
+                t[k] = false
             else
-                return false, last_key, last_t, dict
+                t[k] = value
             end
-        elseif not utils.table_p(v) then
-            if opts.delete then
-                local out = vim.deepcopy(t[key])
-                t[key] = nil
-                return out, last_key, last_t, dict
-            elseif opts.replace then
-                if opts.replace == true then
-                    opts.replace = {}
+        end
+    end
+
+    local function recurse(status)
+        assert(status)
+        assert(status.dict)
+        assert(status.depth)
+
+        if status.depth > n then
+            return
+        end
+
+        local dict = status.dict
+        local depth = status.depth
+        local key = ks[depth]
+        local value = dict[key]
+        local replace = opts.replace
+        local transform = opts.transform
+        local delete = opts.delete
+
+        if value == nil then
+            value = '~NO_VALUE~'
+        end
+
+        if value == '~NO_VALUE~' then
+            if replace ~= nil then
+                if depth == n then
+                    print('bhangar ki shakal ke bhosdike madarchod')
+                    create_new_dict(dict, key, replace)
+                    return dict[key], key, dict
+                else
+                    dict[key] = {}
+                    return recurse {
+                        depth = depth + 1;
+                        dict = {};
+                    }
                 end
-
-                t[key] = opts.replace
-            elseif opts.transform then 
-                assert(callable(opts.transform), 'Transformer must be a callable')
-                t[key] = opts.transform(v, t, key, last_t, last_key)
+            end
+        elseif not utils.is_table(value) then
+            if transform then
+                dict[key] = transform(value)
+            elseif delete then
+                dict[key] = nil
             end
 
-            return t[key], last_key, last_t, dict
-        end
+            if depth < n then
+                if replace then
+                    create_new_dict(dict, key, true)
 
-        last_t = t
-        t = t[key]
-    end
-
-    return last_t[last_key], last_key, last_t, dict
-end
-
-function tu.update(dict, ks, replacement)
-    dict = valid_t(dict)
-    tu.assoc(dict, ks, {transform=function(...) return replacement end})
-    return dict
-end
-
-function tu.remove(dict, ks)
-    dict = valid_t(dict)
-    tu.assoc(dict, ks, {delete=true})
-    return dict
-end
-
--- if table is passed then it will be sent to tu.assoc
-tu.get = function(arr, ...)
-    arr = valid_t(arr)
-    local ks = {...}
-    local vs = {}
-    local failed = false
-
-    for _, i in ipairs(ks) do
-        if utils.table_p(i) then
-            local out = tu.assoc(arr, i) or false
-            vs[#vs+1] = out
-        elseif arr[i] then
-            vs[#vs+1] = arr[i]
+                    return recurse {
+                        depth = depth + 1;
+                        dict = {};
+                    }
+                end
+            else
+                return dict[key], key, dict
+            end
         else
-            failed = true
+            return recurse {
+                depth = depth + 1;
+                dict = value;
+                value = value;
+            }
         end
     end
 
-    if failed then
-        return false
-    elseif #vs == 1 then
-        return vs[1]
-    elseif #vs == 0 then
-        return false
-    else
-        return vs
-    end
+    return recurse {
+        dict = tbl;
+        depth = 1;
+    }
 end
 
-tu.find = function(t, i)
-    t = valid_t(t)
-    for k, v in pairs(t) do
-        if i == v then 
-            return k
-        end
-    end
+function update(dict, ks, replacement)
+    dict = valid_t(dict)
+
+    assert(replacement ~= nil)
+
+    assoc(dict, ks, {
+        replace = replacement;
+    })
+
+    return dict
 end
 
-tu.findall = function(t, i)
-    t = valid_t(t)
-    local found = {}
+function remove(dict, ks)
+    dict = valid_t(dict)
+    assert(ks ~= nil)
+    assoc(dict, ks, {delete=true})
+    return dict
+end
 
-    for k, v in pairs(t) do
-        if i == v then 
-            found[#found+1] = k
+find = function(t, i, depth)
+    t = valid_t(t)
+
+    local function recurse(tbl, value, depth, current)
+        assert(tbl ~= nil)
+        assert(value ~= nil)
+        assert(depth ~= nil)
+
+        current = current or 1
+
+        if current > depth then
+            return
+        end
+        
+        local later = {}
+        for k, v in pairs(tbl) do
+            if value == v then
+                return k
+            end
+
+            if utils.is_table(v) then
+                push(later, k)
+            end
+        end
+
+        for _, k in ipairs(later) do
+            local out = recurse(tbl[k], value, depth+1)
+            if out then
+                return out
+            end
         end
     end
 
-    return found
+    return recurse(t, i, depth or 1)
 end
 
 -- misc operations
 --
-tu.imap = function (t, f)
+imap = function (t, f)
     return iter.iter(t):map(f)
 end
 
-tu.ieach = function (t, f)
+ieach = function (t, f)
     t = valid_t(t)
     iter.iter(t):each(f)
 end
 
-tu.each = function (t, f)
+each = function (t, f)
     t = valid_t(t)
     for _, value in pairs(t) do
         f(value)
     end
 end
 
-tu.map = function (t, f)
+map = function (t, f)
     local out = {}
-    for _, i in tu.imap(t, f) do
-        tu.push(out, i)
+    for _, value in pairs(t) do
+        push(out, f(value))
     end
 
     return out
 end
 
-tu.reduce = function (arr, f, init)
+reduce = function (arr, f, init)
     arr = valid_t(arr)
     init = init or false
 
@@ -575,7 +595,7 @@ tu.reduce = function (arr, f, init)
     return init
 end
 
-tu.filter = function (t, f)
+filter = function (t, f)
     local correct = {}
 
     for k, v in pairs(t) do
@@ -593,7 +613,7 @@ tu.filter = function (t, f)
     return correct
 end
 
-tu.defaultdict = function (t, default)
+defaultdict = function (t, default)
     t = t or {}
     t = valid_t(t)
     local out 
@@ -604,7 +624,7 @@ tu.defaultdict = function (t, default)
         out = default
     end
 
-    t = setmetatable(t, {
+    return setmetatable(t, {
         __index = function(t, k) 
             local v = rawget(t, k)
 
@@ -615,31 +635,57 @@ tu.defaultdict = function (t, default)
             return v
         end
     })
-
-    return t
 end
 
 -- @tparam t table If all the elements are truthy then return true or else return false
-tu.all = function(t)
+all = function(t)
     t = valid_t(t)
-    local v = tu.vals(t)
+    local v = vals(t)
     local n = #v
 
-    return #(tu.filter(function(k)
+    return #(filter(function(k)
         local e = t[k]
         return e ~= nil and e ~= false
     end, v)) == n 
 end
 
-tu.some = function(t)
+some = function(t)
     t = valid_t(t)
-    local v = tu.vals(t)
+    local v = vals(t)
     local n = #v
 
-    return #(tu.filter(function(k)
+    return #(filter(function(k)
         local e = t[k]
         return e ~= nil and e ~= false
     end, v)) > 0
+end
+
+dropfalse = function(t, depth)
+    depth = depth or -1
+    t = valid_t(t)
+
+    local function recurse(t, level)
+        if depth ~= -1 and level > depth then
+            return
+        end
+
+        local later = {}
+        each(keys(t), function(k)
+            local v = t[k]
+            if v == false then
+                t[k] = nil
+            elseif utils.is_table(v) then
+                push(later)
+            end
+        end)
+
+        each(later, function(k) 
+            recurse(t[k], level+1) 
+        end)
+    end
+
+    recurse(t, 1)
+    return t
 end
 
 local function list_to_dict(arr)
@@ -652,7 +698,7 @@ local function list_to_dict(arr)
     return d
 end
 
-tu.union = function(t1, t2)
+union = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
@@ -670,10 +716,10 @@ tu.union = function(t1, t2)
         end
     end
 
-    return tu.keys(a)
+    return keys(a)
 end
 
-tu.intersection = function(t1, t2)
+intersection = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
@@ -691,10 +737,10 @@ tu.intersection = function(t1, t2)
         end
     end
 
-    return tu.keys(a)
+    return keys(a)
 end
 
-tu.difference = function(t1, t2)
+difference = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
@@ -712,10 +758,10 @@ tu.difference = function(t1, t2)
         end
     end
 
-    return tu.keys(a)
+    return keys(a)
 end
 
-tu.subset_p = function(t1, t2)
+subset_p = function(t1, t2)
     assert(t1 ~= nil)
     assert(t2 ~= nil)
 
@@ -738,17 +784,17 @@ tu.subset_p = function(t1, t2)
     if found == t1_len then return true else return false end
 end
 
-tu.superset_p = function(t1, t2)
+superset_p = function(t1, t2)
     t1 = valid_t(t1)
     t2 = valid_t(t2)
-    return tu.subset_p(t2, t1)
+    return subset_p(t2, t1)
 end
 
-tu.is_superset = tu.superset_p
-tu.is_subset = tu.subset_p
+is_superset = superset_p
+is_subset = subset_p
 
-function tu.vec(it, n)
-    assert(utils.cname(it) == 'iterable', 'Please use tu.new_iter to create a new luafun iterable')
+function vec(it, n)
+    assert(utils.cname(it) == 'iterable', 'Please use new_iter to create a new luafun iterable')
 
     local gen, param, state, last_output = it.gen, it.param, it.state
     local out = {}
@@ -756,7 +802,7 @@ function tu.vec(it, n)
     for i=1, n do
         state, last_output = gen(param, state)
         if last_output then
-            tu.push(out, last_output)
+            push(out, last_output)
         else
             break
         end
@@ -765,6 +811,6 @@ function tu.vec(it, n)
     return out
 end
 
-tu.to_vec = tu.vec
+to_vec = vec
 
 return tu

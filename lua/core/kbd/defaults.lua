@@ -61,30 +61,33 @@ keybindings.buffers = {
 update(Doom.kbd, 'defaults', keybindings)
 Doom.kbd.loaded = false
 
-if not Doom.kbd.loaded then
-    if not overrides then
-        local overrides_p = with_user_config_path('lua', 'user', 'kbd', 'defaults.lua')
-        if path.exists(overrides_p) then
-            overrides = require('user.kbd.defaults')
-            claim.table(overrides)
-        end
-    end
-
-    if overrides then
-        each(keys(overrides), function(group)
-            local specs = overrides[group]
-            assoc(keybindings, group, {replace=true})
-            each(partial(push, keybindings[group]), specs)
-        end)
-    end
-
-    for k, v in pairs(keybindings) do
-        if table_p(v) then
-            for _, value in ipairs(v) do
-                kbd.new(unpack(value)):enable()
+vim.schedule(function()
+    if not Doom.kbd.loaded then
+        if not overrides then
+            local overrides_p = with_user_config_path('lua', 'user', 'kbd', 'defaults.lua')
+            if path.exists(overrides_p) then
+                overrides = require('user.kbd.defaults')
+                claim.table(overrides)
             end
         end
-    end
 
-    Doom.kbd.loaded = true
-end
+        if overrides then
+            each(keys(overrides), function(group)
+                local specs = overrides[group]
+                assoc(keybindings, group, {replace=true})
+                each(partial(push, keybindings[group]), specs)
+            end)
+        end
+
+        for k, v in pairs(keybindings) do
+            if table_p(v) then
+                for _, value in ipairs(v) do
+                    local k = kbd.new(unpack(value))
+                    k:enable()
+                end
+            end
+        end
+
+        Doom.kbd.loaded = true
+    end
+end)

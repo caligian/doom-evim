@@ -1,6 +1,7 @@
 return {
     start = {
-        { 'guns/vim-sexp' };
+        {"kyazdani42/nvim-tree.lua"}; 
+        {'guns/vim-sexp' };
         { "savq/paq-nvim" };
         {'ggandor/lightspeed.nvim'};
         { "ryanoasis/vim-devicons" };
@@ -62,10 +63,6 @@ return {
             keep_keys = true;
         };
         {
-            "nvim-neorg/neorg";
-            pattern = '*norg';
-        };
-        {
             "tpope/vim-fugitive";
             keys = {{'Git', 'n', "<leader>gg", ':Git', false, 'Open interactive git'}};
         };
@@ -113,10 +110,6 @@ return {
                 t.setup {extensions={project=merge(copy(ts.defaults.opts), {hijack_netrw=true})}}
                 t.extensions.project.project(ts.defaults.opts)
             end, false, 'Open projects'}};
-        };
-        { 
-            "kyazdani42/nvim-tree.lua"; 
-            keys = {{'nvimtree', 'n', '<leader>`', ':NvimTreeToggle', false, 'Toggle file tree'}}
         };
     };
 }

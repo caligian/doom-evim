@@ -50,5 +50,8 @@ package.path = package.path .. ';' .. home .. '/.vdoom.d/lua/?/init.lua'
 -- cpaths
 package.cpath = package.cpath .. ';' .. home .. '/.local/share/nvim/luarocks/share/lua/5.1/?.so'
 
+-- Enable OOP
+require 'class'
+
 -- Load doom
 require('core')
