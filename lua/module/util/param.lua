@@ -1,14 +1,14 @@
 valid_types = {
-    table = true;
-    ['function'] = true;
-    callable = true;
-    string = true;
-    dict = true;
-    array = true;
-    hash = true;
-    number = true;
-    userdata = true;
-    boolean = true;
+    table = 'table';
+    ['function'] = 'function';
+    callable = 'callable';
+    string = 'string';
+    dict = 'dict';
+    array = 'array';
+    hash = 'hash';
+    number = 'number';
+    userdata = 'userdata';
+    boolean = 'boolean';
     s = 'string';
     t = 'table';
     d = 'dict';
@@ -23,26 +23,38 @@ valid_types = {
 
 local mt = {}
 
-local cb = function (k, obj, no_assert)
-    if obj == nil and opt then return end
-    local out = typeof(obj) == k
-    if inv then out = not out end 
-    if not no_assert then
-        assert(out, sprintf('Object %s is not of type: %s', obj or 'NA', k))
-    else
-        if not out then
-            return sprintf('Object %s is not of type: %s', obj or 'NA', k)
+local cb = function (k, opts)
+    opts = opts or {}
+
+    return function(obj) 
+        if obj == nil and opt then return end
+        local out = typeof(obj) == k
+        if opts.inv then out = not out end 
+        if not out and opts.opt then return true end
+        local msg = ''
+
+        if opts.inv then
+            msg = sprintf('Object %s is of type: %s', obj or 'NA', k)
+        else
+            msg = sprintf('Object %s is not of type: %s', obj or 'NA', k)
         end
-        return true
+
+        if not opts.no_assert then
+            assert(out, msg)
+        else
+            if not out then
+                return sprintf('Object %s is not of type: %s', obj or 'NA', k)
+            end
+            return true
+        end
     end
 end
 
 local multi_cb = function(k)
     local types = values(filter(keys(valid_types), function(s) return #s == 1 end))
-    local what = string.match(k, '^[' .. join(types) .. ']$')
-    if not what then
-        return false
-    end
+    local regex = '^[' .. join(types) .. ']+$'
+    local what = string.match(k, regex)
+    if not what then return false end
     what = vim.split(what, '')
     local args = {}
 
@@ -54,7 +66,7 @@ local multi_cb = function(k)
     return function(obj)
         local msgs = {}
         for _, k in ipairs(args) do
-            local out = cb(k, obj, true)
+            local out = cb(k, {no_assert=true})(obj)
             if is_s(out) then
                 push(msgs, out)
             elseif out == true then
@@ -63,25 +75,28 @@ local multi_cb = function(k)
         end
 
         echo('%s', join(msgs, "\n"))
+        error('Object did not match any given types')
     end
 end
 
 local get_cb = function (k)
     local multi_f = multi_cb(k)
-    if multi_f then
-        return multi_f
-    end
+    if multi_f then return multi_f end
     k = sed(k, {' +', ''})
     local regex = '^(opt_|not_|!|!~|~|~!|not_opt|opt_not)'
     local flags = pcre.match(k, regex)
     local opt_inv = flags == 'not_opt' or flags == 'opt_not' or flags ==  '~!' or flags == '!~'
     local opt = flags == 'opt_' or flags == '!' or opt_inv
     local inv = flags == 'not_' or flags == '~' or opt_inv
+    local options = {
+        opt = opt;
+        inv = inv;
+    }
     k = pcre.gsub(k, regex, '')
 
     assert(valid_types[k] ~= nil, 'Invalid type provided: ' .. k)
 
-    return cb 
+    return cb(k, options) 
 end
 
 mt.__index = function(self, k)
@@ -96,14 +111,16 @@ mt.__call = function (self, obj, ...)
 
     local n = #args
     local fail = false
-
     local msgs = {}
     local fail = 0
+
     for index, i in ipairs(args) do
-        local msg = get_cb(i)(obj, true)
+        local msg = get_cb(i)(obj)
         if type(msg) == 'string' then
             push(msgs, msg)
             fail = fail + 1
+        else
+            return
         end
     end
 
@@ -215,6 +232,8 @@ function bfs_compare_table(table_a, table_b, cmp)
     __compare(table_a, table_b)
     return new_t
 end
-
 bfs_cmp_t = bfs_compare_table
 bfs_compare_t = bfs_cmp_t
+compare_t = bfs_compare_t
+
+claim(1, '~number')

@@ -85,7 +85,7 @@ range = function (from, till, step)
     return t
 end
 
-module_p = function (obj)
+ns_p = function (obj)
     assert(obj ~= nil, 'Object cannot be nil')
 
     if type(obj) == 'table' then
@@ -97,11 +97,9 @@ module_p = function (obj)
     return false
 end
 
-class_p = module_p
-is_class = class_p
-is_module = module_p
-is_ns = module_p
-is_namespace = module_p
+is_ns = ns_p
+is_namespace = ns_p
+namespace_p = ns_p
 
 typeof = function (obj)
     local t = type(obj)

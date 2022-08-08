@@ -1,12 +1,8 @@
-local mod = {}
-local pu = require 'modules.utils.param'
-local u = require 'modules.utils.common'
-local tu = require 'modules.utils.table'
-
+mod = {}
 
 local function set_method(t, k, v)
-    pu.claim(k, 'number', 'string')
-    pu.claim.table(t)
+    claim(k, 'number', 'string')
+    claim.table(t)
 
     local mt = getmetatable(t)
     if mt then
@@ -15,8 +11,8 @@ local function set_method(t, k, v)
 end
 
 local function set_constant(t, k, v)
-    pu.claim(k, 'number', 'string')
-    pu.claim.table(t)
+    claim(k, 'number', 'string')
+    claim.table(t)
 
     local mt = getmetatable(t)
     if mt then
@@ -25,8 +21,8 @@ local function set_constant(t, k, v)
 end
 
 local function set_var(t, k, v)
-    pu.claim(k, 'number', 'string')
-    pu.claim.table(t)
+    claim(k, 'number', 'string')
+    claim.table(t)
 
     local mt = getmetatable(t)
     if mt then
@@ -74,7 +70,7 @@ local function unwrap(getter)
         return function (self)
             return self
         end
-    elseif not u.callable(getter) then
+    elseif not callable(getter) then
         return function (self)
             return get_var(self, getter)
         end
@@ -89,7 +85,7 @@ end
 -- If getter is false then return callback(...)
 local function unwrap_for_method(getter, callback)
     assert(getter ~= nil)
-    pu.claim.callable(callback)
+    claim.callable(callback)
 
     return function (self, ...)
         if getter == false then
@@ -103,8 +99,8 @@ end
 -- If {callback} is a table, the first will be used when the 
 -- self is on LHS and the second will be assumed for RHS. If nothing is provided, consider callback as the default LHS and RHS handler
 function mod.on_operator(self, op, callback, getter)
-    pu.claim.string(op)
-    pu.claim(callback, 'table', 'callable')
+    claim.string(op)
+    claim(callback, 'table', 'callable')
     getter = getter or false
 
     local operators = {
@@ -125,10 +121,10 @@ function mod.on_operator(self, op, callback, getter)
 
     if op ~= '__tostring' then
         local lhs, rhs = false, false
-        if u.table_p(callback) and not u.callable(callback) then
+        if table_p(callback) and not callable(callback) then
             assert(#callback == 2, 'Need a callback for when self is on LHS and when self on RHS')
-            pu.claim.callable(callback[1])
-            pu.claim.callable(callback[2])
+            claim.callable(callback[1])
+            claim.callable(callback[2])
             lhs = callback[1]
             rhs = callback[2]
         else
@@ -192,8 +188,8 @@ function mod.name(self)
 end
 
 function mod.define_method(self, name, callback, getter)
-    pu.claim.string(name)
-    pu.claim.callable(callback)
+    claim.string(name)
+    claim.callable(callback)
 
     getter = getter or false
     callback = unwrap_for_method(getter, callback)
@@ -204,7 +200,7 @@ mod.set_method = mod.define_method
 mod.set_instance_method = mod.define_method
 
 function mod.include(self, methods, getter)
-    pu.claim.table(methods)
+    claim.table(methods)
 
     for key, value in pairs(methods) do
         self:define_method(key, value, getter)
@@ -240,14 +236,14 @@ mod.get_var = mod.getv
 mod.get_variable = mod.getv
 
 function mod.instance_variables(self)
-    return tu.keys(mt_get(self, '__var'))
+    return keys(mt_get(self, '__var'))
 end
 mod.vars = mod.instance_variables
 mod.variables = mod.vars
 mod.get_vars = mod.vars
 
 function mod.instance_methods(self)
-    return tu.keys(mt_get(self, '__method'))
+    return keys(mt_get(self, '__method'))
 end
 mod.methods = mod.instance_methods
 mod.get_methods = mod.methods
@@ -267,7 +263,7 @@ local function create_module(vars)
     local self = { __var = {}, __method = {}, __constant = {} }
 
     for key, value in pairs(vars) do
-        if u.callable(value) then
+        if callable(value) then
             self.__method[key] = value
         elseif key:match('^[A-Z_]+$') then
             self.__constant[key] = value
@@ -277,7 +273,7 @@ local function create_module(vars)
     end
 
     for key, value in pairs(mod) do
-        if u.callable(value) then
+        if callable(value) then
             self.__method[key] = value
         end
     end
@@ -336,7 +332,7 @@ local function new_module(name)
             end
         end
         __newindex = function (...)
-            error(u.sprintf('Attempting to write to Module %s without using accessor methods', name))
+            error(sprintf('Attempting to write to Module %s without using accessor methods', name))
         end
 
         self = setmetatable(self, mt)
@@ -352,8 +348,11 @@ local function new_module(name)
     return _G[name]
 end
 
-module = new_module
+function mod.new(name, vars)
+    claim_s(name)
+    claim(vars, '!table')
+    return new_module(name)(vars)
+end
+
 ns = new_module
 namespace = new_module
-
-return mod

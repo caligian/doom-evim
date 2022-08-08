@@ -1,6 +1,6 @@
-require('modules.utils.common')
-require('modules.utils.table')
-require('modules.utils.param')
-require('modules.utils.function')
-require('modules.utils.string')
-local mod = require('modules.utils.module')
+require 'module.util.common'
+require 'module.util.table'
+require 'module.util.string'
+require 'module.util.function'
+require 'module.util.param'
+require 'module.util.namespace'
