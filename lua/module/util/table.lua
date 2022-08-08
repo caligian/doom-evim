@@ -1,25 +1,21 @@
-local iter = require('fun')
-require('modules.utils.common')
-
 local function valid_t(t)
-    assert(type(t) == 'table', utils.dump(t) .. ' is not a table')
-    if utils.cname(t) == 'table' then
+    assert(type(t) == 'table', dump(t) .. ' is not a table')
+    if cname(t) == 'table' then
         return t.value
-    elseif utils.cname(t) == 'iterable' then
+    elseif cname(t) == 'iterable' then
         return t.param
     end
 
     return t
 end
 
-new_iter = function (t)
+iter = require('fun')
+
+iterable = function (t)
     t = iter.iter(valid_t(t))
-    local mt = getmetatable(t)
-    mt.__name = 'iterable'
-    mt.__type = iter
-    mt.__tostring = function(self)
-        return utils.dump(self)
-    end
+    mt_set(t, '__name', 'iterable')
+    mt_set(t, '__type', iter)
+    mt_set(t, '__tostring', dump)
     return t
 end
 
@@ -94,7 +90,7 @@ extend = function(dst, ...)
     assert(type(dst) == 'table')
 
     for _, arr in ipairs({...}) do
-        if not utils.table_p(arr) then
+        if not table_p(arr) then
             dst[#dst+1] = arr
         else
             arr = valid_t(arr)
@@ -120,7 +116,7 @@ end
 
 lextend = function (arr, ...)
     for _, a in ipairs({...}) do
-        if utils.table_p(a) then
+        if table_p(a) then
             for _, i in ipairs(a) do
                 table.insert(arr, 1, i)
             end
@@ -252,7 +248,9 @@ nth = function (...)
 
     for i = 1, #args-1 do
         local t = valid_t(args[i])
-        params[#params+1] = t[k] or false
+        if t[k] then
+            params[#params+1] = t[k]
+        end
     end
 
     return params
@@ -278,7 +276,7 @@ merge = function(dicta, dictb, depth, f)
         else
             cached[item] = item
 
-            if utils.table_p(a[k]) and utils.table_p(b[k]) then
+            if table_p(a[k]) and table_p(b[k]) then
                 table.insert(later, k)
             else
                 if f then item = f(a[k], item) end
@@ -322,7 +320,7 @@ equals = function(dicta, dictb, depth, f)
             else
                 if type(item_a) ~= type(item_b) then return false end
 
-                if not utils.table_p(item_a) and not utils.table_p(item_b) then 
+                if not table_p(item_a) and not table_p(item_b) then 
                     if item_a ~= item_b then
                         return false 
                     end
@@ -371,36 +369,7 @@ zip = function(...)
     return out
 end
 
-izip = function(...)
-    local arrs = {...}
-    local len = {}
-    local index = 1
-    local max_len = 0
-    local n = #arrs
-
-    for idx, _ in ipairs(arrs) do
-        arrs[idx] = valid_t(arrs[idx])
-        local a = arrs[idx]
-        a = valid_t(a)
-        len[idx] = #a
-    end
-    max_len = math.max(unpack(len))
-
-    return function ()
-        if index > max_len then
-            return
-        end
-
-        local out = {}
-        for i, arr in ipairs(arrs) do
-            local key = index > len[i] and 1 or index
-            push(out, arrs[i][key])
-        end
-        index = index + 1
-
-        return out
-    end, arrs, index
-end
+izip = iter.zip
 
 items = function(dict)
     local vs = {}
@@ -413,12 +382,12 @@ items = function(dict)
     return vs
 end
 
-function assoc(tbl, ks, opts)
+function tget(tbl, ks, opts)
     assert(tbl)
     assert(ks)
 
     opts = opts or {}
-    ks = utils.to_list(ks)
+    ks = to_list(ks)
     local n = #ks
 
     local function create_new_dict(t, k, value)
@@ -468,7 +437,7 @@ function assoc(tbl, ks, opts)
                     }
                 end
             end
-        elseif not utils.is_table(value) then
+        elseif not is_table(value) then
             if transform then
                 dict[key] = transform(value)
             elseif delete then
@@ -502,24 +471,29 @@ function assoc(tbl, ks, opts)
     }
 end
 
+assoc = tget
+
 function update(dict, ks, replacement)
     dict = valid_t(dict)
 
     assert(replacement ~= nil)
 
-    assoc(dict, ks, {
+    tget(dict, ks, {
         replace = replacement;
     })
 
     return dict
 end
 
+tset = update
+
 function remove(dict, ks)
     dict = valid_t(dict)
     assert(ks ~= nil)
-    assoc(dict, ks, {delete=true})
+    tget(dict, ks, {delete=true})
     return dict
 end
+rem = remove
 
 find = function(t, i, depth)
     t = valid_t(t)
@@ -541,7 +515,7 @@ find = function(t, i, depth)
                 return k
             end
 
-            if utils.is_table(v) then
+            if is_table(v) then
                 push(later, k)
             end
         end
@@ -559,26 +533,22 @@ end
 
 -- misc operations
 --
-imap = function (t, f)
-    return iter.iter(t):map(f)
-end
+imap = iter.map
+ieach = iter.each
 
-ieach = function (t, f)
+each = function(t, f, is_dict)
     t = valid_t(t)
-    iter.iter(t):each(f)
-end
+    local it = is_dict and pairs or ipairs
 
-each = function (t, f)
-    t = valid_t(t)
-    for _, value in pairs(t) do
-        f(value)
+    for _, v in it(t) do
+        f(v)
     end
 end
 
 map = function (t, f)
     local out = {}
-    for _, value in pairs(t) do
-        push(out, f(value))
+    for _, o in iterable(t):map(f) do
+        push(out, o)
     end
 
     return out
@@ -618,7 +588,7 @@ defaultdict = function (t, default)
     t = valid_t(t)
     local out 
 
-    if utils.callable(default) then
+    if callable(default) then
         out = default()
     else
         out = default
@@ -628,7 +598,7 @@ defaultdict = function (t, default)
         __index = function(t, k) 
             local v = rawget(t, k)
 
-            if utils.nil_p(v) then 
+            if nil_p(v) then 
                 return vim.deepcopy(out)
             end
 
@@ -674,7 +644,7 @@ dropfalse = function(t, depth)
             local v = t[k]
             if v == false then
                 t[k] = nil
-            elseif utils.is_table(v) then
+            elseif is_table(v) then
                 push(later)
             end
         end)
@@ -704,8 +674,8 @@ union = function(t1, t2)
 
     t1 = valid_t(t1)
     t2 = valid_t(t2)
-    t1 = utils.to_list(t1)
-    t2 = utils.to_list(t2)
+    t1 = to_list(t1)
+    t2 = to_list(t2)
 
     local a = list_to_dict(t1)
     local b = list_to_dict(t2)
@@ -725,8 +695,8 @@ intersection = function(t1, t2)
 
     t1 = valid_t(t1)
     t2 = valid_t(t2)
-    t1 = utils.to_list(t1)
-    t2 = utils.to_list(t2)
+    t1 = to_list(t1)
+    t2 = to_list(t2)
 
     local a = list_to_dict(t1)
     local b = list_to_dict(t2)
@@ -746,8 +716,8 @@ difference = function(t1, t2)
 
     t1 = valid_t(t1)
     t2 = valid_t(t2)
-    t1 = utils.to_list(t1)
-    t2 = utils.to_list(t2)
+    t1 = to_list(t1)
+    t2 = to_list(t2)
 
     local a = list_to_dict(t1, true)
     local b = list_to_dict(t2, true)
@@ -767,8 +737,8 @@ subset_p = function(t1, t2)
 
     t1 = valid_t(t1)
     t2 = valid_t(t2)
-    t1 = utils.to_list(t1)
-    t2 = utils.to_list(t2)
+    t1 = to_list(t1)
+    t2 = to_list(t2)
 
     local found = 0
     local t1_len = #t1
@@ -794,7 +764,7 @@ is_superset = superset_p
 is_subset = subset_p
 
 function vec(it, n)
-    assert(utils.cname(it) == 'iterable', 'Please use new_iter to create a new luafun iterable')
+    assert(cname(it) == 'iterable', 'Please use iterable() to create a new luafun iterable')
 
     local gen, param, state, last_output = it.gen, it.param, it.state
     local out = {}
@@ -810,7 +780,18 @@ function vec(it, n)
 
     return out
 end
-
 to_vec = vec
 
-return tu
+function remove_nil(t)
+    for i=1, #t do
+        if not t[i] then
+            table.remove(t, i)
+        end
+    end
+
+    return t
+end
+del_nil = remove_nil
+nonil = remove_nil
+no_nil = remove_nil
+delnil = remove_nil

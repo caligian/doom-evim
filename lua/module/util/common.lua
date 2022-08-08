@@ -1,6 +1,15 @@
-local path = require('path')
-local yaml = require('yaml')
-local iter = require('fun')
+path = require('path')
+yaml = require('yaml')
+iter = require('fun')
+pcre = require 'rex_pcre2'
+
+function find_ns(name)
+    if Module and type(Module) == 'table' and Module[name] then
+        return Module[name]
+    end
+
+    return false
+end
 
 function table_ro(t)
     return setmetatable(t, {
@@ -23,6 +32,8 @@ function mt_def(t, key, f)
         rawset(mt, key, f)
     end
 end
+
+mt_set = mt_def
 
 identity = function (i)
     return i
@@ -74,41 +85,43 @@ range = function (from, till, step)
     return t
 end
 
-typeof = function (obj)
+module_p = function (obj)
     assert(obj ~= nil, 'Object cannot be nil')
+
+    if type(obj) == 'table' then
+        if mt_get(obj, '__name') or mt_get(obj, '__type') then
+            return true 
+        end
+    end
+
+    return false
+end
+
+class_p = module_p
+is_class = class_p
+is_module = module_p
+is_ns = module_p
+is_namespace = module_p
+
+typeof = function (obj)
     local t = type(obj)
 
     if t == 'table' then
-        local mt = getmetatable(obj)
-        if mt and mt.__type then
-            return mt.__type
-        elseif mt and mt.__call then
+        if is_ns(obj) then
+            return mt_get(obj, '__name') or mt_get(obj, '__type')
+        elseif mt_get(obj, '__call') then
             return 'callable'
         end
     end
 
-    return t
+    return t or false
 end
 
 isa = function (obj, k)
     return typeof(obj) == k
 end
 
-isa = isa
-
-module_p = function (obj)
-    assert(obj ~= nil, 'Object cannot be nil')
-    local t = type(obj)
-
-    if t == 'table' then
-        return t.__name ~= nil
-    end
-
-    return false
-end
-class_p = module_p
-is_class = class_p
-is_module = module_p
+is_a = isa
 
 to_stderr = function(s)
     vim.api.nvim_err_writeln(s)
@@ -125,6 +138,7 @@ end
 bool_p = boolean_p
 is_boolean = boolean_p
 is_bool = boolean_p
+is_b = is_bool
 
 nil_p = function (o)
     if o == nil then
@@ -158,15 +172,13 @@ defined = defined_p
 is_defined = defined
 
 true_p = function (o)
-    if not nil_p(o) and false_p(o) then
-        return true
-    else
-        return false
-    end
+    return o == true
 end
-
-is_truthful = true_p
 is_true = true_p
+
+is_truthful = function(o)
+    return o ~= false and o ~= nil
+end
 
 number_p = function (i)
     return type(i) == 'number'
@@ -178,18 +190,21 @@ end
 
 is_number = number_p
 is_num = num_p
+is_n = is_num
 
 table_p = function (t)
     return type(t) == 'table'
 end
 is_table = table_p
 is_dict = table_p
+is_t = is_table
 
 func_p = function (f)
     return type(f) == 'function'
 end
 is_function = function_p
 is_func = function_p
+is_f = is_func
 function_p = func_p
 
 callable = function (f)
@@ -209,6 +224,7 @@ end
 
 callable_p = callable
 is_callable = callable
+is_c = is_callable
 
 str_p = function (s)
     return type(s) == 'string'
@@ -216,6 +232,7 @@ end
 
 string_p = str_p
 is_string = str_p
+is_s = str_p
 
 to_list = function (i, force)
     if table_p(i) then
@@ -228,6 +245,8 @@ to_list = function (i, force)
         return {i}
     end
 end
+
+tolist = to_list
 
 function class_name(obj)
     if not type(obj) == 'table' then
@@ -423,8 +442,7 @@ add_global = function(obj, name, force)
 end
 
 globalize = function (mod, ks)
-    mod = mod or utils
-
+    assert(mod, 'No table provided')
     if not ks then
         for k, f in pairs(mod) do
             if not _G[k] then

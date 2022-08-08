@@ -1,9 +1,3 @@
--- local mod = require 'modules.utils.module'
-local tu = require 'modules.utils.table'
-local param = require 'modules.utils.param'
-local m = require 'modules.utils.function'
-dofile('../module.lua')
-
 ns 'Callable'
 
 function callable(f)

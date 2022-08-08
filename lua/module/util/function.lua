@@ -1,25 +1,20 @@
-local fun = {}
-local param = require 'modules.utils.param'
-local utils = require('modules.utils.common')
-local tutils = require('modules.utils.table')
-
-function fun.partial(f, ...)
+function partial(f, ...)
     local outer = {...}
 
     return function(...)
-        return f(unpack(tutils.extend(outer, {...})))
+        return f(unpack(extend(outer, {...})))
     end
 end
 
-function fun.lpartial(f, ...)
+function lpartial(f, ...)
     local outer = {...}
 
     return function(...)
-        return f(unpack(tutils.extend({...}, outer)))
+        return f(unpack(extend({...}, outer)))
     end
 end
 
-function fun.ithread(f, ...)
+function ithread(f, ...)
     param.claim.callable(f)
 
     local args = {f, ...}
@@ -49,7 +44,7 @@ function fun.ithread(f, ...)
     end, args, index
 end
 
-function fun.ilthread(...)
+function ilthread(...)
     local cbs = {...}
     local n = #cbs
     local obj = cbs[n]
@@ -76,7 +71,7 @@ function fun.ilthread(...)
     end, cbs, index
 end
 
-function fun.thread(...)
+function thread(...)
     local args = {...}
     local n = #args
     local obj = args[n]
@@ -98,7 +93,7 @@ function fun.thread(...)
     return out
 end
 
-function fun.lthread(...)
+function lthread(...)
     local cbs = {...}
     local n = #cbs
     local obj = cbs[n]
@@ -119,6 +114,3 @@ function fun.lthread(...)
 
     return out
 end
-
-
-return fun

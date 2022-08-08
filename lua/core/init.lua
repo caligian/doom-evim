@@ -1,5 +1,5 @@
 -- All the required modules
-require('modules.utils')
+require('module.util')
 require('logging.file') 
 
 -- Add some modules as globals
